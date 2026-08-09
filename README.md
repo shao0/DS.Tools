@@ -27,13 +27,14 @@ DS.Tools 是一个现代化的跨平台桌面工具集应用，采用最新的 .
 
 ### 🛠️ 内置工具
 
-1. **📊 Dashboard** - 实时信息展示和快速导航
+1. **📊 主页（Dashboard）** - 功能总览与快速导航
 2. **📝 JSON 格式化** - JSON 美化、压缩、验证工具
 3. **🔐 Base64 编码** - Base64 编码/解码工具
 4. **🎨 颜色转换器** - 颜色格式转换工具
 5. **🔑 密码生成器** - 安全密码生成工具
 6. **#️⃣ 文本哈希** - 文本哈希计算工具
 7. **⏰ 时间戳转换** - Unix 时间戳转换工具
+8. **📜 Git 日志** - 选择仓库按时间段浏览提交历史（含完整消息复制）
 
 ## 🚀 快速开始
 
@@ -83,12 +84,13 @@ dotnet run --project DS.Tools/DS.Tools.csproj --configuration Debug
 
 ```
 DS.Tools.slnx
-├── DS.Tools/                      # 主应用 (Avalonia UI)
+├── DS.Tools/                      # 主应用 (Avalonia UI，组合根：模块注册/Serilog/主题)
 ├── Cores/DS.Tools.Core/           # 统一核心层（接口/模型/服务/DI）
-├── Cores/DS.Tools.Module.Base/    # 工具模块基类（IToolModule/ToolRegistry）
-├── Cores/DS.Tools.UI.Shared/      # 共享 UI 资源
-├── Tools/DS.Tools.Module.Text/    # 文本工具模块（7 个子工具）
-└── Tests/DS.Tools.Tests/          # 单元测试
+├── Cores/DS.Tools.Module.Base/    # 工具模块基类（IToolModule/ToolRegistry/IToolCatalog）
+├── Cores/DS.Tools.UI.Shared/      # 共享 UI 资源（样式/控件）
+├── Tools/DS.Tools.Module.Text/    # 文本工具模块（6 个子工具）
+├── Tools/DS.Tools.Module.Git/     # Git 日志模块（git-log 子工具）
+└── Tests/DS.Tools.Tests/          # 单元测试（116 个，含 Headless UI 集成测试）
 ```
 
 ### 模块化架构
@@ -97,10 +99,11 @@ DS.Tools.slnx
 
 - **`IToolModule` / `ToolModule`**：工具模块契约与抽象基类
 - **`ToolRegistry`**：模块注册表（编译期显式注册；注册时挂载子工具目录到模块基类）
-- **`INavigationService`**：导航服务，管理模块/子工具切换与历史记录
+- **`INavigationService`**：导航服务（`NavigateTo`×2 + `NavigationChanged`，无历史栈）
 - **IoC ViewModel 创建**：模块提供 `Func<IServiceProvider, ViewModelBase>` 强类型工厂，
   经 DI 容器 `GetRequiredService<T>()` 解析实例（无 `Type` 键、无反射）
-- **统一注册表服务**：`ToolRegistration`（`AddSubTool<TVM, TView>` 一行注册子工具 + View 映射）+
+- **统一注册表服务**：`ToolRegistration`（`AddSubTool<TVM, TView>` 一行注册子工具 + View 映射，
+  元数据由 ViewModel 实现 `ISubTool` 接口经 constrained call 编译期自声明）+
   `IToolCatalog`/`ToolCatalog` 查询（单条目类型 `SubToolInfo`，View 映射 + 子工具目录同源），
   `ViewRegistryDataTemplate` 桥接 Avalonia 渲染（无手写 XAML DataTemplate 列表）
 
@@ -118,9 +121,9 @@ DS.Tools.slnx
 
 ## 🎨 UI 特性
 
-- **深色/浅色主题**：支持 Light/Dark/System 三种主题模式
-- **响应式布局**：适配不同窗口尺寸
-- **流畅动画**：基于 Avalonia 的高性能渲染
+- **深色/浅色主题**：Light/Dark 双色板（`ThemeDictionaries` 语义化色板，标题栏一键切换）
+- **响应式布局**：适配不同窗口尺寸（SplitView 可收起侧边栏）
+- **流畅动画**：基于 Avalonia 的过渡动画（悬停/按压反馈）
 - **可访问性**：支持键盘导航和屏幕阅读器
 
 ## 🔧 配置
@@ -130,29 +133,23 @@ DS.Tools.slnx
 ```json
 {
   "Theme": {
-    "DefaultTheme": "System",
-    "FollowSystemTheme": true
+    "DefaultTheme": "System"
   },
   "Logging": {
     "DefaultLevel": "Information",
-    "WriteToFile": true
-  },
-  "Tools": {
-    "DefaultToolId": "text-tools",
-    "EnabledTools": [
-      "dashboard",
-      "json-formatter",
-      "base64-converter",
-      "color-converter",
-      "timestamp-converter",
-      "password-generator",
-      "text-hasher"
-    ]
+    "WriteToFile": true,
+    "LogFilePath": "logs/app.log",
+    "MaxFileSizeMB": 10,
+    "RetainedFileCount": 5
   }
 }
 ```
 
+工具模块在组合根 `App.axaml.cs` 的 `ToolModules` 数组**编译期显式注册**（非配置驱动），新增模块 = 数组加一行。
+
 ## 🧪 测试
+
+当前 **116/116** 通过（单元测试 + Avalonia Headless UI 集成测试，headless 测试须同 Collection 串行）。
 
 ```bash
 # 运行测试
@@ -161,6 +158,10 @@ dotnet test Tests/DS.Tools.Tests/DS.Tools.Tests.csproj
 # 查看测试覆盖率
 dotnet test --collect:"XPlat Code Coverage"
 ```
+
+> ⚠️ 已知框架 bug（Avalonia 12.1.x）：`TextWrapping=Wrap` + 含空段落的文本会触发布局死循环（内存爆炸）。
+> 本项目已用 `GitLogMessageConverter` 在显示层压缩连续换行规避；勿移除该 converter 或给 Wrap 绑定添加
+> 未过滤的用户可控多行文本（详见 CLAUDE.md「Avalonia 12.1.x 框架 bug」小节）。
 
 ## 📦 构建发布
 
