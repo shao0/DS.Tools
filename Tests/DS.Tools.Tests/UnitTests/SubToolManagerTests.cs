@@ -1,6 +1,7 @@
 using Xunit;
 using FluentAssertions;
 using DS.Tools.Module.Base;
+using DS.Tools.Core.Models;
 
 namespace DS.Tools.Tests.UnitTests;
 
@@ -34,7 +35,7 @@ public sealed class SubToolManagerTests
     {
         // Arrange
         var manager = new SubToolManager("test-module");
-        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string));
+        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel());
 
         // Act
         manager.AddSubTool(subTool);
@@ -50,8 +51,8 @@ public sealed class SubToolManagerTests
     {
         // Arrange
         var manager = new SubToolManager("test-module");
-        var subTool1 = new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string));
-        var subTool2 = new SubToolInfo("test1", "Test Tool 2", "🔨", typeof(int));
+        var subTool1 = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel());
+        var subTool2 = new SubToolInfo("test1", "Test Tool 2", "🔨", _ => new TestViewModel());
         manager.AddSubTool(subTool1);
 
         // Act & Assert
@@ -65,9 +66,9 @@ public sealed class SubToolManagerTests
         var manager = new SubToolManager("test-module");
         var subTools = new[]
         {
-            new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string)),
-            new SubToolInfo("test2", "Test Tool 2", "🔨", typeof(int)),
-            new SubToolInfo("test3", "Test Tool 3", "⚙️", typeof(double))
+            new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel()),
+            new SubToolInfo("test2", "Test Tool 2", "🔨", _ => new TestViewModel()),
+            new SubToolInfo("test3", "Test Tool 3", "⚙️", _ => new TestViewModel())
         };
 
         // Act
@@ -83,7 +84,7 @@ public sealed class SubToolManagerTests
     {
         // Arrange
         var manager = new SubToolManager("test-module");
-        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string));
+        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel());
         manager.AddSubTool(subTool);
 
         // Act
@@ -108,28 +109,29 @@ public sealed class SubToolManagerTests
     }
 
     [Fact]
-    public void GetSubToolViewModelType_WithExistingId_ShouldReturnCorrectType()
+    public void GetSubToolViewModelFactory_WithExistingId_ShouldReturnFactory()
     {
         // Arrange
         var manager = new SubToolManager("test-module");
-        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string));
+        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel());
         manager.AddSubTool(subTool);
 
         // Act
-        var result = manager.GetSubToolViewModelType("test1");
+        var factory = manager.GetSubToolViewModelFactory("test1");
 
         // Assert
-        result.Should().Be(typeof(string));
+        factory.Should().NotBeNull();
+        factory!(new TestServiceProvider()).Should().BeOfType<TestViewModel>();
     }
 
     [Fact]
-    public void GetSubToolViewModelType_WithNonExistingId_ShouldReturnNull()
+    public void GetSubToolViewModelFactory_WithNonExistingId_ShouldReturnNull()
     {
         // Arrange
         var manager = new SubToolManager("test-module");
 
         // Act
-        var result = manager.GetSubToolViewModelType("nonexistent");
+        var result = manager.GetSubToolViewModelFactory("nonexistent");
 
         // Assert
         result.Should().BeNull();
@@ -140,7 +142,7 @@ public sealed class SubToolManagerTests
     {
         // Arrange
         var manager = new SubToolManager("test-module");
-        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string));
+        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel());
         manager.AddSubTool(subTool);
 
         // Act
@@ -170,8 +172,8 @@ public sealed class SubToolManagerTests
         var manager = new SubToolManager("test-module");
         var subTools = new[]
         {
-            new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string)),
-            new SubToolInfo("test2", "Test Tool 2", "🔨", typeof(int))
+            new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel()),
+            new SubToolInfo("test2", "Test Tool 2", "🔨", _ => new TestViewModel())
         };
         manager.AddSubTools(subTools);
 
@@ -187,7 +189,7 @@ public sealed class SubToolManagerTests
     public void SubToolInfo_GetFullNavigationId_ShouldReturnCorrectFormat()
     {
         // Arrange
-        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(string));
+        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new TestViewModel());
         var moduleId = "test-module";
 
         // Act
@@ -195,5 +197,18 @@ public sealed class SubToolManagerTests
 
         // Assert
         result.Should().Be("test-module:test1");
+    }
+
+    /// <summary>
+    /// 测试用 ViewModel
+    /// </summary>
+    private sealed class TestViewModel : ViewModelBase;
+
+    /// <summary>
+    /// 测试用 IServiceProvider（工厂不接受真实容器依赖，仅传参）
+    /// </summary>
+    private sealed class TestServiceProvider : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => null;
     }
 }

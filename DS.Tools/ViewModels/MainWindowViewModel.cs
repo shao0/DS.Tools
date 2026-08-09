@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -89,36 +88,14 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     {
         if (tool is not null)
         {
-            Type viewModelType;
+            // IoC 创建：ViewModel 由模块提供的强类型工厂经 DI 容器解析
+            // （编译期泛型 GetRequiredService<T>，无 Type 键、无运行时反射）
+            var viewModel = string.IsNullOrEmpty(subToolId)
+                ? tool.CreateMainViewModel(_serviceProvider)
+                : tool.CreateSubToolViewModel(subToolId, _serviceProvider) ?? tool.CreateMainViewModel(_serviceProvider);
 
-            // 如果有子工具ID，则从模块的子工具列表中查找对应的ViewModel类型
-            if (!string.IsNullOrEmpty(subToolId))
-            {
-                viewModelType = GetSubToolViewModelType(tool, subToolId);
-            }
-            else
-            {
-                // 否则使用模块的主ViewModel类型
-                viewModelType = tool.ViewModelType;
-            }
-
-            // 从DI容器解析对应的ViewModel
-            var viewModel = _serviceProvider.GetService(viewModelType) as ViewModelBase;
             ActiveToolViewModel = viewModel;
         }
-    }
-
-    /// <summary>
-    /// 从工具模块获取子工具的ViewModel类型（AOT兼容）
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Type GetSubToolViewModelType(IToolModule tool, string subToolId)
-    {
-        // 使用模块接口的 GetSubToolViewModelType 方法（AOT兼容）
-        var viewModelType = tool.GetSubToolViewModelType(subToolId);
-
-        // 如果找不到子工具，回退到主ViewModel
-        return viewModelType ?? tool.ViewModelType;
     }
 
     /// <summary>

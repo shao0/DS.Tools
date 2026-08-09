@@ -9,7 +9,6 @@ using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Core.DI;
 using DS.Tools.Core.Interfaces;
 using DS.Tools.Module.Base.DI;
-using DS.Tools.Module.Base.UI;
 using DS.Tools.Views;
 using DS.Tools.ViewModels;
 using DS.Tools.Module.Text;

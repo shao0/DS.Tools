@@ -18,8 +18,9 @@ DS.Tools 是一个现代化的跨平台桌面工具集应用，采用最新的 .
 
 ### 🎯 核心特性
 
-- ✅ **极简模块化架构**：基于 `IToolModule` + `INavigationService` + `ViewLocator` 的约定式设计
-- ✅ **完全 AOT 兼容**：无运行时反射，支持 NativeAOT 编译为原生二进制
+- ✅ **极简模块化架构**：`IToolModule` + `ToolRegistry` + `INavigationService`，ViewModel 由 DI 容器（IoC）经强类型工厂创建
+- ✅ **完全 AOT 兼容**：零运行时反射（扫描验证），支持 NativeAOT 编译为原生二进制
+- ✅ **编译期 View 映射**：`x:DataType` DataTemplate 实现 ViewModel→View 映射，无约定式字符串查找
 - ✅ **现代 MVVM 模式**：基于 CommunityToolkit.Mvvm 源生成器
 - ✅ **跨平台支持**：支持 Windows、macOS、Linux
 - ✅ **高性能 UI**：Avalonia UI 提供流畅的用户体验
@@ -83,28 +84,34 @@ dotnet run --project DS.Tools/DS.Tools.csproj --configuration Debug
 ```
 DS.Tools.slnx
 ├── DS.Tools/                      # 主应用 (Avalonia UI)
-├── DS.Tools.Core.Unified/         # 统一核心层
-├── DS.Tools.Module.Base/          # 工具模块基类
-├── DS.Tools.Module.Text/          # 文本工具模块
-├── DS.Tools.UI.Shared/           # 共享 UI 资源
-└── DS.Tools.Tests/               # 单元测试
+├── Cores/DS.Tools.Core/           # 统一核心层（接口/模型/服务/DI）
+├── Cores/DS.Tools.Module.Base/    # 工具模块基类（IToolModule/ToolRegistry）
+├── Cores/DS.Tools.UI.Shared/      # 共享 UI 资源
+├── Tools/DS.Tools.Module.Text/    # 文本工具模块（7 个子工具）
+└── Tests/DS.Tools.Tests/          # 单元测试
 ```
 
 ### 模块化架构
 
-项目采用**极简模块化设计**：
+项目采用**极简模块化设计**（AOT 全程无反射、无 Type 键创建）：
 
-- **`IToolModule`**：工具模块契约接口
-- **`ToolModule`**：抽象基类，实现通用模块逻辑
-- **`INavigationService`**：导航服务，管理工具切换
-- **`ViewLocator`**：基于约定的 ViewModel→View 自动映射
+- **`IToolModule` / `ToolModule`**：工具模块契约与抽象基类
+- **`ToolRegistry`**：模块注册表（编译期显式注册 + 标准 .NET 事件）
+- **`INavigationService`**：导航服务，管理模块/子工具切换与历史记录
+- **IoC ViewModel 创建**：模块提供 `Func<IServiceProvider, ViewModelBase>` 强类型工厂，
+  经 DI 容器 `GetRequiredService<T>()` 解析实例（无 `Type` 键、无反射）
+- **编译期 View 映射**：`MainWindow.axaml` 中 `x:DataType` DataTemplate 声明
+  ViewModel→View 映射，由 Avalonia XAML 编译器生成直接实例化代码
 
 #### 添加新工具
 
 1. 继承 `ToolModule` 基类
-2. 实现必需的成员（Id、Name、Icon、Description、ViewModelType）
-3. 在 `Register` 方法中注册 ViewModel 和服务
-4. 在 `App.axaml.cs` 中注册模块
+2. 实现必需的成员（Id、Name、Icon、Description、`CreateMainViewModel`）
+3. 在 `Register` 方法中注册 ViewModel 和服务（`AddTransient<T>`）
+4. 子工具通过 `SubToolInfo(id, name, icon, sp => sp.GetRequiredService<T>())` 添加
+5. 在 `App.axaml.cs` 中注册模块
+6. 在 `MainWindow.axaml` 的 `Window.DataTemplates` 中追加一条
+   `<DataTemplate x:DataType="vm:XxxViewModel"><views:XxxView /></DataTemplate>`
 
 详细开发指南请参考 [CLAUDE.md](CLAUDE.md)。
 

@@ -36,14 +36,20 @@ public sealed class MainWindowViewModelTests
         _mockTextModule.Setup(x => x.Name).Returns("文本工具");
         _mockTextModule.Setup(x => x.Icon).Returns("📝");
         _mockTextModule.Setup(x => x.Description).Returns("文本工具集");
-        _mockTextModule.Setup(x => x.ViewModelType).Returns(typeof(DummyViewModel));
         _mockTextModule.Setup(x => x.HasSubTools).Returns(true); // TextModule有子工具
         _mockTextModule.Setup(x => x.SubTools).Returns((IReadOnlyList<SubToolInfo>?)null);
+
+        // IoC 创建：主/子 ViewModel 由模块工厂经 IServiceProvider 解析（与生产代码同构）
+        _mockTextModule
+            .Setup(x => x.CreateMainViewModel(It.IsAny<IServiceProvider>()))
+            .Returns(new DummyViewModel());
+        _mockTextModule
+            .Setup(x => x.CreateSubToolViewModel("subtool1", It.IsAny<IServiceProvider>()))
+            .Returns(new DummyViewModel());
 
         var tools = new List<IToolModule> { _mockTextModule.Object };
         _mockToolRegistry.Setup(x => x.Tools).Returns(tools);
         _mockToolRegistry.Setup(x => x.GetTool("text-tools")).Returns(_mockTextModule.Object);
-        _mockServiceProvider.Setup(x => x.GetService(typeof(DummyViewModel))).Returns(new DummyViewModel());
 
         _mockThemeService.Setup(x => x.CurrentTheme).Returns(ThemeVariant.Light);
     }
@@ -147,7 +153,7 @@ public sealed class MainWindowViewModelTests
             _mockThemeService.Object,
             _mockNavigationService.Object,
             _mockServiceProvider.Object);
-        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", typeof(DummyViewModel));
+        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new DummyViewModel());
         _mockNavigationService.Setup(x => x.CurrentTool).Returns(_mockTextModule.Object);
 
         // Act
@@ -167,13 +173,58 @@ public sealed class MainWindowViewModelTests
             _mockNavigationService.Object,
             _mockServiceProvider.Object);
         var dummyViewModel = new DummyViewModel();
-        _mockServiceProvider.Setup(x => x.GetService(typeof(DummyViewModel))).Returns(dummyViewModel);
+        _mockTextModule.Setup(x => x.CreateMainViewModel(It.IsAny<IServiceProvider>())).Returns(dummyViewModel);
 
         // Act
         _mockNavigationService.Raise(x => x.NavigationChanged += null, _mockTextModule.Object, (string?)null!);
 
         // Assert
         viewModel.ActiveToolViewModel.Should().Be(dummyViewModel);
+    }
+
+    [Fact]
+    public void NavigationChanged_WithSubTool_ShouldUseSubToolFactory()
+    {
+        // Arrange
+        var viewModel = new MainWindowViewModel(
+            _mockToolRegistry.Object,
+            _mockThemeService.Object,
+            _mockNavigationService.Object,
+            _mockServiceProvider.Object);
+        var subToolViewModel = new DummyViewModel();
+        _mockTextModule
+            .Setup(x => x.CreateSubToolViewModel("subtool1", It.IsAny<IServiceProvider>()))
+            .Returns(subToolViewModel);
+
+        // Act
+        _mockNavigationService.Raise(x => x.NavigationChanged += null, _mockTextModule.Object, "subtool1");
+
+        // Assert
+        viewModel.ActiveToolViewModel.Should().Be(subToolViewModel);
+    }
+
+    [Fact]
+    public void NavigationChanged_WithUnknownSubTool_ShouldFallBackToMainViewModel()
+    {
+        // Arrange
+        var viewModel = new MainWindowViewModel(
+            _mockToolRegistry.Object,
+            _mockThemeService.Object,
+            _mockNavigationService.Object,
+            _mockServiceProvider.Object);
+        var mainViewModel = new DummyViewModel();
+        _mockTextModule
+            .Setup(x => x.CreateSubToolViewModel("unknown", It.IsAny<IServiceProvider>()))
+            .Returns((ViewModelBase?)null);
+        _mockTextModule
+            .Setup(x => x.CreateMainViewModel(It.IsAny<IServiceProvider>()))
+            .Returns(mainViewModel);
+
+        // Act
+        _mockNavigationService.Raise(x => x.NavigationChanged += null, _mockTextModule.Object, "unknown");
+
+        // Assert
+        viewModel.ActiveToolViewModel.Should().Be(mainViewModel);
     }
 
     [Fact]

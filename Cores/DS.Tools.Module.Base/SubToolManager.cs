@@ -1,20 +1,28 @@
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
+using DS.Tools.Core.Models;
 
 namespace DS.Tools.Module.Base;
 
 /// <summary>
-/// 子工具信息 - 描述一个子工具的元数据
-/// AOT 兼容，编译期类型安全
+/// 子工具信息 - 描述一个子工具的元数据。
+/// AOT 兼容：创建 ViewModel 的工厂委托由模块在编译期提供（IoC，无 Type 键、无反射）。
 /// </summary>
 public sealed class SubToolInfo
 {
-    public SubToolInfo(string id, string name, string icon, Type viewModelType)
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="id">子工具唯一标识符（在模块内唯一）</param>
+    /// <param name="name">子工具显示名称</param>
+    /// <param name="icon">子工具图标</param>
+    /// <param name="createViewModel">ViewModel 工厂：经 DI 容器按强类型解析实例</param>
+    public SubToolInfo(string id, string name, string icon, Func<IServiceProvider, ViewModelBase> createViewModel)
     {
         Id = id;
         Name = name;
         Icon = icon;
-        ViewModelType = viewModelType;
+        CreateViewModel = createViewModel;
     }
 
     /// <summary>子工具唯一标识符（在模块内唯一）</summary>
@@ -26,8 +34,8 @@ public sealed class SubToolInfo
     /// <summary>子工具图标</summary>
     public string Icon { get; }
 
-    /// <summary>对应的 ViewModel 类型</summary>
-    public Type ViewModelType { get; }
+    /// <summary>ViewModel 工厂（IoC 创建，如 <c>sp => sp.GetRequiredService&lt;JsonFormatterViewModel&gt;()</c>）</summary>
+    public Func<IServiceProvider, ViewModelBase> CreateViewModel { get; }
 
     /// <summary>完整导航ID（格式：moduleId:subToolId）</summary>
     public string GetFullNavigationId(string moduleId) => $"{moduleId}:{Id}";
@@ -94,13 +102,12 @@ public sealed class SubToolManager
     }
 
     /// <summary>
-    /// 获取子工具的 ViewModel 类型（AOT 兼容）
+    /// 获取子工具的 ViewModel 工厂（IoC 创建，AOT 兼容）
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Type? GetSubToolViewModelType(string subToolId)
+    public Func<IServiceProvider, ViewModelBase>? GetSubToolViewModelFactory(string subToolId)
     {
-        var subTool = GetSubTool(subToolId);
-        return subTool?.ViewModelType;
+        return GetSubTool(subToolId)?.CreateViewModel;
     }
 
     /// <summary>

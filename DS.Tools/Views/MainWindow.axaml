@@ -6,7 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:module="using:DS.Tools.Module.Base.Interfaces"
-    xmlns:ui="using:DS.Tools.Module.Base.UI"
+    xmlns:textvm="using:DS.Tools.Module.Text.ViewModels"
+    xmlns:textviews="using:DS.Tools.Module.Text.Views"
     xmlns:vm="using:DS.Tools.ViewModels"
     x:Name="RootWindow"
     Title="DS.Tools - Developer Utilities"
@@ -26,9 +27,31 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <!--  使用自定义 ViewLocator  -->
+    <!--  ViewModel→View 映射：编译期 DataTemplate（NativeAOT 兼容，零反射）。
+          每个工具 ViewModel 通过 x:DataType 显式声明，由 Avalonia XAML 编译器
+          生成强类型绑定与直接 new View() 的实例化代码。  -->
     <Window.DataTemplates>
-        <ui:ViewLocator />
+        <DataTemplate x:DataType="textvm:DashboardViewModel">
+            <textviews:DashboardView />
+        </DataTemplate>
+        <DataTemplate x:DataType="textvm:JsonFormatterViewModel">
+            <textviews:JsonFormatterView />
+        </DataTemplate>
+        <DataTemplate x:DataType="textvm:Base64ViewModel">
+            <textviews:Base64View />
+        </DataTemplate>
+        <DataTemplate x:DataType="textvm:ColorConverterViewModel">
+            <textviews:ColorConverterView />
+        </DataTemplate>
+        <DataTemplate x:DataType="textvm:PasswordGeneratorViewModel">
+            <textviews:PasswordGeneratorView />
+        </DataTemplate>
+        <DataTemplate x:DataType="textvm:TextHasherViewModel">
+            <textviews:TextHasherView />
+        </DataTemplate>
+        <DataTemplate x:DataType="textvm:TimestampConverterViewModel">
+            <textviews:TimestampConverterView />
+        </DataTemplate>
     </Window.DataTemplates>
 
     <!--  窗口 chrome 自定义  -->
@@ -321,7 +344,7 @@
                 </Border>
             </SplitView.Pane>
 
-            <!--  内容区：当前工具的视图 - 通过 ViewLocator 自动映射  -->
+            <!--  内容区：当前工具的视图 - 由窗口级 DataTemplate 按编译期映射渲染  -->
             <Border Background="#0F172A">
                 <ContentControl Content="{Binding ActiveToolViewModel}" />
             </Border>

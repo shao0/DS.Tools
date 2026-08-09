@@ -1,10 +1,12 @@
+using DS.Tools.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DS.Tools.Module.Base.Interfaces;
 
 /// <summary>
-/// 工具模块契约 - 定义工具模块的元数据和生命周期
-/// AOT 兼容，编译期显式注册，无运行时反射
+/// 工具模块契约 - 定义工具模块的元数据和生命周期。
+/// AOT 兼容：编译期显式注册，无运行时反射，无 Type 键创建——
+/// ViewModel 一律由 DI 容器（IoC）通过强类型工厂创建。
 /// </summary>
 public interface IToolModule
 {
@@ -29,11 +31,6 @@ public interface IToolModule
     string Description { get; }
 
     /// <summary>
-    /// 主 ViewModel 类型（用于导航和 View 定位）
-    /// </summary>
-    Type ViewModelType { get; }
-
-    /// <summary>
     /// 检查模块是否支持子工具
     /// </summary>
     bool HasSubTools { get; }
@@ -44,12 +41,19 @@ public interface IToolModule
     IReadOnlyList<SubToolInfo>? SubTools { get; }
 
     /// <summary>
-    /// 获取子工具的 ViewModel 类型（AOT 兼容）
-    /// 如果子工具不存在，返回 null
+    /// 通过 DI 容器创建模块主 ViewModel（IoC 创建，编译期泛型，无 Type 键）。
+    /// </summary>
+    /// <param name="services">服务提供者</param>
+    /// <returns>主 ViewModel 实例</returns>
+    ViewModelBase CreateMainViewModel(IServiceProvider services);
+
+    /// <summary>
+    /// 通过 DI 容器创建子工具的 ViewModel；子工具不存在时返回 null。
     /// </summary>
     /// <param name="subToolId">子工具ID</param>
-    /// <returns>子工具的ViewModel类型，不存在则返回null</returns>
-    Type? GetSubToolViewModelType(string subToolId);
+    /// <param name="services">服务提供者</param>
+    /// <returns>子工具 ViewModel 实例，不存在则返回 null</returns>
+    ViewModelBase? CreateSubToolViewModel(string subToolId, IServiceProvider services);
 
     /// <summary>
     /// 注册模块服务和 ViewModel 到 DI 容器

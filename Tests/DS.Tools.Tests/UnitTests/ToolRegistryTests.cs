@@ -23,14 +23,12 @@ public sealed class ToolRegistryTests
         _mockModule1.Setup(x => x.Name).Returns("Module 1");
         _mockModule1.Setup(x => x.Icon).Returns("🔧");
         _mockModule1.Setup(x => x.Description).Returns("Test Module 1");
-        _mockModule1.Setup(x => x.ViewModelType).Returns(typeof(string));
 
         _mockModule2 = new Mock<IToolModule>();
         _mockModule2.Setup(x => x.Id).Returns("module2");
         _mockModule2.Setup(x => x.Name).Returns("Module 2");
         _mockModule2.Setup(x => x.Icon).Returns("🔨");
         _mockModule2.Setup(x => x.Description).Returns("Test Module 2");
-        _mockModule2.Setup(x => x.ViewModelType).Returns(typeof(int));
     }
 
     [Fact]

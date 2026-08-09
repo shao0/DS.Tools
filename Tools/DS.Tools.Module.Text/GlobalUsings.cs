@@ -16,4 +16,3 @@ global using CommunityToolkit.Mvvm.Input;
 global using DS.Tools.Core.Interfaces;
 global using DS.Tools.Core.Models;
 global using DS.Tools.Module.Base.Interfaces;
-global using DS.Tools.Module.Base.UI;

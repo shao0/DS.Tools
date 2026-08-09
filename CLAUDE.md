@@ -426,6 +426,31 @@ DS.Tools.slnx
 
 ---
 
+## ✅ 重构执行状态（2026-08-09 更新）
+
+| 阶段 | 状态 | 说明 |
+|------|------|------|
+| 阶段1：核心层统一 | ✅ 已完成 | 3 个空壳项目（Abstractions/Models/Services）已删除，仅剩 `Cores/DS.Tools.Core` |
+| 阶段2：模块化接线 | ✅ 已完成 | TextModule 完整实现；`App.axaml.cs` 中注册；IoC 工厂化（见下） |
+| 阶段3：文档更新 | ✅ 已完成 | 本文档 + README 已同步 |
+| 阶段4：架构优化 | ✅ 已完成（部分） | 见「AOT 纪律」说明 |
+
+### 反射清除结论（AOT 保证）
+
+全库扫描（`Activator`/`Type.GetType`/`GetCustomAttribute`/`GetMethod`/`Assembly.*` 等）：
+- **唯一反射点**：`ViewLocator.cs` 的 `Activator.CreateInstance` —— **已删除**，改为 `MainWindow.axaml` 编译期 `x:DataType` DataTemplate（Avalonia XAML 编译器直接生成实例化代码）
+- **IoC 化改造**：`IToolModule.ViewModelType`（Type 键）→ `CreateMainViewModel`/`CreateSubToolViewModel` 强类型工厂；`SubToolInfo.Type` → `Func<IServiceProvider, ViewModelBase>`。ViewModel 一律经 DI 容器 `GetRequiredService<T>()` 创建，**代码中已无 Type 键创建路径**
+- `System.Text.Json` 走 `AppJsonContext` 源生成上下文；`EventAggregator` 为类型键委托（非反射）
+- 验证：`EnableTrimAnalyzer=true` + `TreatWarningsAsErrors=true` 构建零警告
+
+### 当前验证结果
+
+- 构建：Rider / CLI `dotnet build` 均通过，零警告
+- 测试：47/47 通过（含新增的 IoC 工厂分支测试）
+- 冒烟：应用启动后正常运行，DashboardView 经 DataTemplate 渲染无崩溃
+
+---
+
 **文档版本**：1.0
 **创建日期**：2026-08-09
 **最后更新**：2026-08-09

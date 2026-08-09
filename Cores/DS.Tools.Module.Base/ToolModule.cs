@@ -1,3 +1,4 @@
+using DS.Tools.Core.Models;
 using DS.Tools.Module.Base.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System.Runtime.CompilerServices;
@@ -9,6 +10,10 @@ namespace DS.Tools.Module.Base;
 /// NativeAOT 兼容：模块构造函数不得依赖任何 DI 服务
 /// （模块实例化发生在 BuildServiceProvider 之前；服务应通过 Register 注册，
 /// 初始化逻辑放在 Initialize，所需服务从 IServiceProvider 解析）。
+///
+/// ViewModel 一律经 DI 容器（IoC）创建：模块提供强类型工厂
+/// （如 <c>sp =&gt; sp.GetRequiredService&lt;DashboardViewModel&gt;()</c>），
+/// 杜绝 Type 键解析与运行时反射。
 ///
 /// 子类须实现所有 abstract 成员。
 /// </summary>
@@ -27,9 +32,6 @@ public abstract class ToolModule : IToolModule
 
     /// <inheritdoc />
     public abstract string Description { get; }
-
-    /// <inheritdoc />
-    public abstract Type ViewModelType { get; }
 
     /// <summary>
     /// 子工具管理器（如果模块支持子工具）
@@ -57,13 +59,16 @@ public abstract class ToolModule : IToolModule
 
     /// <inheritdoc />
     /// <summary>
-    /// 默认实现：从子工具管理器获取子工具的 ViewModel 类型（AOT兼容）
-    /// 子类可以重写此方法来自定义子工具解析逻辑
+    /// 默认实现：从子工具管理器获取子工具的 ViewModel 工厂并经 DI 容器创建（IoC，AOT 兼容）。
+    /// 子类可以重写此方法来自定义子工具解析逻辑。
     /// </summary>
-    public virtual Type? GetSubToolViewModelType(string subToolId)
+    public virtual ViewModelBase? CreateSubToolViewModel(string subToolId, IServiceProvider services)
     {
-        return _subToolManager?.GetSubToolViewModelType(subToolId);
+        return _subToolManager?.GetSubToolViewModelFactory(subToolId)?.Invoke(services);
     }
+
+    /// <inheritdoc />
+    public abstract ViewModelBase CreateMainViewModel(IServiceProvider services);
 
     /// <inheritdoc />
     public abstract IServiceCollection Register(IServiceCollection services);
