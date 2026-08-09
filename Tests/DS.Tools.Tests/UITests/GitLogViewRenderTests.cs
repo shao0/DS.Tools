@@ -117,8 +117,8 @@ public class GitLogViewRenderTests
             var vm = CreateViewModel();
             vm.RepositoryPath = @"D:\repo";
             vm.BranchName = "main";
-            vm.LogEntries.Add(new GitLogEntry("abc1234", "Test User", "test@example.com",
-                new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug"));
+            vm.LogEntries = [new GitLogEntry("abc1234", "Test User", "test@example.com",
+                new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug")];
 
             RenderInWindow(vm, out var window, out _);
             RenderFrame();
@@ -163,7 +163,7 @@ public class GitLogViewRenderTests
     /// </summary>
     private sealed class StubFolderPickerService : IFolderPickerService
     {
-        public Task<string?> PickFolderAsync(string? suggestedPath) => Task.FromResult<string?>(null);
+        public Task<string?> PickFolderAsync(string? suggestedPath, string? title) => Task.FromResult<string?>(null);
     }
 
     /// <summary>
@@ -198,7 +198,5 @@ public class GitLogViewRenderTests
     private sealed class StubClipboardService : IClipboardService
     {
         public Task SetTextAsync(string text) => Task.CompletedTask;
-
-        public Task<string?> GetTextAsync() => Task.FromResult<string?>(null);
     }
 }

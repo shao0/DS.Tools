@@ -23,6 +23,11 @@
     <!-- ======================================== -->
     <EnablePreviewFeatures>false</EnablePreviewFeatures>
 
+    <!-- ======================================== -->
+    <!-- Avalonia 编译绑定（全项目默认开启）        -->
+    <!-- ======================================== -->
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+
   </PropertyGroup>
 
   <ItemGroup>

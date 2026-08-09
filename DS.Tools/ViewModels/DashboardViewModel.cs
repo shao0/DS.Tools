@@ -101,9 +101,9 @@ public sealed partial class DashboardViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// 启动时钟更新
+    /// 启动时钟更新（由 MainWindowViewModel 在导航到主页时调用；构造时已启动）
     /// </summary>
-    public void StartClock()
+    internal void StartClock()
     {
         // 立即更新一次时钟
         UpdateClock();
@@ -116,9 +116,9 @@ public sealed partial class DashboardViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// 停止时钟更新
+    /// 停止时钟更新（由 MainWindowViewModel 在导航离开主页时调用，避免计时器空转）
     /// </summary>
-    public void StopClock()
+    internal void StopClock()
     {
         if (_clockTimer.IsEnabled)
         {

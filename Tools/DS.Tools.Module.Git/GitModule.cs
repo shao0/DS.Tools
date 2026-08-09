@@ -25,9 +25,6 @@ public sealed class GitModule : ToolModule
 
         /// <summary>子工具：Git 日志</summary>
         public const string Log = "git-log";
-
-        /// <summary>完整导航 ID（module:subTool）</summary>
-        public static string Full(string subToolId) => $"{Module}:{subToolId}";
     }
 
     public override string Id => ToolIds.Module;

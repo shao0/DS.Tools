@@ -1,3 +1,4 @@
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DS.Tools.Module.Base.Interfaces;
@@ -92,7 +93,8 @@ public sealed partial class TimestampConverterViewModel : ViewModelBase, ISubToo
             return;
         }
 
-        if (!DateTime.TryParse(DateInput.Trim(), out var dateTime))
+        // InvariantCulture：输入格式与区域无关（zh-CN/en-US 解析行为一致）
+        if (!DateTime.TryParse(DateInput.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime))
         {
             HasErrors = true;
             ErrorMessage = "无效的日期格式，请使用 yyyy-MM-dd HH:mm:ss 格式";

@@ -20,21 +20,6 @@ public interface INavigationService
     void NavigateTo(IToolModule tool);
 
     /// <summary>
-    /// 导航回上一个工具
-    /// </summary>
-    void NavigateBack();
-
-    /// <summary>
-    /// 获取当前活动的工具模块
-    /// </summary>
-    IToolModule? CurrentTool { get; }
-
-    /// <summary>
-    /// 获取当前活动的子工具ID（如果有）
-    /// </summary>
-    string? CurrentSubToolId { get; }
-
-    /// <summary>
     /// 导航变更事件（参数：当前工具模块，当前子工具ID）
     /// </summary>
     event Action<IToolModule?, string?>? NavigationChanged;

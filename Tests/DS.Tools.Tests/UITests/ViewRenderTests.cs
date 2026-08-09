@@ -102,6 +102,5 @@ public class ViewRenderTests
     private sealed class ClipboardServiceStub : IClipboardService
     {
         public Task SetTextAsync(string text) => Task.CompletedTask;
-        public Task<string?> GetTextAsync() => Task.FromResult<string?>(null);
     }
 }

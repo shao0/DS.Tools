@@ -10,6 +10,11 @@ namespace DS.Tools.Infrastructure.Logging;
 /// </summary>
 public sealed class AvaloniaLogSink(ILogger logger) : ILogSink
 {
+    /// <summary>Avalonia 命名占位符（{Name}）匹配，静态编译缓存（绑定错误日志高频时避免每次现编正则）</summary>
+    private static readonly Regex NamedPlaceholderRegex = new(
+        @"\{[A-Za-z][A-Za-z0-9]*\}",
+        RegexOptions.Compiled);
+
     public bool IsEnabled(LogEventLevel level, string area)
         => logger.IsEnabled(level switch
         {
@@ -40,8 +45,8 @@ public sealed class AvaloniaLogSink(ILogger logger) : ILogSink
 
         // Avalonia 日志模板使用命名占位符（{Name}），与 propertyValues 按位置对应——按出现顺序替换
         var index = 0;
-        var formatted = Regex.Replace(
-            messageTemplate, @"\{[A-Za-z][A-Za-z0-9]*\}",
+        var formatted = NamedPlaceholderRegex.Replace(
+            messageTemplate,
             _ => index < propertyValues.Length ? propertyValues[index++]?.ToString() ?? "null" : "null");
 
         logger.Log(logLevel, "Avalonia[{Area}] {Message}", area, formatted);

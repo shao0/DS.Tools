@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:DS.Tools.UI.Shared.Controls"
     xmlns:gitmodels="using:DS.Tools.Module.Git.Models"
     xmlns:vm="using:DS.Tools.Module.Git.ViewModels"
     d:DesignHeight="600"
@@ -13,7 +14,27 @@
     mc:Ignorable="d">
 
     <UserControl.Styles>
-        <StyleInclude Source="avares://DS.Tools.Module.Git/Styles/GitLogStyles.axaml" />
+        <!--  共享样式（按钮/滚动条）  -->
+        <StyleInclude Source="avares://DS.Tools.UI.Shared/Styles/ToolStyles.axaml" />
+
+        <!--  仓库路径输入框（工具栏内紧凑单行输入，本视图专属）  -->
+        <Style Selector="TextBox.repoPathBox">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="CaretBrush" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="SelectionForegroundBrush" Value="{DynamicResource PrimaryFgBrush}" />
+        </Style>
+
+        <Style Selector="TextBox.repoPathBox:focus">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+        </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -69,7 +90,7 @@
                 <Button
                     Grid.Column="1"
                     VerticalAlignment="Center"
-                    Classes="actionButton"
+                    Classes="action-button"
                     Command="{Binding PickFolderCommand}"
                     Content="📁 选择文件夹" />
 
@@ -100,7 +121,7 @@
                 <Button
                     Grid.Column="5"
                     VerticalAlignment="Center"
-                    Classes="actionButton"
+                    Classes="action-button"
                     Command="{Binding LoadLogCommand}"
                     Content="📜 获取日志" />
             </Grid>
@@ -145,7 +166,7 @@
                         MinWidth="0"
                         Padding="12,6"
                         Height="32"
-                        Classes="secondaryButton"
+                        Classes="secondary-button"
                         Command="{Binding CopyLogCommand}"
                         Content="📋 复制结果" />
                 </Grid>
@@ -257,47 +278,7 @@
                     IsVisible="{Binding IsLoading}"
                     Orientation="Horizontal"
                     Spacing="12">
-                    <Grid
-                        Width="16"
-                        Height="16">
-                        <Ellipse
-                            Width="16"
-                            Height="16"
-                            Fill="Transparent"
-                            Stroke="{DynamicResource PrimaryBrush}"
-                            StrokeThickness="2" />
-                        <Ellipse
-                            Width="16"
-                            Height="16"
-                            Fill="Transparent"
-                            Stroke="{DynamicResource PrimaryBrush}"
-                            StrokeDashArray="4,2"
-                            StrokeThickness="2">
-                            <Ellipse.Styles>
-                                <Style Selector="Ellipse">
-                                    <Style.Animations>
-                                        <!--  Avalonia 12：animator 按属性类型静态匹配。动画化
-                                              Opacity（double，命中内置 DoubleAnimator）做脉冲，
-                                              不可动画化整个 RenderTransform 对象（无匹配 animator，
-                                              挂载即抛异常导致内容区空白）。  -->
-                                        <Animation
-                                            IterationCount="INFINITE"
-                                            Duration="0:0:0.9">
-                                            <KeyFrame Cue="0%">
-                                                <Setter Property="Opacity" Value="0.25" />
-                                            </KeyFrame>
-                                            <KeyFrame Cue="50%">
-                                                <Setter Property="Opacity" Value="1" />
-                                            </KeyFrame>
-                                            <KeyFrame Cue="100%">
-                                                <Setter Property="Opacity" Value="0.25" />
-                                            </KeyFrame>
-                                        </Animation>
-                                    </Style.Animations>
-                                </Style>
-                            </Ellipse.Styles>
-                        </Ellipse>
-                    </Grid>
+                    <controls:LoadingSpinner />
                     <TextBlock
                         VerticalAlignment="Center"
                         FontSize="13"

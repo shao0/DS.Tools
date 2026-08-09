@@ -1,14 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\..\Cores\DS.Tools.Module.Base\DS.Tools.Module.Base.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Cores\DS.Tools.Module.Base\DS.Tools.Module.Base.csproj" />
+    <ProjectReference Include="..\..\Cores\DS.Tools.UI.Shared\DS.Tools.UI.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 模块自包含依赖（版本经 Directory.Packages.props 集中管理） -->
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
 
 </Project>

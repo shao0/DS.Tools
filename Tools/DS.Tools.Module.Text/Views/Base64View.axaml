@@ -12,86 +12,8 @@
     mc:Ignorable="d">
 
     <UserControl.Styles>
-        <!--  卡片样式  -->
-        <Style Selector="Border.card">
-            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="20" />
-            <Setter Property="Margin" Value="0,0,0,20" />
-        </Style>
-
-        <!--  标题样式  -->
-        <Style Selector="TextBlock.cardTitle">
-            <Setter Property="FontSize" Value="16" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="Margin" Value="0,0,0,12" />
-        </Style>
-
-        <!--  文本框样式  -->
-        <Style Selector="TextBox.formInput">
-            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="MinHeight" Value="100" />
-            <Setter Property="AcceptsReturn" Value="True" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-
-        <Style Selector="TextBox.formInput:focus">
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-        </Style>
-
-        <!--  结果框样式  -->
-        <Style Selector="Border.resultBox">
-            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Margin" Value="0,12,0,0" />
-        </Style>
-
-        <!--  按钮样式  -->
-        <Style Selector="Button.btn">
-            <Setter Property="Padding" Value="12,20" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <Style Selector="Button.primary">
-            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-
-        <Style Selector="Button.primary:pointerover">
-            <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
-        </Style>
-
-        <Style Selector="Button.secondary">
-            <Setter Property="Background" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        </Style>
-
-        <Style Selector="Button.secondary:pointerover">
-            <Setter Property="Background" Value="{DynamicResource SecondaryHoverBrush}" />
-        </Style>
-
-        <!--  错误提示样式  -->
-        <Style Selector="TextBlock.errorText">
-            <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Margin" Value="0,8,0,0" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
+        <!--  共享样式（卡片/标题/输入框/结果框/按钮/错误提示）  -->
+        <StyleInclude Source="avares://DS.Tools.UI.Shared/Styles/ToolStyles.axaml" />
     </UserControl.Styles>
 
     <ScrollViewer>
@@ -120,9 +42,12 @@
                         Text="🔤 文本转 Base64" />
 
                     <TextBox
+                        AcceptsReturn="True"
                         Classes="formInput"
+                        MinHeight="100"
                         PlaceholderText="输入要编码的文本..."
-                        Text="{Binding InputText, Mode=TwoWay}" />
+                        Text="{Binding InputText, Mode=TwoWay}"
+                        TextWrapping="Wrap" />
 
                     <StackPanel
                         Margin="0,12,0,0"
@@ -175,9 +100,12 @@
                         Text="🔓 Base64 转文本" />
 
                     <TextBox
+                        AcceptsReturn="True"
                         Classes="formInput"
+                        MinHeight="100"
                         PlaceholderText="输入 Base64 字符串..."
-                        Text="{Binding InputText, Mode=TwoWay}" />
+                        Text="{Binding InputText, Mode=TwoWay}"
+                        TextWrapping="Wrap" />
 
                     <StackPanel
                         Margin="0,12,0,0"

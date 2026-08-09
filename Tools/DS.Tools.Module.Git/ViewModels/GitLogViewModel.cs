@@ -10,7 +10,7 @@ namespace DS.Tools.Module.Git.ViewModels;
 /// Git 日志工具 ViewModel
 /// 使用 CommunityToolkit.Mvvm 源生成器，AOT 兼容，无反射调用
 /// </summary>
-public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
+public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
 {
     // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
     static string ISubTool.ModuleId => GitModule.ToolIds.Module;
@@ -80,12 +80,6 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     private DateTime? _untilDate;
 
     /// <summary>
-    /// 状态信息（成功时显示统计）
-    /// </summary>
-    [ObservableProperty]
-    private string _statusMessage = string.Empty;
-
-    /// <summary>
     /// 是否已有日志结果
     /// </summary>
     [ObservableProperty]
@@ -99,9 +93,10 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     private int _logCount;
 
     /// <summary>
-    /// 提交日志条目集合
+    /// 提交日志条目（整批替换，避免逐条 Add 触发 1000 次 CollectionChanged）
     /// </summary>
-    public ObservableCollection<GitLogEntry> LogEntries { get; } = [];
+    [ObservableProperty]
+    private IReadOnlyList<GitLogEntry> _logEntries = [];
 
     /// <summary>
     /// 是否为空状态（无错误、非加载中、无日志条目——显示占位提示）
@@ -115,7 +110,7 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     {
         base.OnPropertyChanged(e);
 
-        if (e.PropertyName is nameof(IsLoading) or nameof(HasErrors) or nameof(HasLog) or nameof(LogCount))
+        if (e.PropertyName is nameof(IsLoading) or nameof(HasErrors) or nameof(HasLog) or nameof(LogCount) or nameof(LogEntries))
         {
             OnPropertyChanged(nameof(IsEmptyState));
         }
@@ -127,7 +122,7 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     [RelayCommand]
     private async Task PickFolderAsync()
     {
-        var path = await _folderPickerService.PickFolderAsync(RepositoryPath);
+        var path = await _folderPickerService.PickFolderAsync(RepositoryPath, "选择 Git 仓库文件夹");
         if (string.IsNullOrWhiteSpace(path))
             return; // 用户取消
 
@@ -137,15 +132,15 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     }
 
     /// <summary>
-    /// 获取日志命令：按当前起止日期重新拉取日志
+    /// 获取日志命令：按当前起止日期重新拉取日志（返回 Task + CancellationToken 参数，自动生成可取消异步命令）
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanLoadLog))]
-    private async Task LoadLogAsync()
+    private async Task LoadLogAsync(CancellationToken token)
     {
         if (IsLoading)
             return; // 防重入
 
-        await LoadLogCoreAsync();
+        await LoadLogCoreAsync(token);
     }
 
     private bool CanLoadLog() => !string.IsNullOrWhiteSpace(RepositoryPath);
@@ -154,25 +149,8 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     /// 复制全部日志到剪贴板命令
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCopyLog))]
-    private async Task CopyLogAsync()
-    {
-        var text = BuildCopyText();
-        if (string.IsNullOrEmpty(text))
-            return;
-
-        try
-        {
-            await _clipboardService.SetTextAsync(text);
-            StatusMessage = $"✓ 已复制 {LogCount} 条日志到剪贴板";
-            await Task.Delay(2000); // 显示成功消息后清除
-            StatusMessage = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "复制日志到剪贴板失败");
-            ShowError($"复制失败: {ex.Message}");
-        }
-    }
+    private Task CopyLogAsync()
+        => CopyToClipboardAsync(_clipboardService, BuildCopyText(), $"✓ 已复制 {LogCount} 条日志到剪贴板");
 
     private bool CanCopyLog() => LogCount > 0;
 
@@ -202,7 +180,7 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
             }
 
             BranchName = await _gitLogService.GetCurrentBranchAsync(RepositoryPath);
-            await LoadLogCoreAsync();
+            await LoadLogCoreAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -218,7 +196,7 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     /// <summary>
     /// 拉取日志（起止日期经本地时区偏移转换为 DateTimeOffset）
     /// </summary>
-    private async Task LoadLogCoreAsync()
+    private async Task LoadLogCoreAsync(CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(RepositoryPath))
             return;
@@ -230,16 +208,12 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
         IsLoading = true;
         try
         {
-            var result = await _gitLogService.GetLogAsync(RepositoryPath, since, until);
+            var result = await _gitLogService.GetLogAsync(RepositoryPath, since, until, token);
 
-            LogEntries.Clear();
             if (result.IsSuccess)
             {
-                foreach (var entry in result.Entries)
-                {
-                    LogEntries.Add(entry);
-                }
-
+                // 整批替换（避免逐条 Add 触发 N 次 CollectionChanged）
+                LogEntries = result.Entries;
                 HasErrors = false;
                 ErrorMessage = null;
                 HasLog = true;
@@ -282,15 +256,13 @@ public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
     }
 
     /// <summary>
-    /// 显示错误
+    /// 显示错误（基类三段式基础上追加：清空日志结果）
     /// </summary>
-    private void ShowError(string message)
+    protected override void ShowError(string message)
     {
-        HasErrors = true;
-        ErrorMessage = message;
+        base.ShowError(message);
         HasLog = false;
         LogCount = 0;
-        StatusMessage = string.Empty;
-        LogEntries.Clear();
+        LogEntries = [];
     }
 }

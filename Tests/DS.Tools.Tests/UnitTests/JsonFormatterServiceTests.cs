@@ -92,7 +92,7 @@ public sealed class JsonFormatterServiceTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.OperationType.Should().Be(JsonFormatterOperationType.Validate);
-        result.FormattedJson.Should().Contain("JSON 格式有效");
+        result.FormattedJson.Should().BeEmpty(); // 验证操作无输出
     }
 
     [Fact]
@@ -107,26 +107,17 @@ public sealed class JsonFormatterServiceTests
     }
 
     [Fact]
-    public void CalculateJsonDepth_WithNestedJson_ShouldReturnCorrectDepth()
+    public void Validate_NestedJson_ShouldReportDepth()
     {
         // Arrange
         const string json = """{"a":{"b":{"c":1}}}""";
 
         // Act
-        var depth = _service.CalculateJsonDepth(json);
+        var result = _service.Validate(json);
 
         // Assert
-        depth.Should().Be(3);
-    }
-
-    [Fact]
-    public void CalculateJsonDepth_WithInvalidJson_ShouldReturnZero()
-    {
-        // Act
-        var depth = _service.CalculateJsonDepth("invalid");
-
-        // Assert
-        depth.Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.JsonDepth.Should().Be(3);
     }
 
     [Fact]

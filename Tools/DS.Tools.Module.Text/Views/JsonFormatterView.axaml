@@ -4,14 +4,17 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:DS.Tools.UI.Shared.Controls"
     xmlns:vm="using:DS.Tools.Module.Text.ViewModels"
     d:DesignHeight="450"
     d:DesignWidth="800"
+    x:CompileBindings="True"
     x:DataType="vm:JsonFormatterViewModel"
     mc:Ignorable="d">
 
     <UserControl.Styles>
-        <StyleInclude Source="avares://DS.Tools.Module.Text/Styles/JsonFormatterStyles.axaml" />
+        <!--  共享样式（按钮/输入框/滚动条）  -->
+        <StyleInclude Source="avares://DS.Tools.UI.Shared/Styles/ToolStyles.axaml" />
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -60,35 +63,35 @@
                 <Button
                     MinWidth="120"
                     Padding="16,10"
-                    Classes="ActionButton"
+                    Classes="action-button"
                     Command="{Binding FormatCommand}"
                     Content="✨ 格式化" />
 
                 <Button
                     MinWidth="120"
                     Padding="16,10"
-                    Classes="ActionButton"
+                    Classes="action-button"
                     Command="{Binding CompressCommand}"
                     Content="🗜️ 压缩" />
 
                 <Button
                     MinWidth="120"
                     Padding="16,10"
-                    Classes="ActionButton"
+                    Classes="action-button"
                     Command="{Binding ValidateCommand}"
                     Content="✓ 验证" />
 
                 <Button
                     MinWidth="100"
                     Padding="16,10"
-                    Classes="SecondaryButton"
+                    Classes="secondary-button"
                     Command="{Binding ClearCommand}"
                     Content="🗑️ 清空" />
 
                 <Button
                     MinWidth="120"
                     Padding="16,10"
-                    Classes="SecondaryButton"
+                    Classes="secondary-button"
                     Command="{Binding CopyOutputCommand}"
                     Content="📋 复制结果" />
             </StackPanel>
@@ -132,6 +135,7 @@
                             VerticalContentAlignment="Top"
                             AcceptsReturn="True"
                             CaretBrush="{DynamicResource TextPrimaryBrush}"
+                            Classes="borderless"
                             FontFamily="Consolas,Courier New,monospace"
                             FontSize="13"
                             Foreground="{DynamicResource TextPrimaryBrush}"
@@ -258,47 +262,7 @@
                     IsVisible="{Binding IsProcessing}"
                     Orientation="Horizontal"
                     Spacing="12">
-                    <Grid
-                        Width="16"
-                        Height="16">
-                        <Ellipse
-                            Width="16"
-                            Height="16"
-                            Fill="Transparent"
-                            Stroke="{DynamicResource PrimaryBrush}"
-                            StrokeThickness="2" />
-                        <Ellipse
-                            Width="16"
-                            Height="16"
-                            Fill="Transparent"
-                            Stroke="{DynamicResource PrimaryBrush}"
-                            StrokeDashArray="4,2"
-                            StrokeThickness="2">
-                            <Ellipse.Styles>
-                                <Style Selector="Ellipse">
-                                    <Style.Animations>
-                                        <!--  Avalonia 12：animator 按属性类型静态匹配。动画化
-                                              Opacity（double，命中内置 DoubleAnimator）做脉冲，
-                                              不可动画化整个 RenderTransform 对象（无匹配 animator，
-                                              挂载即抛异常导致内容区空白）。  -->
-                                        <Animation
-                                            IterationCount="INFINITE"
-                                            Duration="0:0:0.9">
-                                            <KeyFrame Cue="0%">
-                                                <Setter Property="Opacity" Value="0.25" />
-                                            </KeyFrame>
-                                            <KeyFrame Cue="50%">
-                                                <Setter Property="Opacity" Value="1" />
-                                            </KeyFrame>
-                                            <KeyFrame Cue="100%">
-                                                <Setter Property="Opacity" Value="0.25" />
-                                            </KeyFrame>
-                                        </Animation>
-                                    </Style.Animations>
-                                </Style>
-                            </Ellipse.Styles>
-                        </Ellipse>
-                    </Grid>
+                    <controls:LoadingSpinner />
                     <TextBlock
                         VerticalAlignment="Center"
                         FontSize="13"

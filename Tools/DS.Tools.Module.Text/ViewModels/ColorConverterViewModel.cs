@@ -36,10 +36,28 @@ public sealed partial class ColorConverterViewModel : ViewModelBase, ISubTool
     /// <summary>颜色预览字符串（HEX 形式），只读</summary>
     public string ColorPreview => PreviewColor.ToString();
 
-    /// <summary>HEX 输入变化时自动触发转换</summary>
-    partial void OnHexInputChanged(string value) => ConvertFromHex();
+    /// <summary>
+    /// HEX 输入变化时自动触发转换。
+    /// 中间态（如输入到 "#3B82" 的途中）不报错——仅在输入完整（3 或 6 位）且无效时显示错误。
+    /// </summary>
+    partial void OnHexInputChanged(string value)
+    {
+        // 输入完整（去 # 后 3 或 6 位）且无效才报错；其余情况静默清空输出
+        var hex = value.Trim().TrimStart('#');
+        var isCompleteInput = hex.Length is 3 or 6;
 
-    [RelayCommand]
+        if (isCompleteInput && !TryParseHex(HexInput, out var color))
+        {
+            HasErrors = true;
+            ErrorMessage = "无效的 HEX 颜色值";
+            return;
+        }
+
+        HasErrors = false;
+        ErrorMessage = null;
+        ConvertFromHex();
+    }
+
     private void ConvertFromHex()
     {
         if (TryParseHex(HexInput, out var color))
@@ -48,30 +66,7 @@ public sealed partial class ColorConverterViewModel : ViewModelBase, ISubTool
             var hsl = RgbToHsl(color.R, color.G, color.B);
             HslOutput = $"hsl({hsl.H}, {hsl.S}%, {hsl.L}%)";
             PreviewColor = color;
-            HasErrors = false;
-            ErrorMessage = null;
         }
-        else
-        {
-            HasErrors = true;
-            ErrorMessage = "无效的 HEX 颜色值";
-        }
-    }
-
-    [RelayCommand]
-    private void ConvertFromRgb()
-    {
-        // 简化实现，实际需要解析 RGB 字符串
-        HasErrors = true;
-        ErrorMessage = "请使用 HEX 输入（其他格式待实现）";
-    }
-
-    [RelayCommand]
-    private void ConvertFromHsl()
-    {
-        // 简化实现，实际需要解析 HSL 字符串
-        HasErrors = true;
-        ErrorMessage = "请使用 HEX 输入（其他格式待实现）";
     }
 
     [RelayCommand]

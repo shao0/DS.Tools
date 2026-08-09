@@ -84,14 +84,10 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     /// </summary>
     private void NavigateHome()
     {
-        var key = (HomeCacheKey, (string?)null);
-        if (!_viewModelCache.TryGetValue(key, out var viewModel))
-        {
-            viewModel = _serviceProvider.GetRequiredService<DashboardViewModel>();
-            _viewModelCache[key] = viewModel;
-        }
+        var viewModel = GetOrCreateViewModel((HomeCacheKey, (string?)null),
+            () => _serviceProvider.GetRequiredService<DashboardViewModel>());
 
-        ActiveToolViewModel = viewModel;
+        SetActiveViewModel(viewModel);
     }
 
     /// <summary>
@@ -108,17 +104,44 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         if (tool is null)
             return;
 
-        var key = (tool.Id, subToolId);
-        if (!_viewModelCache.TryGetValue(key, out var viewModel))
+        var viewModel = GetOrCreateViewModel((tool.Id, subToolId), () =>
         {
             // IoC 创建：ViewModel 由模块提供的强类型工厂经 DI 容器解析
             // （编译期泛型 GetRequiredService<T>，无 Type 键、无运行时反射）
-            viewModel = string.IsNullOrEmpty(subToolId)
+            return string.IsNullOrEmpty(subToolId)
                 ? tool.CreateMainViewModel(_serviceProvider)
                 : tool.CreateSubToolViewModel(subToolId, _serviceProvider) ?? tool.CreateMainViewModel(_serviceProvider);
+        });
 
+        SetActiveViewModel(viewModel);
+    }
+
+    /// <summary>
+    /// 按导航键取缓存中的 ViewModel；未命中时经工厂创建并缓存（切换工具保留输入状态，避免重复创建）
+    /// </summary>
+    private ViewModelBase GetOrCreateViewModel((string ToolId, string? SubToolId) key, Func<ViewModelBase> factory)
+    {
+        if (!_viewModelCache.TryGetValue(key, out var viewModel))
+        {
+            viewModel = factory();
             _viewModelCache[key] = viewModel;
         }
+
+        return viewModel;
+    }
+
+    /// <summary>
+    /// 激活指定 ViewModel：主页可见时启动时钟，离开时停止（避免计时器在不可见时空转）
+    /// </summary>
+    private void SetActiveViewModel(ViewModelBase viewModel)
+    {
+        if (ReferenceEquals(ActiveToolViewModel, viewModel))
+            return;
+
+        if (ActiveToolViewModel is DashboardViewModel previousDashboard)
+            previousDashboard.StopClock();
+        if (viewModel is DashboardViewModel dashboard)
+            dashboard.StartClock();
 
         ActiveToolViewModel = viewModel;
     }

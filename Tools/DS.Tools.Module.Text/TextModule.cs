@@ -40,9 +40,6 @@ public sealed class TextModule : ToolModule
 
         /// <summary>子工具：时间戳转换</summary>
         public const string TimestampConverter = "timestamp-converter";
-
-        /// <summary>完整导航 ID（module:subTool）</summary>
-        public static string Full(string subToolId) => $"{Module}:{subToolId}";
     }
 
     public override string Id => ToolIds.Module;

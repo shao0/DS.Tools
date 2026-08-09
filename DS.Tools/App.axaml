@@ -53,15 +53,6 @@
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
-        <!-- Card Panel Styles -->
-        <Style Selector="Border.card">
-            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="24" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-        </Style>
-
         <!-- TextBox Styles -->
         <Style Selector="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />

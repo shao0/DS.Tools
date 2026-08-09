@@ -13,6 +13,34 @@
     mc:Ignorable="d">
 
     <UserControl.Styles>
+        <!--  统计卡片（统一外观，4 张卡片复用）  -->
+        <Style Selector="Border.statCard">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="24" />
+        </Style>
+
+        <Style Selector="TextBlock.statIcon">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="32" />
+        </Style>
+
+        <Style Selector="TextBlock.statValue">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style Selector="TextBlock.statLabel">
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        </Style>
+
         <!--  功能入口磁贴样式  -->
         <Style Selector="Button.toolTile">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
@@ -45,133 +73,84 @@
                 Foreground="{DynamicResource TextPrimaryBrush}"
                 Text="主页" />
 
-            <!--  统计卡片（2x2）  -->
+            <!--  统计卡片（2x2，外观统一走 statCard 类样式）  -->
             <Grid ColumnDefinitions="*,*">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!--  当前时间卡片  -->
                 <Border
                     Grid.Row="0"
                     Grid.Column="0"
                     Margin="0,0,8,16"
-                    Padding="24"
-                    Background="{DynamicResource CardBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="12">
+                    Classes="statCard">
                     <StackPanel>
                         <TextBlock
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Center"
-                            FontSize="32"
+                            Classes="statIcon"
                             Text="⏰" />
                         <TextBlock
-                            HorizontalAlignment="Center"
-                            FontSize="24"
-                            FontWeight="Bold"
+                            Classes="statValue"
                             Foreground="{DynamicResource PrimaryBrush}"
                             Text="{Binding CurrentTime}" />
                         <TextBlock
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Classes="statLabel"
                             Text="当前时间" />
                     </StackPanel>
                 </Border>
 
-                <!--  当前日期卡片  -->
                 <Border
                     Grid.Row="0"
                     Grid.Column="1"
                     Margin="0,0,0,16"
-                    Padding="24"
-                    Background="{DynamicResource CardBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="12">
+                    Classes="statCard">
                     <StackPanel>
                         <TextBlock
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Center"
-                            FontSize="32"
+                            Classes="statIcon"
                             Text="📅" />
                         <TextBlock
-                            HorizontalAlignment="Center"
-                            FontSize="24"
-                            FontWeight="Bold"
+                            Classes="statValue"
                             Foreground="{DynamicResource AccentSuccessBrush}"
                             Text="{Binding CurrentDate}" />
                         <TextBlock
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Classes="statLabel"
                             Text="今日日期" />
                     </StackPanel>
                 </Border>
 
-                <!--  时间戳卡片  -->
                 <Border
                     Grid.Row="1"
                     Grid.Column="0"
                     Margin="0,0,8,0"
-                    Padding="24"
-                    Background="{DynamicResource CardBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="12">
+                    Classes="statCard">
                     <StackPanel>
                         <TextBlock
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Center"
-                            FontSize="32"
+                            Classes="statIcon"
                             Text="🕐" />
                         <TextBlock
-                            HorizontalAlignment="Center"
-                            FontSize="24"
-                            FontWeight="Bold"
+                            Classes="statValue"
                             Foreground="{DynamicResource AccentWarningBrush}"
                             Text="{Binding Timestamp}" />
                         <TextBlock
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Classes="statLabel"
                             Text="当前时间戳（秒）" />
                     </StackPanel>
                 </Border>
 
-                <!--  功能总数卡片  -->
                 <Border
                     Grid.Row="1"
                     Grid.Column="1"
-                    Margin="0,0,0,0"
-                    Padding="24"
-                    Background="{DynamicResource CardBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="12">
+                    Classes="statCard">
                     <StackPanel>
                         <TextBlock
-                            Margin="0,0,0,8"
-                            HorizontalAlignment="Center"
-                            FontSize="32"
+                            Classes="statIcon"
                             Text="🧩" />
                         <TextBlock
-                            HorizontalAlignment="Center"
-                            FontSize="24"
-                            FontWeight="Bold"
+                            Classes="statValue"
                             Foreground="{DynamicResource PrimaryBrush}"
                             Text="{Binding ToolCount}" />
                         <TextBlock
-                            Margin="0,4,0,0"
-                            HorizontalAlignment="Center"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Classes="statLabel"
                             Text="功能总数" />
                     </StackPanel>
                 </Border>

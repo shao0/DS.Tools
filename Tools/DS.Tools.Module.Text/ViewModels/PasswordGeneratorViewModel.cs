@@ -12,7 +12,7 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// 密码生成器 ViewModel - 生成安全强密码
 /// AOT 兼容，使用 RandomNumberGenerator（密码学安全）
 /// </summary>
-public sealed partial class PasswordGeneratorViewModel : ViewModelBase, ISubTool
+public sealed partial class PasswordGeneratorViewModel : ToolViewModelBase, ISubTool
 {
     // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
     static string ISubTool.ModuleId => TextModule.ToolIds.Module;
@@ -21,6 +21,9 @@ public sealed partial class PasswordGeneratorViewModel : ViewModelBase, ISubTool
     static string ISubTool.Icon => "🔑";
 
     private readonly IClipboardService _clipboardService;
+
+    /// <summary>密码学安全随机数生成器（RNG 实现线程安全，全局共享单实例）</summary>
+    private static readonly RandomNumberGenerator Rng = RandomNumberGenerator.Create();
 
     /// <summary>
     /// 构造函数 - 显式依赖注入
@@ -78,11 +81,10 @@ public sealed partial class PasswordGeneratorViewModel : ViewModelBase, ISubTool
         var chars = charSet.ToString();
         var result = new char[PasswordLength];
 
-        // 使用密码学安全的随机数生成器
-        using var rng = RandomNumberGenerator.Create();
+        // 使用密码学安全的随机数生成器（共享静态实例，避免每次生成新建）
         var byteArray = new byte[PasswordLength * 4];
 
-        rng.GetBytes(byteArray);
+        Rng.GetBytes(byteArray);
 
         for (var i = 0; i < PasswordLength; i++)
         {
@@ -97,23 +99,7 @@ public sealed partial class PasswordGeneratorViewModel : ViewModelBase, ISubTool
     }
 
     [RelayCommand(CanExecute = nameof(CanCopy))]
-    private async Task CopyAsync()
-    {
-        if (!string.IsNullOrEmpty(GeneratedPassword))
-        {
-            try
-            {
-                await _clipboardService.SetTextAsync(GeneratedPassword);
-                HasErrors = false;
-                ErrorMessage = null;
-            }
-            catch (Exception ex)
-            {
-                HasErrors = true;
-                ErrorMessage = $"复制失败: {ex.Message}";
-            }
-        }
-    }
+    private Task CopyAsync() => CopyToClipboardAsync(_clipboardService, GeneratedPassword);
 
     private bool CanCopy() => !string.IsNullOrEmpty(GeneratedPassword);
 }

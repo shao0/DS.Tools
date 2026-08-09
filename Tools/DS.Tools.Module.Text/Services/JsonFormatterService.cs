@@ -14,176 +14,68 @@ public sealed class JsonFormatterService : IJsonFormatterService
     /// <summary>
     /// 格式化 JSON 字符串（美化）
     /// </summary>
-    public JsonFormatterResult Format(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return JsonFormatterResult.CreateFailure(
-                "JSON 输入不能为空",
-                JsonFormatterOperationType.Format);
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            var (output, depth) = WriteJson(doc.RootElement, indented: true);
-
-            return JsonFormatterResult.CreateSuccess(
-                output,
-                json.Length,
-                JsonFormatterOperationType.Format,
-                depth);
-        }
-        catch (JsonException ex)
-        {
-            return JsonFormatterResult.CreateFailure(
-                $"JSON 格式错误: {ex.Message}",
-                JsonFormatterOperationType.Format);
-        }
-        catch (Exception ex)
-        {
-            return JsonFormatterResult.CreateFailure(
-                $"格式化失败: {ex.Message}",
-                JsonFormatterOperationType.Format);
-        }
-    }
+    public JsonFormatterResult Format(string json) => Execute(json, JsonFormatterOperationType.Format, indented: true);
 
     /// <summary>
     /// 压缩 JSON 字符串（最小化）
     /// </summary>
-    public JsonFormatterResult Compress(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return JsonFormatterResult.CreateFailure(
-                "JSON 输入不能为空",
-                JsonFormatterOperationType.Compress);
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            var (output, depth) = WriteJson(doc.RootElement, indented: false);
-
-            return JsonFormatterResult.CreateSuccess(
-                output,
-                json.Length,
-                JsonFormatterOperationType.Compress,
-                depth);
-        }
-        catch (JsonException ex)
-        {
-            return JsonFormatterResult.CreateFailure(
-                $"JSON 格式错误: {ex.Message}",
-                JsonFormatterOperationType.Compress);
-        }
-        catch (Exception ex)
-        {
-            return JsonFormatterResult.CreateFailure(
-                $"压缩失败: {ex.Message}",
-                JsonFormatterOperationType.Compress);
-        }
-    }
+    public JsonFormatterResult Compress(string json) => Execute(json, JsonFormatterOperationType.Compress, indented: false);
 
     /// <summary>
-    /// 验证 JSON 字符串
+    /// 验证 JSON 字符串（无输出，仅确认合法并计算嵌套深度）
     /// </summary>
     public JsonFormatterResult Validate(string json)
+        => Execute(json, JsonFormatterOperationType.Validate, indented: false, successText: string.Empty);
+
+    /// <summary>
+    /// 统一执行模板：空值校验 → 单次解析 → 单遍写出（同时计算深度）→ 结果包装。
+    /// 验证操作无输出：写入 Stream.Null 只取深度，零输出分配。
+    /// </summary>
+    private static JsonFormatterResult Execute(
+        string json,
+        JsonFormatterOperationType operationType,
+        bool indented,
+        string? successText = null)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
-            return JsonFormatterResult.CreateFailure(
-                "JSON 输入不能为空",
-                JsonFormatterOperationType.Validate);
+            return JsonFormatterResult.CreateFailure("JSON 输入不能为空", operationType);
         }
 
         try
         {
             using var doc = JsonDocument.Parse(json);
-            var depth = CalculateElementDepth(doc.RootElement, 0);
 
-            // 验证成功，返回格式化的 JSON 作为结果
-            return JsonFormatterResult.CreateSuccess(
-                "✓ JSON 格式有效",
-                json.Length,
-                JsonFormatterOperationType.Validate,
-                depth);
+            using var stream = successText is null ? new MemoryStream() : Stream.Null;
+            using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = indented });
+            var depth = WriteElement(doc.RootElement, writer, 0);
+            writer.Flush();
+
+            var output = successText ?? Encoding.UTF8.GetString(((MemoryStream)stream).ToArray());
+            return JsonFormatterResult.CreateSuccess(output, json.Length, operationType, depth);
         }
         catch (JsonException ex)
         {
-            return JsonFormatterResult.CreateFailure(
-                $"JSON 格式错误: {ex.Message}",
-                JsonFormatterOperationType.Validate);
+            return JsonFormatterResult.CreateFailure($"JSON 格式错误: {ex.Message}", operationType);
         }
         catch (Exception ex)
         {
-            return JsonFormatterResult.CreateFailure(
-                $"验证失败: {ex.Message}",
-                JsonFormatterOperationType.Validate);
+            return JsonFormatterResult.CreateFailure($"{OperationName(operationType)}失败: {ex.Message}", operationType);
         }
     }
 
     /// <summary>
-    /// 计算 JSON 嵌套深度
+    /// 操作类型对应的失败消息前缀
     /// </summary>
-    public int CalculateJsonDepth(string json)
+    private static string OperationName(JsonFormatterOperationType operationType) => operationType switch
     {
-        if (string.IsNullOrWhiteSpace(json))
-            return 0;
-
-        try
-        {
-            using var doc = JsonDocument.Parse(json);
-            return CalculateElementDepth(doc.RootElement, 0);
-        }
-        catch
-        {
-            return 0;
-        }
-    }
+        JsonFormatterOperationType.Format => "格式化",
+        JsonFormatterOperationType.Compress => "压缩",
+        _ => "验证"
+    };
 
     /// <summary>
-    /// 递归计算 JSON 元素深度
-    /// </summary>
-    private static int CalculateElementDepth(JsonElement element, int currentDepth)
-    {
-        int maxChildDepth = currentDepth;
-
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            foreach (var property in element.EnumerateObject())
-            {
-                var childDepth = CalculateElementDepth(property.Value, currentDepth + 1);
-                maxChildDepth = Math.Max(maxChildDepth, childDepth);
-            }
-        }
-        else if (element.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var item in element.EnumerateArray())
-            {
-                var childDepth = CalculateElementDepth(item, currentDepth + 1);
-                maxChildDepth = Math.Max(maxChildDepth, childDepth);
-            }
-        }
-
-        return maxChildDepth;
-    }
-
-    /// <summary>
-    /// 单遍写出 JSON：递归写入 Utf8JsonWriter 并计算嵌套深度
-    /// </summary>
-    private static (string Text, int Depth) WriteJson(JsonElement element, bool indented)
-    {
-        using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = indented });
-        var depth = WriteElement(element, writer, 0);
-        writer.Flush();
-
-        return (Encoding.UTF8.GetString(stream.ToArray()), depth);
-    }
-
-    /// <summary>
-    /// 递归写入 JSON 元素，返回子树最大深度
+    /// 递归写入 JSON 元素，返回子树最大深度（单遍完成输出与深度计算）
     /// </summary>
     private static int WriteElement(JsonElement element, Utf8JsonWriter writer, int depth)
     {

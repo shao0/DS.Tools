@@ -12,7 +12,7 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// 文本哈希 ViewModel - 计算文本的 MD5 和 SHA-256 哈希值
 /// AOT 兼容，使用 SHA256.HashData 和 MD5.HashData 静态方法
 /// </summary>
-public sealed partial class TextHasherViewModel : ViewModelBase, ISubTool
+public sealed partial class TextHasherViewModel : ToolViewModelBase, ISubTool
 {
     // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
     static string ISubTool.ModuleId => TextModule.ToolIds.Module;
@@ -87,42 +87,10 @@ public sealed partial class TextHasherViewModel : ViewModelBase, ISubTool
     }
 
     [RelayCommand(CanExecute = nameof(CanCopySha256))]
-    private async Task CopySha256Async()
-    {
-        if (!string.IsNullOrEmpty(Sha256Result))
-        {
-            try
-            {
-                await _clipboardService.SetTextAsync(Sha256Result);
-                HasErrors = false;
-                ErrorMessage = null;
-            }
-            catch (Exception ex)
-            {
-                HasErrors = true;
-                ErrorMessage = $"复制失败: {ex.Message}";
-            }
-        }
-    }
+    private Task CopySha256Async() => CopyToClipboardAsync(_clipboardService, Sha256Result);
 
     [RelayCommand(CanExecute = nameof(CanCopyMd5))]
-    private async Task CopyMd5Async()
-    {
-        if (!string.IsNullOrEmpty(Md5Result))
-        {
-            try
-            {
-                await _clipboardService.SetTextAsync(Md5Result);
-                HasErrors = false;
-                ErrorMessage = null;
-            }
-            catch (Exception ex)
-            {
-                HasErrors = true;
-                ErrorMessage = $"复制失败: {ex.Message}";
-            }
-        }
-    }
+    private Task CopyMd5Async() => CopyToClipboardAsync(_clipboardService, Md5Result);
 
     private bool CanCalculateHash() => !string.IsNullOrWhiteSpace(InputText);
 

@@ -6,13 +6,13 @@ namespace DS.Tools.Module.Base.Services;
 
 /// <summary>
 /// 工具目录实现（查询侧，统一注册表查询服务）-
-/// 合并 View 映射查询（原 ViewRegistry）与子工具查询（原 SubToolCatalog）：
+/// 合并 View 映射查询与子工具查询：
 /// 构造时经 MEL 集合注入收集 Register 阶段入容器的全部 <see cref="ViewMappingEntry"/> 与 <see cref="SubToolInfo"/>，
 /// View 映射反转集合（后注册者优先匹配，覆盖语义）、子工具按 ModuleId 建立查找索引。
 /// AOT 兼容：View 匹配为编译期类型模式（is 委托），子工具为 string 键分组，无 Type 键、无运行时反射；
 /// View 实例经 IoC 工厂创建，派生类 VM 天然命中基类映射。
 /// </summary>
-public sealed class ToolCatalog : IToolCatalog
+internal sealed class ToolCatalog : IToolCatalog
 {
     private readonly IReadOnlyList<ViewMappingEntry> _mappings;
     private readonly ILookup<string, SubToolInfo> _byModule;
@@ -59,7 +59,7 @@ public sealed class ToolCatalog : IToolCatalog
 /// 实例在 Build 前创建，成员仅供 ToolCatalog（同程序集）查询。
 /// 无 Type 键——持 Match 委托（类型模式）与 Build 委托（IoC 工厂），AOT 兼容零反射。
 /// </summary>
-public sealed class ViewMappingEntry
+internal sealed class ViewMappingEntry
 {
     /// <summary>
     /// 创建映射条目（仅 <see cref="ToolRegistration"/> 内部使用）

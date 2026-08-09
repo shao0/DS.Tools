@@ -84,7 +84,7 @@ public sealed class GitLogViewModelTests
     {
         // Arrange
         const string selected = @"D:\Code\Self\DS.Tools";
-        _folderPicker.Setup(f => f.PickFolderAsync(It.IsAny<string?>())).ReturnsAsync(selected);
+        _folderPicker.Setup(f => f.PickFolderAsync(It.IsAny<string?>(), It.IsAny<string?>())).ReturnsAsync(selected);
         _gitLog.Setup(g => g.IsGitRepositoryAsync(selected, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _gitLog.Setup(g => g.GetCurrentBranchAsync(selected, It.IsAny<CancellationToken>())).ReturnsAsync("main");
         _gitLog.Setup(g => g.GetLogAsync(selected, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
@@ -105,15 +105,15 @@ public sealed class GitLogViewModelTests
         vm.HasErrors.Should().BeFalse();
         vm.StatusMessage.Should().Contain("共 2 条提交");
         _settings.Verify(s => s.Save(It.Is<GitSettings>(x => x.LastFolderPath == selected)), Times.Once);
-        // 建议起始位置传入当前路径
-        _folderPicker.Verify(f => f.PickFolderAsync(null), Times.Once);
+        // 建议起始位置传入当前路径 + 对话框标题由调用方提供
+        _folderPicker.Verify(f => f.PickFolderAsync(null, "选择 Git 仓库文件夹"), Times.Once);
     }
 
     [Fact]
     public async Task PickFolder_Cancelled_KeepsStateAndDoesNotSave()
     {
         // Arrange
-        _folderPicker.Setup(f => f.PickFolderAsync(It.IsAny<string?>())).ReturnsAsync((string?)null);
+        _folderPicker.Setup(f => f.PickFolderAsync(It.IsAny<string?>(), It.IsAny<string?>())).ReturnsAsync((string?)null);
         var vm = CreateViewModel();
 
         // Act
@@ -130,7 +130,7 @@ public sealed class GitLogViewModelTests
     {
         // Arrange
         const string selected = @"C:\not-a-repo";
-        _folderPicker.Setup(f => f.PickFolderAsync(It.IsAny<string?>())).ReturnsAsync(selected);
+        _folderPicker.Setup(f => f.PickFolderAsync(It.IsAny<string?>(), It.IsAny<string?>())).ReturnsAsync(selected);
         _gitLog.Setup(g => g.IsGitRepositoryAsync(selected, It.IsAny<CancellationToken>())).ReturnsAsync(false);
         var vm = CreateViewModel();
 

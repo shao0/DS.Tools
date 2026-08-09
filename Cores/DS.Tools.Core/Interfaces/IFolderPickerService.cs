@@ -10,6 +10,7 @@ public interface IFolderPickerService
     /// 打开系统文件夹选择对话框
     /// </summary>
     /// <param name="suggestedPath">建议起始位置（例如上次选择的文件夹），可为 null</param>
+    /// <param name="title">对话框标题（由调用方/模块提供），可为 null</param>
     /// <returns>选中文件夹的本地路径；用户取消或无窗口可用时返回 null</returns>
-    Task<string?> PickFolderAsync(string? suggestedPath);
+    Task<string?> PickFolderAsync(string? suggestedPath, string? title);
 }

@@ -36,19 +36,16 @@ public abstract class ToolModule : IToolModule
     /// <inheritdoc />
     public abstract string Description { get; }
 
-    /// <inheritdoc />
     /// <summary>
-    /// 从子工具目录查询（挂载前返回 null，等价于无子工具）
+    /// 从子工具目录查询（挂载前返回 false，等价于无子工具）
     /// </summary>
     public bool HasSubTools => SubTools is { Count: > 0 };
 
-    /// <inheritdoc />
     /// <summary>
     /// 从统一目录查询（挂载前返回 null）
     /// </summary>
     public IReadOnlyList<SubToolInfo>? SubTools => _toolCatalog?.GetSubTools(Id);
 
-    /// <inheritdoc />
     /// <summary>
     /// 默认实现：从统一目录取得对应条目并经其 IoC 工厂创建（AOT 兼容）。
     /// 子类可以重写此方法来自定义子工具解析逻辑。

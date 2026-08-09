@@ -44,8 +44,6 @@ public sealed class NavigationServiceTests
 
         // Assert
         service.Should().NotBeNull();
-        service.CurrentTool.Should().BeNull();
-        service.CurrentSubToolId.Should().BeNull();
     }
 
     [Fact]
@@ -75,8 +73,6 @@ public sealed class NavigationServiceTests
         // Assert
         capturedTool.Should().Be(_mockModule1.Object);
         capturedSubToolId.Should().BeNull();
-        service.CurrentTool.Should().Be(_mockModule1.Object);
-        service.CurrentSubToolId.Should().BeNull();
     }
 
     [Fact]
@@ -110,7 +106,6 @@ public sealed class NavigationServiceTests
         // Assert
         capturedTool.Should().Be(module);
         capturedSubToolId.Should().BeNull();
-        service.CurrentTool.Should().Be(module);
     }
 
     [Fact]
@@ -132,8 +127,6 @@ public sealed class NavigationServiceTests
         // Assert
         capturedTool.Should().Be(_mockModule1.Object);
         capturedSubToolId.Should().Be("subtool1");
-        service.CurrentTool.Should().Be(_mockModule1.Object);
-        service.CurrentSubToolId.Should().Be("subtool1");
     }
 
     [Fact]
@@ -144,65 +137,6 @@ public sealed class NavigationServiceTests
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => service.NavigateTo((IToolModule)null!));
-    }
-
-    [Fact]
-    public void NavigateBack_WithEmptyHistory_ShouldDoNothing()
-    {
-        // Arrange
-        var service = new NavigationService(_mockToolRegistry.Object);
-        int eventCallCount = 0;
-        service.NavigationChanged += (tool, subToolId) => eventCallCount++;
-
-        // Act
-        service.NavigateBack();
-
-        // Assert
-        eventCallCount.Should().Be(0);
-    }
-
-    [Fact]
-    public void NavigateBack_WithHistory_ShouldNavigateToPreviousTool()
-    {
-        // Arrange
-        var service = new NavigationService(_mockToolRegistry.Object);
-        service.NavigateTo("module1");
-        service.NavigateTo("module2");
-
-        IToolModule? capturedTool = null;
-        string? capturedSubToolId = null;
-        service.NavigationChanged += (tool, subToolId) =>
-        {
-            capturedTool = tool;
-            capturedSubToolId = subToolId;
-        };
-
-        // Act
-        service.NavigateBack();
-
-        // Assert
-        capturedTool.Should().Be(_mockModule1.Object);
-        service.CurrentTool.Should().Be(_mockModule1.Object);
-    }
-
-    [Fact]
-    public void NavigateTo_ShouldMaintainNavigationHistory()
-    {
-        // Arrange
-        var service = new NavigationService(_mockToolRegistry.Object);
-
-        // Act
-        service.NavigateTo("module1");
-        service.NavigateTo("module2");
-
-        // Assert
-        service.CurrentTool.Should().Be(_mockModule2.Object);
-
-        // Act - Navigate back
-        service.NavigateBack();
-
-        // Assert
-        service.CurrentTool.Should().Be(_mockModule1.Object);
     }
 
     [Fact]

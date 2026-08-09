@@ -5,7 +5,7 @@ namespace DS.Tools.Module.Base.Interfaces;
 
 /// <summary>
 /// 工具目录接口（查询侧，统一注册表查询服务）-
-/// 合并 View 映射查询（原 IViewRegistry）与子工具查询（原 ISubToolCatalog）：
+/// 合并 View 映射查询与子工具查询：
 /// 容器构建后经 MEL 集合注入（<c>IEnumerable&lt;ViewMappingEntry&gt;</c> + <c>IEnumerable&lt;SubToolInfo&gt;</c>）收集
 /// 全部模块在 Register 阶段注册的元数据，按需查询。
 /// AOT 兼容：无 Type 键、无反射——View 匹配为编译期类型模式，子工具为 string 键匹配。

@@ -1,6 +1,3 @@
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
@@ -11,19 +8,22 @@ namespace DS.Tools.Core.Services;
 /// <summary>
 /// 文件夹选择服务实现 - 经主窗口的 TopLevel.StorageProvider 访问系统文件夹对话框（Avalonia 12，AOT 兼容）。
 /// 所有对话框操作必须在 UI 线程执行，由 Dispatcher 桥接（与 ClipboardService 同模式）。
+/// 对话框标题由调用方（模块）提供——Core 层不持有模块专属文案。
 /// </summary>
-public sealed class FolderPickerService(ILogger<FolderPickerService> logger) : IFolderPickerService
+internal sealed class FolderPickerService(ILogger<FolderPickerService> logger) : IFolderPickerService
 {
     /// <summary>
     /// 打开系统文件夹选择对话框
     /// </summary>
-    public async Task<string?> PickFolderAsync(string? suggestedPath)
+    /// <param name="suggestedPath">建议起始位置（上次选择的文件夹），可空</param>
+    /// <param name="title">对话框标题（调用方提供，null 时用系统默认）</param>
+    public async Task<string?> PickFolderAsync(string? suggestedPath, string? title)
     {
         try
         {
             return await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                if (GetMainWindow() is not { } mainWindow)
+                if (TopLevelLocator.GetMainWindow() is not { } mainWindow)
                 {
                     logger.LogWarning("文件夹选择器不可用（主窗口尚未就绪）");
                     return null;
@@ -38,7 +38,7 @@ public sealed class FolderPickerService(ILogger<FolderPickerService> logger) : I
 
                 var options = new FolderPickerOpenOptions
                 {
-                    Title = "选择 Git 仓库文件夹",
+                    Title = title,
                     AllowMultiple = false
                 };
 
@@ -57,15 +57,5 @@ public sealed class FolderPickerService(ILogger<FolderPickerService> logger) : I
             logger.LogWarning(ex, "打开文件夹选择器失败");
             return null;
         }
-    }
-
-    /// <summary>
-    /// 获取当前主窗口（Window 继承 TopLevel，提供 StorageProvider）
-    /// </summary>
-    private static Window? GetMainWindow()
-    {
-        return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } mainWindow }
-            ? mainWindow
-            : null;
     }
 }

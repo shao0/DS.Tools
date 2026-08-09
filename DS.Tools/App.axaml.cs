@@ -58,7 +58,9 @@ public partial class App : Application
         _serviceProvider = services.BuildServiceProvider();
 
         var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
-        logger.LogInformation("应用启动：{AppName} v{AppVersion}，工具模块 {ModuleCount} 个", "DS.Tools", "1.0.0", ToolModules.Length);
+        // 程序集版本仅元数据访问（非类型反射），AOT/Trim 安全
+        var appVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "1.0.0";
+        logger.LogInformation("应用启动：{AppName} v{AppVersion}，工具模块 {ModuleCount} 个", "DS.Tools", appVersion, ToolModules.Length);
 
         // 将 Avalonia 内部日志（含绑定错误）接入 ILogger，便于排查 UI 绑定问题
         Avalonia.Logging.Logger.Sink = new AvaloniaLogSink(logger);

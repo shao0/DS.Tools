@@ -1,0 +1,16 @@
+<Project>
+  <!-- 先导入根目录全局配置（LangVersion/Nullable/AOT/编译绑定等）——
+       MSBuild 只导入最近的 Directory.Build.props，必须显式向上引入 -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <ItemGroup>
+    <!-- 工具模块共享全局 using（System 系已由根 Directory.Build.props 提供，此处只补模块特有命名空间） -->
+    <Using Include="System.Collections.ObjectModel" />
+    <Using Include="System.Threading" />
+    <Using Include="CommunityToolkit.Mvvm.ComponentModel" />
+    <Using Include="CommunityToolkit.Mvvm.Input" />
+    <Using Include="DS.Tools.Core.Interfaces" />
+    <Using Include="DS.Tools.Core.Models" />
+    <Using Include="DS.Tools.Module.Base.Interfaces" />
+  </ItemGroup>
+</Project>

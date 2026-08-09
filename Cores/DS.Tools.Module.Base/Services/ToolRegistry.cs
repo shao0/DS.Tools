@@ -6,13 +6,13 @@ namespace DS.Tools.Module.Base.Services;
 /// 工具注册表实现 - 管理所有工具模块的注册和查询。
 /// AOT 兼容，无运行时反射。当前选中工具状态由 <see cref="INavigationService"/> 持有。
 /// 注册模块时顺带挂载统一目录到模块基类（模块元数据在 Register 阶段已入容器）。
+/// 生命周期与进程一致，无需显式释放。
 /// </summary>
-public sealed class ToolRegistry : IToolRegistry, IDisposable
+internal sealed class ToolRegistry : IToolRegistry
 {
     private readonly List<IToolModule> _tools = [];
     private readonly Dictionary<string, IToolModule> _toolIndex = new();
     private readonly IToolCatalog _toolCatalog;
-    private bool _isDisposed;
 
     /// <summary>
     /// 构造函数
@@ -31,20 +31,13 @@ public sealed class ToolRegistry : IToolRegistry, IDisposable
     /// <summary>
     /// 根据 ID 获取工具
     /// </summary>
-    public IToolModule? GetTool(string id)
-    {
-        ObjectDisposedException.ThrowIf(_isDisposed, typeof(ToolRegistry));
-
-        return _toolIndex.GetValueOrDefault(id);
-    }
+    public IToolModule? GetTool(string id) => _toolIndex.GetValueOrDefault(id);
 
     /// <summary>
     /// 注册工具（编译期显式调用）
     /// </summary>
     public void Register(IToolModule tool)
     {
-        ObjectDisposedException.ThrowIf(_isDisposed, typeof(ToolRegistry));
-
         ArgumentNullException.ThrowIfNull(tool);
 
         // 检查重复
@@ -63,18 +56,5 @@ public sealed class ToolRegistry : IToolRegistry, IDisposable
         // 添加到列表和索引
         _tools.Add(tool);
         _toolIndex[tool.Id] = tool;
-    }
-
-    /// <summary>
-    /// 释放资源
-    /// </summary>
-    public void Dispose()
-    {
-        if (_isDisposed)
-            return;
-
-        _tools.Clear();
-        _toolIndex.Clear();
-        _isDisposed = true;
     }
 }

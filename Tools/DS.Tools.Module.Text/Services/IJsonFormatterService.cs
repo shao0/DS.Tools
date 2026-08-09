@@ -23,16 +23,9 @@ public interface IJsonFormatterService
     JsonFormatterResult Compress(string json);
 
     /// <summary>
-    /// 验证 JSON 字符串
+    /// 验证 JSON 字符串（无输出，结果携带嵌套深度）
     /// </summary>
     /// <param name="json">待验证的 JSON 字符串</param>
     /// <returns>验证结果</returns>
     JsonFormatterResult Validate(string json);
-
-    /// <summary>
-    /// 计算 JSON 嵌套深度
-    /// </summary>
-    /// <param name="json">JSON 字符串</param>
-    /// <returns>嵌套层级数</returns>
-    int CalculateJsonDepth(string json);
 }

@@ -47,13 +47,11 @@ public sealed class GitLogService : IGitLogService
         if (string.IsNullOrWhiteSpace(path))
             return false;
 
-        // 优先工作树探测；退化覆盖选中 .git 目录本身的情况
-        var workTree = await RunGitAsync(path, ["rev-parse", "--is-inside-work-tree"], ct);
-        if (workTree.ExitCode == 0 && workTree.Stdout.Trim() == "true")
-            return true;
-
-        var gitDir = await RunGitAsync(path, ["rev-parse", "--is-inside-git-dir"], ct);
-        return gitDir.ExitCode == 0 && gitDir.Stdout.Trim() == "true";
+        // 单次进程同时探测工作树与 .git 目录（两个 flag 各输出一行 true/false；
+        // 覆盖工作树与选中 .git 目录本身两种情况，避免两次串行启动）
+        var result = await RunGitAsync(path, ["rev-parse", "--is-inside-work-tree", "--is-inside-git-dir"], ct);
+        return result.ExitCode == 0
+            && result.Stdout.Split('\n').Any(line => line.Trim() == "true");
     }
 
     /// <inheritdoc />

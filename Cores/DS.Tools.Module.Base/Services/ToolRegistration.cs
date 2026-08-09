@@ -8,7 +8,6 @@ namespace DS.Tools.Module.Base.Services;
 
 /// <summary>
 /// 工具注册扩展方法（注册侧，统一注册入口）-
-/// 合并 View 映射注册（原 ViewMappingRegistry.AddViewMapping）与子工具注册（原 SubToolRegistry.AddSubTool）。
 /// 每个方法一行完成「类型以 Transient 入容器」+「元数据（含 IoC 工厂）以单例入容器」，
 /// 编译期强类型（泛型工厂 <c>sp =&gt; sp.GetRequiredService&lt;T&gt;()</c>），无 Type 键、零反射，AOT 兼容；
 /// 容器构建后由 <see cref="IToolCatalog"/> 经集合注入查询。

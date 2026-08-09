@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 样式文件 -->
-    <AvaloniaResource Include="Styles\**" />
+    <!-- 资源文件（.axaml 由 Avalonia 默认 glob 自动纳入；此处仅补非 axaml 资源） -->
+    <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 </Project>

@@ -16,4 +16,9 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 测试直接构造 internal 实现（ToolCatalog/ToolRegistry/NavigationService） -->
+    <InternalsVisibleTo Include="DS.Tools.Tests" />
+  </ItemGroup>
+
 </Project>

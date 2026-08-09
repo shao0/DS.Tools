@@ -1,0 +1,51 @@
+<UserControl
+    x:Class="DS.Tools.UI.Shared.Controls.LoadingSpinner"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    d:DesignHeight="16"
+    d:DesignWidth="16"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!-- 旋转脉冲加载指示器：双层 Ellipse，内圈 Opacity 脉冲。
+         Avalonia 12：animator 按属性类型静态匹配，动画化 Opacity（double，
+         命中内置 DoubleAnimator）；不可动画化整个 RenderTransform 对象。 -->
+    <Grid
+        Width="16"
+        Height="16">
+        <Ellipse
+            Width="16"
+            Height="16"
+            Fill="Transparent"
+            Stroke="{DynamicResource PrimaryBrush}"
+            StrokeThickness="2" />
+        <Ellipse
+            Width="16"
+            Height="16"
+            Fill="Transparent"
+            Stroke="{DynamicResource PrimaryBrush}"
+            StrokeDashArray="4,2"
+            StrokeThickness="2">
+            <Ellipse.Styles>
+                <Style Selector="Ellipse">
+                    <Style.Animations>
+                        <Animation
+                            IterationCount="INFINITE"
+                            Duration="0:0:0.9">
+                            <KeyFrame Cue="0%">
+                                <Setter Property="Opacity" Value="0.25" />
+                            </KeyFrame>
+                            <KeyFrame Cue="50%">
+                                <Setter Property="Opacity" Value="1" />
+                            </KeyFrame>
+                            <KeyFrame Cue="100%">
+                                <Setter Property="Opacity" Value="0.25" />
+                            </KeyFrame>
+                        </Animation>
+                    </Style.Animations>
+                </Style>
+            </Ellipse.Styles>
+        </Ellipse>
+    </Grid>
+</UserControl>

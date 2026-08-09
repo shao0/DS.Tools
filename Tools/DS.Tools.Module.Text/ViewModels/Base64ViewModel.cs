@@ -10,7 +10,7 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// Base64 编解码 ViewModel - 文本与 Base64 之间的相互转换
 /// 基于 CommunityToolkit.Mvvm（源生成器），NativeAOT 兼容，无运行时反射
 /// </summary>
-public sealed partial class Base64ViewModel : ViewModelBase, ISubTool
+public sealed partial class Base64ViewModel : ToolViewModelBase, ISubTool
 {
     // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
     static string ISubTool.ModuleId => TextModule.ToolIds.Module;
@@ -128,45 +128,13 @@ public sealed partial class Base64ViewModel : ViewModelBase, ISubTool
     /// 复制编码结果到剪贴板
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCopyEncoded))]
-    private async Task CopyEncodedAsync()
-    {
-        if (!string.IsNullOrEmpty(EncodedResult))
-        {
-            try
-            {
-                await _clipboardService.SetTextAsync(EncodedResult);
-                HasErrors = false;
-                ErrorMessage = null;
-            }
-            catch (Exception ex)
-            {
-                HasErrors = true;
-                ErrorMessage = $"复制失败: {ex.Message}";
-            }
-        }
-    }
+    private Task CopyEncodedAsync() => CopyToClipboardAsync(_clipboardService, EncodedResult);
 
     /// <summary>
     /// 复制解码结果到剪贴板
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCopyDecoded))]
-    private async Task CopyDecodedAsync()
-    {
-        if (!string.IsNullOrEmpty(DecodedResult))
-        {
-            try
-            {
-                await _clipboardService.SetTextAsync(DecodedResult);
-                HasErrors = false;
-                ErrorMessage = null;
-            }
-            catch (Exception ex)
-            {
-                HasErrors = true;
-                ErrorMessage = $"复制失败: {ex.Message}";
-            }
-        }
-    }
+    private Task CopyDecodedAsync() => CopyToClipboardAsync(_clipboardService, DecodedResult);
 
     private bool CanEncode() => !string.IsNullOrEmpty(InputText);
     private bool CanDecode() => !string.IsNullOrEmpty(InputText);

@@ -9,9 +9,4 @@ public interface IClipboardService
     /// 设置文本到剪贴板
     /// </summary>
     Task SetTextAsync(string text);
-
-    /// <summary>
-    /// 从剪贴板获取文本
-    /// </summary>
-    Task<string?> GetTextAsync();
 }

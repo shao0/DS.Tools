@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// JSON 格式化工具 ViewModel
 /// 使用 CommunityToolkit.Mvvm 源生成器，AOT 兼容，无反射调用
 /// </summary>
-public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
+public sealed partial class JsonFormatterViewModel : ToolViewModelBase, ISubTool
 {
     // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
     static string ISubTool.ModuleId => TextModule.ToolIds.Module;
@@ -56,13 +57,6 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
     private string _outputJson = string.Empty;
 
     /// <summary>
-    /// 状态信息（成功时显示统计）
-    /// </summary>
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ClearCommand))]
-    private string _statusMessage = string.Empty;
-
-    /// <summary>
     /// 是否正在处理
     /// </summary>
     [ObservableProperty]
@@ -86,6 +80,19 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
         ClearOutput();
     }
 
+    /// <summary>
+    /// 状态消息（基类属性）变化时刷新清空命令的可执行状态
+    /// </summary>
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (e.PropertyName == nameof(StatusMessage))
+        {
+            ClearCommand.NotifyCanExecuteChanged();
+        }
+    }
+
     private bool CanExecuteFormat() => !string.IsNullOrWhiteSpace(InputJson) && !IsProcessing;
 
     private bool CanClear() =>
@@ -96,31 +103,22 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
     private bool CanCopyOutput() => !string.IsNullOrWhiteSpace(OutputJson);
 
     /// <summary>
-    /// 执行格式化
+    /// 执行格式化（返回 Task 自动生成异步命令；CPU 操作移出 UI 线程——大数据量不冻结界面，spinner 真实可见）
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteFormat))]
-    private void Format()
-    {
-        ExecuteOperation(() => _service.Format(InputJson));
-    }
+    private Task FormatAsync() => ExecuteOperationAsync(() => _service.Format(InputJson));
 
     /// <summary>
     /// 执行压缩
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteFormat))]
-    private void Compress()
-    {
-        ExecuteOperation(() => _service.Compress(InputJson));
-    }
+    private Task CompressAsync() => ExecuteOperationAsync(() => _service.Compress(InputJson));
 
     /// <summary>
     /// 执行验证
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteFormat))]
-    private void Validate()
-    {
-        ExecuteOperation(() => _service.Validate(InputJson));
-    }
+    private Task ValidateAsync() => ExecuteOperationAsync(() => _service.Validate(InputJson));
 
     /// <summary>
     /// 执行清空
@@ -137,28 +135,12 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
     /// 执行复制输出（异步，剪贴板需 UI 线程）
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCopyOutput))]
-    private async Task CopyOutputAsync()
-    {
-        if (string.IsNullOrWhiteSpace(OutputJson))
-            return;
-
-        try
-        {
-            await _clipboardService.SetTextAsync(OutputJson);
-            StatusMessage = "✓ 已复制到剪贴板";
-            await Task.Delay(2000); // 显示成功消息后清除
-            StatusMessage = string.Empty;
-        }
-        catch (Exception ex)
-        {
-            ShowError($"复制失败: {ex.Message}");
-        }
-    }
+    private Task CopyOutputAsync() => CopyToClipboardAsync(_clipboardService, OutputJson);
 
     /// <summary>
-    /// 执行通用操作逻辑（同步；数据量小，无阻塞风险）
+    /// 执行通用操作逻辑（CPU 操作经 Task.Run 移出 UI 线程，AsyncRelayCommand 自带防重入）
     /// </summary>
-    private void ExecuteOperation(Func<JsonFormatterResult> operation)
+    private async Task ExecuteOperationAsync(Func<JsonFormatterResult> operation)
     {
         if (IsProcessing)
             return;
@@ -168,7 +150,7 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
 
         try
         {
-            var result = operation();
+            var result = await Task.Run(operation);
 
             if (result.IsSuccess)
             {
@@ -181,7 +163,7 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "JSON 操作异常（{Operation}）", nameof(ExecuteOperation));
+            _logger.LogError(ex, "JSON 操作异常（{Operation}）", nameof(ExecuteOperationAsync));
             ShowError($"操作异常: {ex.Message}");
         }
         finally
@@ -203,7 +185,7 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
         if (result.OperationType == JsonFormatterOperationType.Validate)
         {
             OutputJson = string.Empty;
-            StatusMessage = $"✓ {result.FormattedJson} | 深度: {result.JsonDepth} | 原始长度: {result.OriginalLength}";
+            StatusMessage = $"✓ JSON 格式有效 | 深度: {result.JsonDepth} | 原始长度: {result.OriginalLength}";
         }
         else
         {
@@ -218,25 +200,13 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
     }
 
     /// <summary>
-    /// 显示错误
+    /// 显示错误（基类三段式基础上追加：清空输出区）
     /// </summary>
-    private void ShowError(string message)
+    protected override void ShowError(string message)
     {
-        HasErrors = true;
-        ErrorMessage = message;
+        base.ShowError(message);
         HasOutput = false;
         OutputJson = string.Empty;
-        StatusMessage = string.Empty;
-    }
-
-    /// <summary>
-    /// 清除错误状态
-    /// </summary>
-    private void ClearError()
-    {
-        HasErrors = false;
-        ErrorMessage = null;
-        StatusMessage = string.Empty;
     }
 
     /// <summary>

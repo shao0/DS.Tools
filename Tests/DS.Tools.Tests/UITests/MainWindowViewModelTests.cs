@@ -186,8 +186,6 @@ public sealed class MainWindowViewModelTests
         var gitModule = new Mock<IToolModule>();
         gitModule.Setup(x => x.Id).Returns("git-tools");
         _mockToolRegistry.Setup(x => x.Tools).Returns(new List<IToolModule> { _mockTextModule.Object, gitModule.Object });
-        // 当前活动模块是文本模块，但点击的是 Git 模块的子工具
-        _mockNavigationService.Setup(x => x.CurrentTool).Returns(_mockTextModule.Object);
 
         // Act
         viewModel.SelectSubToolCommand.Execute(gitSubTool);

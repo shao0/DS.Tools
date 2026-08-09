@@ -12,42 +12,8 @@
     mc:Ignorable="d">
 
     <UserControl.Styles>
-        <Style Selector="Border.card">
-            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="20" />
-        </Style>
-
-        <Style Selector="TextBlock.cardTitle">
-            <Setter Property="FontSize" Value="18" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="Margin" Value="0,0,0,16" />
-        </Style>
-
-        <Style Selector="TextBox.formInput">
-            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="MinHeight" Value="80" />
-            <Setter Property="AcceptsReturn" Value="True" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
-
-        <Style Selector="Border.resultBox">
-            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Margin" Value="0,12,0,0" />
-        </Style>
+        <!--  共享样式（卡片/标题/输入框/结果框）  -->
+        <StyleInclude Source="avares://DS.Tools.UI.Shared/Styles/ToolStyles.axaml" />
     </UserControl.Styles>
 
     <ScrollViewer>
@@ -74,9 +40,12 @@
                         Text="#️⃣ 输入文本" />
 
                     <TextBox
+                        AcceptsReturn="True"
                         Classes="formInput"
+                        MinHeight="80"
                         PlaceholderText="输入要计算哈希的文本..."
-                        Text="{Binding InputText, Mode=TwoWay}" />
+                        Text="{Binding InputText, Mode=TwoWay}"
+                        TextWrapping="Wrap" />
 
                     <Button
                         Margin="0,12,0,0"
