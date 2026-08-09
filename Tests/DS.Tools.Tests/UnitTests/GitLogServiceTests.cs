@@ -149,9 +149,9 @@ public sealed class GitLogServiceTests
         result.IsSuccess.Should().BeTrue();
         result.Entries.Should().HaveCount(3);
         // 时间倒序：最新的在前
-        result.Entries[0].Subject.Should().Be("third commit");
-        result.Entries[1].Subject.Should().Be("second commit");
-        result.Entries[2].Subject.Should().Be("first commit");
+        result.Entries[0].Message.Should().Be("third commit");
+        result.Entries[1].Message.Should().Be("second commit");
+        result.Entries[2].Message.Should().Be("first commit");
         // 字段解析
         result.Entries[0].Hash.Should().NotBeNullOrEmpty();
         result.Entries[0].AuthorName.Should().Be("Test User");
@@ -160,7 +160,7 @@ public sealed class GitLogServiceTests
     }
 
     [RequiresGitFact]
-    public async Task GetLog_WithPipeInSubject_ParsesSubjectIntact()
+    public async Task GetLog_WithPipeInMessage_ParsesMessageIntact()
     {
         using var repo = GitTestRepo.Create();
         repo.Commit("fix: A|B|C", new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.FromHours(8)));
@@ -168,7 +168,25 @@ public sealed class GitLogServiceTests
         var result = await _service.GetLogAsync(repo.Path, null, null);
 
         result.IsSuccess.Should().BeTrue();
-        result.Entries[0].Subject.Should().Be("fix: A|B|C");
+        result.Entries[0].Message.Should().Be("fix: A|B|C");
+    }
+
+    [RequiresGitFact]
+    public async Task GetLog_WithMultiLineMessage_ParsesFullMessage()
+    {
+        // 回归：%B 完整消息（含正文与换行）不丢行——%s 仅首行主题是此前的显示缺陷
+        using var repo = GitTestRepo.Create();
+        File.AppendAllText(Path.Combine(repo.Path, "file.txt"), "x" + Environment.NewLine);
+        repo.Run(["add", "-A"]);
+        repo.Run(["commit", "-q", "-m", "feat: multi-line body", "-m", "line one\n\nline three"]);
+
+        var result = await _service.GetLogAsync(repo.Path, null, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Entries.Should().ContainSingle();
+        // 完整消息：主题 + 正文段落（含中间空行），而非仅首行
+        result.Entries[0].Message.Should().StartWith("feat: multi-line body");
+        result.Entries[0].Message.Should().Contain("\n\nline one\n\nline three");
     }
 
     [RequiresGitFact]
@@ -181,7 +199,7 @@ public sealed class GitLogServiceTests
         var result = await _service.GetLogAsync(repo.Path, null, null);
 
         result.IsSuccess.Should().BeTrue();
-        result.Entries[0].Subject.Should().Be("修复：一级菜单显示问题");
+        result.Entries[0].Message.Should().Be("修复：一级菜单显示问题");
         result.Entries[0].AuthorName.Should().Be("小毛 邵");
     }
 
@@ -211,17 +229,17 @@ public sealed class GitLogServiceTests
         // 仅起始时间
         var sinceOnly = await _service.GetLogAsync(repo.Path, since, null);
         sinceOnly.Entries.Should().HaveCount(2);
-        sinceOnly.Entries.Select(e => e.Subject).Should().Contain(new[] { "feb", "mar" });
+        sinceOnly.Entries.Select(e => e.Message).Should().Contain(new[] { "feb", "mar" });
 
         // 仅结束时间
         var untilOnly = await _service.GetLogAsync(repo.Path, null, until);
         untilOnly.Entries.Should().HaveCount(2);
-        untilOnly.Entries.Select(e => e.Subject).Should().Contain(new[] { "jan", "feb" });
+        untilOnly.Entries.Select(e => e.Message).Should().Contain(new[] { "jan", "feb" });
 
         // 起止时间
         var both = await _service.GetLogAsync(repo.Path, since, until);
         both.Entries.Should().HaveCount(1);
-        both.Entries[0].Subject.Should().Be("feb");
+        both.Entries[0].Message.Should().Be("feb");
     }
 
     [RequiresGitFact]
@@ -239,7 +257,7 @@ public sealed class GitLogServiceTests
 
         // 边界=2-15 零点：2-15 当天的提交被排除，2-14 保留
         result.Entries.Should().HaveCount(1);
-        result.Entries[0].Subject.Should().Be("previous-day");
+        result.Entries[0].Message.Should().Be("previous-day");
     }
 
     [RequiresGitFact]

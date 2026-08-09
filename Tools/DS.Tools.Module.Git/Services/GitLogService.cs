@@ -22,18 +22,10 @@ public sealed class GitLogService : IGitLogService
 
     private readonly ILogger<GitLogService> _logger;
     private readonly string _gitExecutable;
-
-    /// <summary>
-    /// 构造函数（DI 使用）—— 默认使用 PATH 中的 git
-    /// </summary>
-    public GitLogService(ILogger<GitLogService> logger) : this(logger, "git")
-    {
-    }
-
     /// <summary>
     /// 构造函数（测试使用）—— 可注入自定义 git 可执行文件
     /// </summary>
-    public GitLogService(ILogger<GitLogService> logger, string gitExecutable)
+    public GitLogService(ILogger<GitLogService> logger, string gitExecutable = "git")
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _gitExecutable = string.IsNullOrWhiteSpace(gitExecutable)
@@ -91,8 +83,9 @@ public sealed class GitLogService : IGitLogService
         if (until is { } untilDate)
             args.Add($"--until={FormatGitDate(untilDate)}");
 
-        // 记录分隔 %x1e、字段分隔 %x1f——规避提交主题含 '|' 等常规字符的解析歧义
-        args.Add("--pretty=format:%x1e%h%x1f%an%x1f%ae%x1f%aI%x1f%s");
+        // 记录分隔 %x1e、字段分隔 %x1f——规避提交消息含 '|' 等常规字符的解析歧义；
+        // 消息取 %B（完整提交消息，含正文与换行）而非 %s（仅首行主题）
+        args.Add("--pretty=format:%x1e%h%x1f%an%x1f%ae%x1f%aI%x1f%B");
 
         var output = await RunGitAsync(repoPath, args, ct);
         if (output.ExitCode != 0)
@@ -115,31 +108,34 @@ public sealed class GitLogService : IGitLogService
     }
 
     /// <summary>
-    /// 解析 git log 输出：按 \n 分行、\x1e 记录分隔、\x1f 字段分隔；畸形行跳过并记日志
+    /// 解析 git log 输出：\x1e 记录分隔、\x1f 字段分隔。
+    /// 记录按 \x1e 整体切分（而非按行）——消息为末字段可含换行（%B 全文），跨行消息不丢行；
+    /// Split 限 5 段，消息保留第 5 段之后的全部内容（含内部 \x1f）；畸形记录跳过并记日志。
     /// </summary>
     private IReadOnlyList<GitLogEntry> ParseLogOutput(string stdout)
     {
         var entries = new List<GitLogEntry>();
-        var lines = stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var records = stdout.Split('\x1e', StringSplitOptions.RemoveEmptyEntries);
 
-        foreach (var line in lines)
+        foreach (var record in records)
         {
-            var record = line.TrimStart('\x1e');
-            var fields = record.Split('\x1f');
-
+            // 前 4 个定长字段（hash/作者/邮箱/日期不含 \x1f 与换行）+ 消息（剩余全部，可跨行）
+            var fields = record.Split('\x1f', 5);
             if (fields.Length != 5 ||
                 !DateTimeOffset.TryParse(fields[3], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
             {
-                _logger.LogWarning("跳过无法解析的 git log 行：{Line}", line);
+                var preview = record.Length > 200 ? record[..200] + "…" : record;
+                _logger.LogWarning("跳过无法解析的 git log 记录：{Record}", preview);
                 continue;
             }
 
+            // git 记录之间以 \n 分隔——去掉消息尾部该分隔换行（正文内部换行保留）
             entries.Add(new GitLogEntry(
                 fields[0],
                 fields[1],
                 fields[2],
                 date,
-                fields[4]));
+                fields[4].TrimEnd('\n', '\r')));
         }
 
         return entries;

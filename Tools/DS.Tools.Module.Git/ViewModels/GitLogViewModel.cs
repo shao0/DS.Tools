@@ -156,10 +156,11 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
 
     /// <summary>
     /// 生成剪贴板文本：每条日志一行（hash | 作者 | 日期 | 主题）
+    /// 消息为完整多行文本时取首行（主题），保持"每行一条"的表格格式
     /// </summary>
     private string BuildCopyText()
         => string.Join(Environment.NewLine, LogEntries.Select(e =>
-            $"{e.Hash} | {e.AuthorName} | {e.Date:yyyy-MM-dd HH:mm} | {e.Subject}"));
+            $"{e.Hash} | {e.AuthorName} | {e.Date:yyyy-MM-dd HH:mm} | {e.Message.Split('\n')[0]}"));
 
     /// <summary>
     /// 加载仓库状态：校验仓库 → 获取分支 → 拉取日志

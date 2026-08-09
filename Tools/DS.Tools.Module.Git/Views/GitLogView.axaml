@@ -239,7 +239,7 @@
                                         FontSize="14"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Text="{Binding Subject}"
+                                        Text="{Binding Message}"
                                         TextWrapping="Wrap" />
                                     <TextBlock
                                         FontSize="12"

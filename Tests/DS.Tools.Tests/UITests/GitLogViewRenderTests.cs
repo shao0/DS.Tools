@@ -136,6 +136,43 @@ public class GitLogViewRenderTests
     }
 
     [Fact]
+    public void GitLogView_WithMultiLineMessages_ShouldRenderFullMessages()
+    {
+        // 回归：%B 完整消息（含正文与换行）应完整渲染——%s 仅首行主题是此前的显示缺陷
+        EnsureHeadlessInitialized();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var vm = CreateViewModel();
+            vm.RepositoryPath = @"D:\repo";
+            vm.BranchName = "main";
+            vm.LogEntries =
+            [
+                new GitLogEntry("abc1234", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)),
+                    "feat: multi-line body\n\nline one\n\nline three"),
+                new GitLogEntry("def5678", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 2, 10, 0, 0, TimeSpan.FromHours(8)),
+                    "fix: second commit")
+            ];
+
+            RenderInWindow(vm, out var window, out _);
+            RenderFrame();
+
+            // 多行消息完整渲染（正文段落可见，而非仅首行主题）
+            window.GetVisualDescendants().OfType<TextBlock>()
+                .Any(t => t.Text == "feat: multi-line body\n\nline one\n\nline three").Should().BeTrue("多行提交消息应完整显示在日志列表中");
+            // 多条记录全部渲染（非仅第一条）
+            window.GetVisualDescendants().OfType<TextBlock>()
+                .Any(t => t.Text == "fix: second commit").Should().BeTrue("第二条提交应显示在日志列表中");
+            window.GetVisualDescendants().OfType<TextBlock>()
+                .Any(t => t.Text == "def5678").Should().BeTrue("第二条提交的哈希应显示");
+
+            window.Close();
+        });
+    }
+
+    [Fact]
     public void GitLogView_WithError_ShouldRenderErrorPanel()
     {
         EnsureHeadlessInitialized();
