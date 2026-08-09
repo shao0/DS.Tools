@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DS.Tools.Module.Base;
+using DS.Tools.Module.Base.Services;
 using DS.Tools.Module.Text.Services;
 using DS.Tools.Module.Text.ViewModels;
+using DS.Tools.Module.Text.Views;
 
 namespace DS.Tools.Module.Text;
 
@@ -66,19 +68,17 @@ public sealed class TextModule : ToolModule
 
     public override IServiceCollection Register(IServiceCollection services)
     {
-        // 注册所有 ViewModel
-        services.AddTransient<JsonFormatterViewModel>();
-        services.AddTransient<Base64ViewModel>();
-        services.AddTransient<ColorConverterViewModel>();
-        services.AddTransient<PasswordGeneratorViewModel>();
-        services.AddTransient<TextHasherViewModel>();
-        services.AddTransient<TimestampConverterViewModel>();
+        // 注册所有子工具：AddViewMapping 一行完成「VM + View 入容器 + ViewModel→View 映射」——
+        // IoC 经 DI 容器创建，类型模式匹配无 Type 键，AOT 兼容零反射，替代 XAML DataTemplate 手写列表
+        services.AddViewMapping<JsonFormatterViewModel, JsonFormatterView>();
+        services.AddViewMapping<Base64ViewModel, Base64View>();
+        services.AddViewMapping<ColorConverterViewModel, ColorConverterView>();
+        services.AddViewMapping<PasswordGeneratorViewModel, PasswordGeneratorView>();
+        services.AddViewMapping<TextHasherViewModel, TextHasherView>();
+        services.AddViewMapping<TimestampConverterViewModel, TimestampConverterView>();
 
         // 注册共享服务
         services.AddSingleton<IJsonFormatterService, JsonFormatterService>();
-
-        // 注意：ViewModel→View 映射不在此注册——
-        // 由主应用 MainWindow.axaml 中的编译期 DataTemplate 声明（AOT 兼容，零反射）。
 
         return services;
     }

@@ -4,13 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:base="using:DS.Tools.Module.Base"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:gitviews="using:DS.Tools.Module.Git.Views"
-    xmlns:gitvm="using:DS.Tools.Module.Git.ViewModels"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:module="using:DS.Tools.Module.Base.Interfaces"
-    xmlns:textviews="using:DS.Tools.Module.Text.Views"
-    xmlns:textvm="using:DS.Tools.Module.Text.ViewModels"
-    xmlns:views="using:DS.Tools.Views"
     xmlns:vm="using:DS.Tools.ViewModels"
     x:Name="RootWindow"
     Title="DS.Tools - Developer Utilities"
@@ -27,36 +22,10 @@
     mc:Ignorable="d">
 
     <!--
-        ViewModel→View 映射：编译期 DataTemplate（NativeAOT 兼容，零反射）。
-        每个工具 ViewModel 通过 x:DataType 显式声明，由 Avalonia XAML 编译器
-        生成强类型绑定与直接 new View() 的实例化代码。
+        ViewModel→View 映射：由 IViewRegistry 注册表统一管理（AOT 兼容，零反射）——
+        注册点收敛为各模块 RegisterViews + 组合根主页注册；MainWindow 构造时挂载
+        ViewRegistryDataTemplate（见 MainWindow.axaml.cs），ContentControl 按注册表渲染。
     -->
-    <Window.DataTemplates>
-        <DataTemplate x:DataType="vm:DashboardViewModel">
-            <views:DashboardView />
-        </DataTemplate>
-        <DataTemplate x:DataType="textvm:JsonFormatterViewModel">
-            <textviews:JsonFormatterView />
-        </DataTemplate>
-        <DataTemplate x:DataType="textvm:Base64ViewModel">
-            <textviews:Base64View />
-        </DataTemplate>
-        <DataTemplate x:DataType="textvm:ColorConverterViewModel">
-            <textviews:ColorConverterView />
-        </DataTemplate>
-        <DataTemplate x:DataType="textvm:PasswordGeneratorViewModel">
-            <textviews:PasswordGeneratorView />
-        </DataTemplate>
-        <DataTemplate x:DataType="textvm:TextHasherViewModel">
-            <textviews:TextHasherView />
-        </DataTemplate>
-        <DataTemplate x:DataType="textvm:TimestampConverterViewModel">
-            <textviews:TimestampConverterView />
-        </DataTemplate>
-        <DataTemplate x:DataType="gitvm:GitLogViewModel">
-            <gitviews:GitLogView />
-        </DataTemplate>
-    </Window.DataTemplates>
 
     <!--  窗口 chrome 自定义  -->
     <Window.Styles>
@@ -344,7 +313,7 @@
                 </Border>
             </SplitView.Pane>
 
-            <!--  内容区：当前工具的视图 - 由窗口级 DataTemplate 按编译期映射渲染  -->
+            <!--  内容区：当前工具的视图 - 经 ViewRegistryDataTemplate 按注册表映射渲染  -->
             <Border Background="{DynamicResource BackgroundBrush}">
                 <ContentControl Content="{Binding ActiveToolViewModel}" />
             </Border>

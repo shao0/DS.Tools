@@ -12,6 +12,7 @@ using DS.Tools.Core.Interfaces;
 using DS.Tools.Infrastructure.Logging;
 using DS.Tools.Module.Base.DI;
 using DS.Tools.Module.Base.Interfaces;
+using DS.Tools.Module.Base.Services;
 using DS.Tools.Module.Git;
 using DS.Tools.Module.Text;
 using DS.Tools.ViewModels;
@@ -110,7 +111,7 @@ public partial class App : Application
         services.AddApplicationServices();
         services.AddModuleServices();
 
-        // 注册 ViewModel 和 View
+        // 注册 ViewModel 和 View（主页 View 经 RegisterToolModules 的 viewMappings.Add 注册）
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<DashboardViewModel>(); // 主页（应用级，经 DI 创建）
         services.AddTransient<MainWindow>();
@@ -119,10 +120,15 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// 注册工具模块：模块服务入 DI 容器 + 模块实例注册为单例（编译期显式，无反射）
+    /// 注册工具模块：模块服务入 DI 容器 + 模块实例注册为单例
+    /// （编译期显式，无反射；模块 Register 一个方法完成服务/VM/View 映射全部注册，
+    /// View 映射经 ViewMappingRegistry.AddViewMapping 扩展方法入容器）
     /// </summary>
     private void RegisterToolModules(IServiceCollection services)
     {
+        // 主页（应用级，不属于任何模块）的 View 映射在组合根注册
+        services.AddViewMapping<DashboardViewModel, DashboardView>();
+
         foreach (var module in ToolModules)
         {
             module.Register(services);

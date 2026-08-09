@@ -499,6 +499,19 @@ DS.Tools.slnx
 
 测试 108/108 通过（新增 46 个：Settings 6、GitLogService 18、Git VM 12、视图渲染 3、导航回归 2、复制 3、主页 4（分组构建/导航命令/磁贴渲染/回主页命令））。
 
+### View 注册表（2026-08-09）
+
+ViewModel→View 渲染机制从「MainWindow.axaml 手写 DataTemplate 列表」升级为**注册管理服务**（替代逐条 XAML 声明，注册点收敛到各模块自身的 `Register` 方法）。
+
+1. **`ViewMappingRegistry`（静态类 + IServiceCollection 扩展方法）**（`Cores/DS.Tools.Module.Base/Services`）：**单方法** `AddViewMapping<TViewModel, TView>()` 一行完成「VM + View 均以 Transient 入容器」+「映射声明」；每个映射以 `ViewMappingEntry`（public 类、internal 构造/成员）实例 `AddSingleton` 进容器（Build 前纯数据）；泛型参数带 `[DynamicallyAccessedMembers(PublicConstructors)]` 注解（满足 AddTransient 的 trim 要求）；**无 Type 键**——条目持 `Match` 委托（`vm is TViewModel` 类型模式，编译期静态类型检查）与 `Build` 委托（`sp.GetRequiredService<TView>()` IoC 工厂）
+2. **`IViewRegistry`/`ViewRegistry`**（查询侧，Build 后）：单例注入 `IEnumerable<ViewMappingEntry>`（**MEL 集合注入**，按注册顺序收集）+ `IServiceProvider`，构造时**反转**集合（后注册者优先匹配，覆盖语义）；`GetView`/`IsRegistered` 逐条目调 `Match` 委托判定——**无 Type 键、无字典查询**，派生类 VM 天然命中基类映射；View 实例经 IoC 工厂创建——**AOT 纪律保持**：is 模式与泛型工厂均为编译期静态引用，无反射创建路径
+3. **`ViewRegistryDataTemplate`**（Module.Base）：桥接 Avalonia `IDataTemplate` 与查询侧注册表——`Match` = 已注册、`Build` = 经 IoC 工厂创建 View；MainWindow 构造时挂入窗口 DataTemplates（内容区 ContentControl 绑定 ActiveToolViewModel 的渲染路径不变）
+4. **模块单方法注册**：`IToolModule.Register(IServiceCollection)`（单参）一个方法完成全部注册——`services.AddViewMapping<GitLogViewModel, GitLogView>()` 一行搞定 VM+View 接线；原 `RegisterViews`/`IViewMappingRegistry`/`AddViewModel`/`AddView` 均已删除；组合根 `RegisterToolModules` 只加主页映射 `services.AddViewMapping<DashboardViewModel, DashboardView>()`（应用级，不属于任何模块）
+5. **MainWindow 双构造**：`MainWindow(IViewRegistry?)` 经 DI 解析并挂载模板；无参构造 `: this(null)` 仅为满足 Avalonia XAML 编译器（AVLN3000 要求 x:Class 有无参构造），运行时不走此路径
+6. **MainWindow.axaml 已删除** `Window.DataTemplates` 块与 5 个不再使用的 xmlns（textvm/textviews/gitvm/gitviews/views）——新增模块无需再改主窗口 XAML，只在 `Register` 里加一行 `services.AddViewMapping<VM, View>()`
+
+测试 115/115 通过（ViewRegistryTests 7 个：AddViewMapping VM+View 容器注册/映射→新实例/未注册 null/覆盖注册/派生 VM 命中基类映射/IoC 依赖注入/模板桥接 Match+Build 委托；MainWindowRenderIntegrationTests 的 BuildContainer 与 App 同构接线，渲染断言不变）。
+
 ---
 
 **文档版本**：1.0

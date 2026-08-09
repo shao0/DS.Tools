@@ -56,7 +56,9 @@ public interface IToolModule
     ViewModelBase? CreateSubToolViewModel(string subToolId, IServiceProvider services);
 
     /// <summary>
-    /// 注册模块服务和 ViewModel 到 DI 容器
+    /// 注册模块的全部依赖：服务、ViewModel 经 <c>AddViewModel&lt;T&gt;</c> 扩展方法入容器，
+    /// View 注册进容器 + 声明 ViewModel → View 映射（经 <c>AddViewMapping&lt;TViewModel, TView&gt;</c>
+    /// 扩展方法，编译期强类型，零反射）。在容器构建前调用。
     /// </summary>
     /// <param name="services">服务集合</param>
     /// <returns>更新后的服务集合（链式调用）</returns>

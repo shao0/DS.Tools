@@ -13,6 +13,7 @@ using Xunit;
 using DS.Tools.Core.DI;
 using DS.Tools.Module.Base.DI;
 using DS.Tools.Module.Base.Interfaces;
+using DS.Tools.Module.Base.Services;
 using DS.Tools.Module.Git;
 using DS.Tools.Module.Git.ViewModels;
 using DS.Tools.Module.Text;
@@ -108,6 +109,7 @@ public class MainWindowRenderIntegrationTests
         services.AddApplicationServices();
         services.AddModuleServices();
 
+        // 等价于 App.RegisterToolModules：模块单方法注册（View 映射经 AddViewMapping 扩展方法入容器）
         var module = new TextModule();
         module.Register(services);
         services.AddSingleton(module);
@@ -116,6 +118,9 @@ public class MainWindowRenderIntegrationTests
         gitModule.Register(services);
         services.AddSingleton(gitModule);
 
+        // 主页（应用级，不属于任何模块）的 View 映射在组合根注册
+        services.AddViewMapping<DashboardViewModel, DashboardView>();
+
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<DashboardViewModel>(); // 主页（应用级）
         services.AddTransient<MainWindow>();
@@ -123,8 +128,10 @@ public class MainWindowRenderIntegrationTests
         var sp = services.BuildServiceProvider();
 
         // 等价于 App.InitializeToolModules：模块注册进 ToolRegistry
-        sp.GetRequiredService<IToolRegistry>().Register(module);
-        sp.GetRequiredService<IToolRegistry>().Register(gitModule);
+        // （MainWindow 构造时挂载 ViewRegistryDataTemplate，按映射注册表 IoC 渲染内容区）
+        var toolRegistry = sp.GetRequiredService<IToolRegistry>();
+        toolRegistry.Register(module);
+        toolRegistry.Register(gitModule);
 
         return sp;
     }
