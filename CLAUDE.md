@@ -443,13 +443,19 @@ DS.Tools.slnx
 全库扫描（`Activator`/`Type.GetType`/`GetCustomAttribute`/`GetMethod`/`Assembly.*` 等）：
 - **唯一反射点**：`ViewLocator.cs` 的 `Activator.CreateInstance` —— **已删除**，改为 `MainWindow.axaml` 编译期 `x:DataType` DataTemplate（Avalonia XAML 编译器直接生成实例化代码）
 - **IoC 化改造**：`IToolModule.ViewModelType`（Type 键）→ `CreateMainViewModel`/`CreateSubToolViewModel` 强类型工厂；`SubToolInfo.Type` → `Func<IServiceProvider, ViewModelBase>`。ViewModel 一律经 DI 容器 `GetRequiredService<T>()` 创建，**代码中已无 Type 键创建路径**
-- `System.Text.Json` 走 `AppJsonContext` 源生成上下文；`EventAggregator` 为类型键委托（非反射）
+- `System.Text.Json` 经源生成上下文（AOT 兼容）；`EventAggregator`/`AppJsonContext` 已随二轮清理删除
 - 验证：`EnableTrimAnalyzer=true` + `TreatWarningsAsErrors=true` 构建零警告
+
+### UI 问题修复（2026-08-09 三轮）
+
+1. **一级菜单显示不全**：侧边栏 DockPanel 子元素顺序错误（LastChildFill 拉伸导致版本区抢占菜单空间）——版本 Border 最先声明 `Dock="Bottom"`、Logo `Dock="Top"`、ScrollViewer 最后填充
+2. **JSON 工具界面不显示**：`JsonFormatterView` 加载指示器用 `Style.Animations` 动画化整个 `RenderTransform` 对象（`ITransform` 类型）——Avalonia 12 的 animator 按属性类型静态匹配，`ITransform` 无匹配，动画激活即抛 `No animator registered for the property RenderTransform`，异常中断 Content 绑定应用导致内容区空白。修复：改动画化 `Opacity`（double，命中内置 `DoubleAnimator`）。**教训：Avalonia 12 不可动画化整个 RenderTransform 对象；Setter 不支持嵌套属性路径（`RenderTransform.Angle` 无法解析）**
+3. **版本信息固定底部**：同问题 1 的 Dock 顺序修复
 
 ### 当前验证结果
 
 - 构建：Rider / CLI `dotnet build` 均通过，`TreatWarningsAsErrors` 全开零警告
-- 测试：56/56 通过（含 JsonFormatterService 10 个、IoC 工厂分支、VM 缓存分支测试）
+- 测试：62/62 通过（含 JsonFormatterService 10 个、IoC 工厂分支、VM 缓存分支、Headless UI 集成测试——headless 测试类须同 xUnit Collection 串行，Avalonia 平台仅可初始化一次）
 - 冒烟：应用启动后正常运行；Serilog 控制台+文件日志输出启动/模块初始化链路；DashboardView 经 DataTemplate 渲染无崩溃
 
 ### 二轮架构清理（2026-08-09）

@@ -274,24 +274,24 @@
                             Stroke="{DynamicResource PrimaryBrush}"
                             StrokeDashArray="4,2"
                             StrokeThickness="2">
-                            <Ellipse.RenderTransform>
-                                <RotateTransform Angle="0" />
-                            </Ellipse.RenderTransform>
                             <Ellipse.Styles>
                                 <Style Selector="Ellipse">
                                     <Style.Animations>
+                                        <!--  Avalonia 12：animator 按属性类型静态匹配。动画化
+                                              Opacity（double，命中内置 DoubleAnimator）做脉冲，
+                                              不可动画化整个 RenderTransform 对象（无匹配 animator，
+                                              挂载即抛异常导致内容区空白）。  -->
                                         <Animation
                                             IterationCount="INFINITE"
-                                            Duration="0:0:1">
+                                            Duration="0:0:0.9">
                                             <KeyFrame Cue="0%">
-                                                <Setter Property="RenderTransform">
-                                                    <RotateTransform Angle="0" />
-                                                </Setter>
+                                                <Setter Property="Opacity" Value="0.25" />
+                                            </KeyFrame>
+                                            <KeyFrame Cue="50%">
+                                                <Setter Property="Opacity" Value="1" />
                                             </KeyFrame>
                                             <KeyFrame Cue="100%">
-                                                <Setter Property="RenderTransform">
-                                                    <RotateTransform Angle="360" />
-                                                </Setter>
+                                                <Setter Property="Opacity" Value="0.25" />
                                             </KeyFrame>
                                         </Animation>
                                     </Style.Animations>

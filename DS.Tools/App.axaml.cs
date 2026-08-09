@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
+using Avalonia.VisualTree;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -56,6 +57,9 @@ public partial class App : Application
 
         var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
         logger.LogInformation("应用启动：{AppName} v{AppVersion}，工具模块 {ModuleCount} 个", "DS.Tools", "1.0.0", ToolModules.Length);
+
+        // 将 Avalonia 内部日志（含绑定错误）接入 ILogger，便于排查 UI 绑定问题
+        Avalonia.Logging.Logger.Sink = new AvaloniaLogSink(logger);
 
         // ===== 阶段4：初始化工具模块（注册到 ToolRegistry）=====
         InitializeToolModules(logger);

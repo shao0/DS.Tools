@@ -25,6 +25,8 @@
     </PackageReference>
     <PackageReference Include="Moq" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Avalonia.Headless" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
 </Project>
