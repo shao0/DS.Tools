@@ -47,8 +47,46 @@ public sealed class LocalizationService : ILocalizationService
     /// </summary>
     public string GetString(string key)
     {
-        // TODO: 实现实际的资源文件查找
-        return key;
+        // 简化的资源查找实现 - AOT兼容
+        // 在实际应用中，可以从资源文件或数据库加载本地化字符串
+        // 这里提供基本的本地化字符串映射
+
+        var localizedStrings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            // 通用字符串
+            ["app_title"] = _currentCulture.Name == "zh-CN" ? "DS.Tools - 开发者工具集" : "DS.Tools - Developer Utilities",
+            ["toolbox"] = _currentCulture.Name == "zh-CN" ? "工具箱" : "Toolbox",
+            ["settings"] = _currentCulture.Name == "zh-CN" ? "设置" : "Settings",
+            ["about"] = _currentCulture.Name == "zh-CN" ? "关于" : "About",
+
+            // 按钮文本
+            ["copy"] = _currentCulture.Name == "zh-CN" ? "复制" : "Copy",
+            ["paste"] = _currentCulture.Name == "zh-CN" ? "粘贴" : "Paste",
+            ["clear"] = _currentCulture.Name == "zh-CN" ? "清空" : "Clear",
+            ["submit"] = _currentCulture.Name == "zh-CN" ? "提交" : "Submit",
+            ["cancel"] = _currentCulture.Name == "zh-CN" ? "取消" : "Cancel",
+            ["save"] = _currentCulture.Name == "zh-CN" ? "保存" : "Save",
+            ["delete"] = _currentCulture.Name == "zh-CN" ? "删除" : "Delete",
+            ["edit"] = _currentCulture.Name == "zh-CN" ? "编辑" : "Edit",
+
+            // 状态消息
+            ["success"] = _currentCulture.Name == "zh-CN" ? "成功" : "Success",
+            ["error"] = _currentCulture.Name == "zh-CN" ? "错误" : "Error",
+            ["warning"] = _currentCulture.Name == "zh-CN" ? "警告" : "Warning",
+            ["loading"] = _currentCulture.Name == "zh-CN" ? "加载中..." : "Loading...",
+
+            // 工具名称
+            ["text_tools"] = _currentCulture.Name == "zh-CN" ? "文本工具" : "Text Tools",
+            ["json_formatter"] = _currentCulture.Name == "zh-CN" ? "JSON格式化" : "JSON Formatter",
+            ["base64_converter"] = _currentCulture.Name == "zh-CN" ? "Base64编码" : "Base64 Converter",
+            ["color_converter"] = _currentCulture.Name == "zh-CN" ? "颜色转换" : "Color Converter",
+            ["password_generator"] = _currentCulture.Name == "zh-CN" ? "密码生成器" : "Password Generator",
+            ["text_hasher"] = _currentCulture.Name == "zh-CN" ? "文本哈希" : "Text Hasher",
+            ["timestamp_converter"] = _currentCulture.Name == "zh-CN" ? "时间戳转换" : "Timestamp Converter"
+        };
+
+        // 尝试获取本地化字符串，如果找不到则返回key本身
+        return localizedStrings.TryGetValue(key, out var value) ? value : key;
     }
 
     /// <summary>

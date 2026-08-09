@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DS.Tools.Module.Base.Interfaces;
+using Avalonia.Threading;
+
 
 namespace DS.Tools.Module.Text.ViewModels;
 
@@ -11,6 +13,7 @@ namespace DS.Tools.Module.Text.ViewModels;
 public sealed partial class DashboardViewModel : ViewModelBase
 {
     private readonly INavigationService? _navigationService;
+    private readonly DispatcherTimer _clockTimer;
 
     /// <summary>当前时间（HH:mm 格式）</summary>
     [ObservableProperty]
@@ -24,15 +27,20 @@ public sealed partial class DashboardViewModel : ViewModelBase
     [ObservableProperty]
     private string? _timestamp;
 
-    /// <summary>时钟是否正在运行（内部控制标志，非绑定属性）</summary>
-    private bool _isClockRunning;
-
     /// <summary>
     /// 构造函数
     /// </summary>
     public DashboardViewModel(INavigationService? navigationService = null)
     {
         _navigationService = navigationService;
+
+        // 初始化 DispatcherTimer，每秒更新一次时钟
+        _clockTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _clockTimer.Tick += OnClockTick;
+
         StartClock();
     }
 
@@ -41,15 +49,14 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     public void StartClock()
     {
-        if (_isClockRunning)
-            return;
-
-        _isClockRunning = true;
+        // 立即更新一次时钟
         UpdateClock();
 
-        // TODO: 在实际应用中，应该使用 DispatcherTimer 实现
-        // 这里只是演示，实际需要使用 Avalonia 的定时器机制
-        // 暂时通过手动更新模拟时钟运行
+        // 启动定时器
+        if (!_clockTimer.IsEnabled)
+        {
+            _clockTimer.Start();
+        }
     }
 
     /// <summary>
@@ -57,7 +64,18 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// </summary>
     public void StopClock()
     {
-        _isClockRunning = false;
+        if (_clockTimer.IsEnabled)
+        {
+            _clockTimer.Stop();
+        }
+    }
+
+    /// <summary>
+    /// 时钟定时器触发事件
+    /// </summary>
+    private void OnClockTick(object? sender, EventArgs e)
+    {
+        UpdateClock();
     }
 
     /// <summary>

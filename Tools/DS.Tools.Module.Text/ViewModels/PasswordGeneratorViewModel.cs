@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DS.Tools.Core.Interfaces;
 
 
 namespace DS.Tools.Module.Text.ViewModels;
@@ -12,6 +13,15 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// </summary>
 public sealed partial class PasswordGeneratorViewModel : ViewModelBase
 {
+    private readonly IClipboardService _clipboardService;
+
+    /// <summary>
+    /// 构造函数 - 显式依赖注入
+    /// </summary>
+    public PasswordGeneratorViewModel(IClipboardService clipboardService)
+    {
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+    }
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PasswordLengthDisplay))]
     private int _passwordLength = 16;
@@ -80,12 +90,21 @@ public sealed partial class PasswordGeneratorViewModel : ViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(CanCopy))]
-    private void Copy()
+    private async Task CopyAsync()
     {
         if (!string.IsNullOrEmpty(GeneratedPassword))
         {
-            // TODO: 实现剪贴板复制
-            Console.WriteLine($"已复制密码: {GeneratedPassword}");
+            try
+            {
+                await _clipboardService.SetTextAsync(GeneratedPassword);
+                HasErrors = false;
+                ErrorMessage = null;
+            }
+            catch (Exception ex)
+            {
+                HasErrors = true;
+                ErrorMessage = $"复制失败: {ex.Message}";
+            }
         }
     }
 

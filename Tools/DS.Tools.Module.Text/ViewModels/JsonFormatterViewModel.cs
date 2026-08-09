@@ -148,8 +148,7 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase
 
         try
         {
-            // TODO: 实现 Avalonia 剪贴板复制
-            // 需要通过依赖注入或服务定位获取 IClipboard
+            await _clipboardService.SetTextAsync(OutputJson);
             StatusMessage = "✓ 已复制到剪贴板";
             await Task.Delay(2000); // 显示成功消息后清除
             StatusMessage = string.Empty;

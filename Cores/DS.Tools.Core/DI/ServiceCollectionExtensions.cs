@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         // ========================================
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
 
         return services;
     }

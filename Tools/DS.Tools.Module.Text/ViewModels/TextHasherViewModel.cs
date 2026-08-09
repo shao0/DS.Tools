@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DS.Tools.Core.Interfaces;
 
 
 namespace DS.Tools.Module.Text.ViewModels;
@@ -12,6 +13,15 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// </summary>
 public sealed partial class TextHasherViewModel : ViewModelBase
 {
+    private readonly IClipboardService _clipboardService;
+
+    /// <summary>
+    /// 构造函数 - 显式依赖注入
+    /// </summary>
+    public TextHasherViewModel(IClipboardService clipboardService)
+    {
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+    }
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CalculateHashCommand))]
     [NotifyCanExecuteChangedFor(nameof(ClearCommand))]
@@ -70,22 +80,40 @@ public sealed partial class TextHasherViewModel : ViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(CanCopySha256))]
-    private void CopySha256()
+    private async Task CopySha256Async()
     {
         if (!string.IsNullOrEmpty(Sha256Result))
         {
-            // TODO: 实现剪贴板复制
-            Console.WriteLine($"已复制 SHA-256: {Sha256Result}");
+            try
+            {
+                await _clipboardService.SetTextAsync(Sha256Result);
+                HasErrors = false;
+                ErrorMessage = null;
+            }
+            catch (Exception ex)
+            {
+                HasErrors = true;
+                ErrorMessage = $"复制失败: {ex.Message}";
+            }
         }
     }
 
     [RelayCommand(CanExecute = nameof(CanCopyMd5))]
-    private void CopyMd5()
+    private async Task CopyMd5Async()
     {
         if (!string.IsNullOrEmpty(Md5Result))
         {
-            // TODO: 实现剪贴板复制
-            Console.WriteLine($"已复制 MD5: {Md5Result}");
+            try
+            {
+                await _clipboardService.SetTextAsync(Md5Result);
+                HasErrors = false;
+                ErrorMessage = null;
+            }
+            catch (Exception ex)
+            {
+                HasErrors = true;
+                ErrorMessage = $"复制失败: {ex.Message}";
+            }
         }
     }
 
