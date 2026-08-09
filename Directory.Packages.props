@@ -53,7 +53,7 @@
   <!-- 日志 - Serilog                          -->
   <!-- ======================================== -->
   <PropertyGroup>
-    <SerilogVersion>4.2.0</SerilogVersion>
+    <SerilogVersion>4.4.0</SerilogVersion>
     <SerilogExtensionsVersion>9.0.0</SerilogExtensionsVersion>
     <SerilogSinksFileVersion>6.0.0</SerilogSinksFileVersion>
     <SerilogSinksConsoleVersion>5.0.0</SerilogSinksConsoleVersion>

@@ -9,6 +9,7 @@
     <File Path="CLAUDE.md" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
+    <File Path="publish-aot.ps1" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/DS.Tools.Tests/DS.Tools.Tests.csproj" />
