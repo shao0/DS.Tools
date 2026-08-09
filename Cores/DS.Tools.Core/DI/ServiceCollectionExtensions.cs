@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
         // ========================================
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<IFolderPickerService, FolderPickerService>();
 
         return services;
     }

@@ -45,6 +45,7 @@
 
         <!-- 工具模块引用 -->
         <ProjectReference Include="..\Tools\DS.Tools.Module.Text\DS.Tools.Module.Text.csproj" />
+        <ProjectReference Include="..\Tools\DS.Tools.Module.Git\DS.Tools.Module.Git.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -13,6 +13,8 @@ using Xunit;
 using DS.Tools.Core.DI;
 using DS.Tools.Module.Base.DI;
 using DS.Tools.Module.Base.Interfaces;
+using DS.Tools.Module.Git;
+using DS.Tools.Module.Git.ViewModels;
 using DS.Tools.Module.Text;
 using DS.Tools.Module.Text.ViewModels;
 using DS.Tools.ViewModels;
@@ -99,6 +101,10 @@ public class MainWindowRenderIntegrationTests
         module.Register(services);
         services.AddSingleton(module);
 
+        var gitModule = new GitModule();
+        gitModule.Register(services);
+        services.AddSingleton(gitModule);
+
         services.AddTransient<MainWindowViewModel>();
         services.AddTransient<MainWindow>();
 
@@ -106,6 +112,7 @@ public class MainWindowRenderIntegrationTests
 
         // 等价于 App.InitializeToolModules：模块注册进 ToolRegistry
         sp.GetRequiredService<IToolRegistry>().Register(module);
+        sp.GetRequiredService<IToolRegistry>().Register(gitModule);
 
         return sp;
     }
@@ -160,6 +167,39 @@ public class MainWindowRenderIntegrationTests
                 $"内容区 {bindingState}；" +
                 $"绑定日志: [{string.Join(" | ", bindingErrors)}]");
             presenter!.Child.Should().BeOfType<DS.Tools.Module.Text.Views.JsonFormatterView>();
+        });
+    }
+
+    [Fact]
+    public void MainWindow_NavigateToGitLogTool_ShouldRenderGitLogView()
+    {
+        EnsureHeadlessInitialized();
+        var sp = BuildContainer();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var window = sp.GetRequiredService<MainWindow>();
+            window.DataContext = sp.GetRequiredService<MainWindowViewModel>();
+            window.Show();
+            RenderFrame();
+
+            // 通过侧边栏菜单导航到 Git 日志
+            var gitText = window.GetVisualDescendants().OfType<TextBlock>()
+                .First(t => t.Text == "Git 日志");
+            var gitButton = gitText.GetVisualAncestors().OfType<Button>().First();
+            gitButton.Command!.Execute(gitButton.CommandParameter);
+            RenderFrame();
+
+            // 导航后内容区应切换为 GitLogViewModel 并渲染对应 View
+            var targetVm = ((MainWindowViewModel)window.DataContext!).ActiveToolViewModel;
+            targetVm.Should().BeOfType<GitLogViewModel>();
+
+            var presenters = window.GetVisualDescendants().OfType<ContentPresenter>().ToList();
+            var presenter = presenters.FirstOrDefault(p => ReferenceEquals(p.Content, targetVm));
+            presenter.Should().NotBeNull(
+                $"GitLogViewModel 应被 ContentPresenter 承载；ContentPresenter 共 {presenters.Count} 个，" +
+                $"Content 类型: [{string.Join(", ", presenters.Select(p => p.Content?.GetType().Name ?? "null"))}]");
+            presenter!.Child.Should().BeOfType<DS.Tools.Module.Git.Views.GitLogView>();
         });
     }
 

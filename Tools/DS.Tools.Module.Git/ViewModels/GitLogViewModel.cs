@@ -1,0 +1,252 @@
+using System.ComponentModel;
+using Microsoft.Extensions.Logging;
+using DS.Tools.Module.Git.Models;
+using DS.Tools.Module.Git.Services;
+
+namespace DS.Tools.Module.Git.ViewModels;
+
+/// <summary>
+/// Git 日志工具 ViewModel
+/// 使用 CommunityToolkit.Mvvm 源生成器，AOT 兼容，无反射调用
+/// </summary>
+public sealed partial class GitLogViewModel : ViewModelBase
+{
+    private readonly IGitLogService _gitLogService;
+    private readonly IGitSettingsService _settingsService;
+    private readonly IFolderPickerService _folderPickerService;
+    private readonly ILogger<GitLogViewModel> _logger;
+
+    /// <summary>
+    /// 构造函数 —— 通过 DI 注入服务；启动时恢复上次选择的文件夹并自动加载
+    /// </summary>
+    public GitLogViewModel(
+        IGitLogService gitLogService,
+        IGitSettingsService settingsService,
+        IFolderPickerService folderPickerService,
+        ILogger<GitLogViewModel> logger)
+    {
+        _gitLogService = gitLogService ?? throw new ArgumentNullException(nameof(gitLogService));
+        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _folderPickerService = folderPickerService ?? throw new ArgumentNullException(nameof(folderPickerService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        DisplayName = "Git 日志";
+
+        // 默认时间范围：本周一至本周日（自动加载/首次查询默认只看本周提交）
+        SetDefaultDateRange();
+
+        // 启动时恢复上次选择的文件夹并自动加载（fire-and-forget，全程 try/catch 无未观察异常）
+        var saved = _settingsService.Load();
+        if (!string.IsNullOrWhiteSpace(saved.LastFolderPath))
+        {
+            RepositoryPath = saved.LastFolderPath;
+            _ = RefreshRepoStateAsync();
+        }
+    }
+
+    /// <summary>
+    /// 仓库路径（可手动编辑，或经文件夹选择器）
+    /// </summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(LoadLogCommand))]
+    private string? _repositoryPath;
+
+    /// <summary>
+    /// 当前分支名称
+    /// </summary>
+    [ObservableProperty]
+    private string? _branchName;
+
+    /// <summary>
+    /// 起始日期（null = 不限）
+    /// </summary>
+    [ObservableProperty]
+    private DateTime? _sinceDate;
+
+    /// <summary>
+    /// 结束日期（null = 不限）
+    /// </summary>
+    [ObservableProperty]
+    private DateTime? _untilDate;
+
+    /// <summary>
+    /// 状态信息（成功时显示统计）
+    /// </summary>
+    [ObservableProperty]
+    private string _statusMessage = string.Empty;
+
+    /// <summary>
+    /// 是否已有日志结果
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasLog;
+
+    /// <summary>
+    /// 日志条目数（与 LogEntries 同步维护）
+    /// </summary>
+    [ObservableProperty]
+    private int _logCount;
+
+    /// <summary>
+    /// 提交日志条目集合
+    /// </summary>
+    public ObservableCollection<GitLogEntry> LogEntries { get; } = [];
+
+    /// <summary>
+    /// 是否为空状态（无错误、非加载中、无日志条目——显示占位提示）
+    /// </summary>
+    public bool IsEmptyState => !HasErrors && !IsLoading && LogEntries.Count == 0;
+
+    /// <summary>
+    /// 属性变化时联动刷新空状态（含基类 IsLoading/HasErrors/ErrorMessage）
+    /// </summary>
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        if (e.PropertyName is nameof(IsLoading) or nameof(HasErrors) or nameof(HasLog) or nameof(LogCount))
+        {
+            OnPropertyChanged(nameof(IsEmptyState));
+        }
+    }
+
+    /// <summary>
+    /// 选择文件夹命令：打开系统对话框 → 保存设置 → 加载仓库状态与日志
+    /// </summary>
+    [RelayCommand]
+    private async Task PickFolderAsync()
+    {
+        var path = await _folderPickerService.PickFolderAsync(RepositoryPath);
+        if (string.IsNullOrWhiteSpace(path))
+            return; // 用户取消
+
+        RepositoryPath = path;
+        _settingsService.Save(new GitSettings { LastFolderPath = path });
+        await RefreshRepoStateAsync();
+    }
+
+    /// <summary>
+    /// 获取日志命令：按当前起止日期重新拉取日志
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanLoadLog))]
+    private async Task LoadLogAsync()
+    {
+        if (IsLoading)
+            return; // 防重入
+
+        await LoadLogCoreAsync();
+    }
+
+    private bool CanLoadLog() => !string.IsNullOrWhiteSpace(RepositoryPath);
+
+    /// <summary>
+    /// 加载仓库状态：校验仓库 → 获取分支 → 拉取日志
+    /// </summary>
+    private async Task RefreshRepoStateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(RepositoryPath))
+            return;
+
+        IsLoading = true;
+        try
+        {
+            if (!await _gitLogService.IsGitRepositoryAsync(RepositoryPath))
+            {
+                BranchName = null;
+                ShowError("所选文件夹不是 Git 仓库");
+                return;
+            }
+
+            BranchName = await _gitLogService.GetCurrentBranchAsync(RepositoryPath);
+            await LoadLogCoreAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "加载仓库状态失败（{RepoPath}）", RepositoryPath);
+            ShowError($"加载失败: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// 拉取日志（起止日期经本地时区偏移转换为 DateTimeOffset）
+    /// </summary>
+    private async Task LoadLogCoreAsync()
+    {
+        if (string.IsNullOrWhiteSpace(RepositoryPath))
+            return;
+
+        DateTimeOffset? since = SinceDate is { } s ? ToLocalOffset(s) : null;
+        // 结束日期按"含当天"处理：次日零点作为 git --until 的排他边界，否则当天（如周日）提交会被排除
+        DateTimeOffset? until = UntilDate is { } u ? ToLocalOffset(u.AddDays(1)) : null;
+
+        IsLoading = true;
+        try
+        {
+            var result = await _gitLogService.GetLogAsync(RepositoryPath, since, until);
+
+            LogEntries.Clear();
+            if (result.IsSuccess)
+            {
+                foreach (var entry in result.Entries)
+                {
+                    LogEntries.Add(entry);
+                }
+
+                HasErrors = false;
+                ErrorMessage = null;
+                HasLog = true;
+                LogCount = result.Entries.Count;
+                StatusMessage = $"✓ 共 {result.Entries.Count} 条提交" +
+                    (result.Entries.Count >= GitLogService.MaxEntries ? "（已达上限 1000 条）" : string.Empty);
+            }
+            else
+            {
+                ShowError(result.ErrorMessage ?? "获取日志失败");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取 Git 日志失败（{RepoPath}）", RepositoryPath);
+            ShowError($"获取日志异常: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// 本地时间转 DateTimeOffset（使用本地时区偏移）
+    /// </summary>
+    private static DateTimeOffset ToLocalOffset(DateTime value)
+        => new(value, TimeZoneInfo.Local.GetUtcOffset(value));
+
+    /// <summary>
+    /// 设置默认时间范围：本周一至本周日
+    /// </summary>
+    private void SetDefaultDateRange()
+    {
+        var today = DateTime.Today;
+        // DayOfWeek：周日=0、周一=1 … 周六=6 → 到本周一的偏移 = (dayOfWeek + 6) % 7
+        var monday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+        SinceDate = monday;
+        UntilDate = monday.AddDays(6);
+    }
+
+    /// <summary>
+    /// 显示错误
+    /// </summary>
+    private void ShowError(string message)
+    {
+        HasErrors = true;
+        ErrorMessage = message;
+        HasLog = false;
+        LogCount = 0;
+        StatusMessage = string.Empty;
+        LogEntries.Clear();
+    }
+}

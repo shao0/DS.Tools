@@ -470,6 +470,24 @@ DS.Tools.slnx
 6. **效率**：JsonFormatterService 去伪异步（无 await 的 async 方法改同步）且单次 `JsonDocument.Parse` 完成验证+输出+深度（原 3 次解析）；删除全库 ~30 处 `[MethodImpl(AggressiveInlining)]` 滥用；`ClipboardService` 占位 Console 输出改为 Avalonia 12 真实剪贴板 API（`DataTransferItem.CreateText` / `TryGetDataAsync`）；`NavigationService` 移除未使用的 `IServiceProvider` 依赖
 7. **配置对齐**：Microsoft.Extensions.* 升到 10.0.0（与 net10.0 对齐）；`appsettings.json` 子工具 ID 与 `ToolIds` 常量一致；`Directory.Build.props` 全开 `TreatWarningsAsErrors`（移除覆盖它的 `WarningsAsErrors` 列表）
 
+### Git 日志模块（2026-08-09）
+
+新增第二个工具模块 `Tools/DS.Tools.Module.Git`（`git-tools` → 子工具 `git-log`），四步功能：文件夹选择 → 当前分支名 → 设置 JSON 持久化 → 时间段日志。
+
+1. **文件夹选择器入 Core**：`IFolderPickerService`/`FolderPickerService`（镜像 `ClipboardService` 的 MainWindow + Dispatcher 模式，`StorageProvider.OpenFolderPickerAsync`，Avalonia 12 验证过 `TryGetLocalPath`/`CanPickFolder`/`FolderPickerOpenOptions`），注册于 `AddApplicationServices()`
+2. **设置持久化**：`IGitSettingsService` → `%LocalAppData%\DS.Tools\git-settings.json`（源生成上下文 `GitJsonContext`，camelCase + 缩进；双构造函数供测试注入路径；损坏/缺失回默认值，保存失败仅记日志）
+3. **git CLI 集成**：`IGitLogService` 经 `System.Diagnostics.Process` 执行（零新依赖，禁 LibGit2Sharp）——`git -C <path>` + `ArgumentList` 免引号；分支 = `symbolic-ref --short -q HEAD`（游离 HEAD 退化 `rev-parse --short HEAD`）；日志 = `log -n 1000 [--since/--until] --pretty=format:%x1e%h%x1f%an%x1f%ae%x1f%aI%x1f%s`（控制符分隔防主题含 `|`）；防死锁（先读流再等待）、30s 超时 + 进程树 Kill、`Win32Exception` 友好报错、空仓库 exit-128 特判为成功空列表
+4. **修复多模块导航 bug**：`MainWindowViewModel.SelectSubTool` 原以「当前活动模块」推断子工具导航 ID——多模块下点击其他模块的子工具会路由错误（`text-tools:git-log`）；改为从 `IToolRegistry` 查找子工具所属模块（`SubTools.Contains` 引用相等）再拼 ID
+5. **清理**：删除临时诊断测试 `MenuDiagTests.cs`/`MenuDiagAppTests.cs`（文件注释自述"确认后删除"；后者不在 HeadlessUi 串行集合内且初始化真实 App，污染共享平台状态导致其他 headless 测试随机失败）
+
+**已验证 API 事实**（反射 Avalonia 12.1.0 程序集）：`CalendarDatePicker.SelectedDate` 是 `DateTime?`（VM 转 `DateTimeOffset` 用本地时区偏移）；`Watermark` 已废弃 → 用 `PlaceholderText`（AVLN5001 警告会冒泡）。xUnit v2 无运行时动态跳过（`Assert.Skip`/`SkipException` 均 v3）——git 缺失时用发现期 `RequiresGitFact` 属性置 `Skip`。
+
+**编码教训**：git 输出为 UTF-8 字节，`Process.StandardOutput` 在中文 Windows 上默认按 ANSI 代码页（GBK）解码 → 中文提交主题/作者/分支名乱码。修复：`StandardOutputEncoding`/`StandardErrorEncoding` 设 `UTF8Encoding(false)` + 命令参数 `-c i18n.logOutputEncoding=UTF-8`（兼容 GBK 提交编码的旧仓库）。
+
+**默认时间范围**：打开工具即默认本周一至本周日（`SetDefaultDateRange`，`DayOfWeek` 周日=0 的周一偏移 `(dow+6)%7`）。注意 git `--until` 是排他边界——结束日期必须按"含当天"处理：VM 传参 `until.AddDays(1)`（次日零点），否则周日当天提交会被排除（服务层 `GetLog_UntilBoundary_IsExclusiveAtBoundaryInstant` 锁定该语义）。
+
+测试 101/101 通过（新增 39 个：Settings 6、GitLogService 18（真实 git 临时仓库 + 固定日期提交 + 中文编码回归 + 边界语义）、VM 11、视图渲染 3、导航回归 2）。
+
 ---
 
 **文档版本**：1.0

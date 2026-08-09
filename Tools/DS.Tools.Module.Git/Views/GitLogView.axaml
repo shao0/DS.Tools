@@ -1,0 +1,303 @@
+<UserControl
+    x:Class="DS.Tools.Module.Git.Views.GitLogView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:gitmodels="using:DS.Tools.Module.Git.Models"
+    xmlns:vm="using:DS.Tools.Module.Git.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="900"
+    x:CompileBindings="True"
+    x:DataType="vm:GitLogViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://DS.Tools.Module.Git/Styles/GitLogStyles.axaml" />
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!--  标题区域  -->
+        <Border
+            Grid.Row="0"
+            Padding="24,16"
+            Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1"
+            CornerRadius="12,12,0,0">
+            <Grid ColumnDefinitions="Auto,*">
+                <TextBlock
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    Text="📜" />
+                <StackPanel
+                    Grid.Column="1"
+                    VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="20"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
+                        Text="Git 日志" />
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        FontSize="12"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        Text="选择 Git 仓库文件夹，按时间段浏览提交历史" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!--  操作区域：仓库路径 + 文件夹选择 + 日期范围 + 获取日志  -->
+        <Border
+            Grid.Row="1"
+            Padding="24,16"
+            Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12">
+                <!--  仓库路径（可手动编辑）  -->
+                <TextBox
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Classes="repoPathBox"
+                    PlaceholderText="选择 Git 仓库文件夹..."
+                    Text="{Binding RepositoryPath, Mode=TwoWay}" />
+
+                <!--  选择文件夹  -->
+                <Button
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Classes="actionButton"
+                    Command="{Binding PickFolderCommand}"
+                    Content="📁 选择文件夹" />
+
+                <!--  起始日期  -->
+                <CalendarDatePicker
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    MinWidth="150"
+                    PlaceholderText="起始日期"
+                    SelectedDate="{Binding SinceDate, Mode=TwoWay}" />
+
+                <TextBlock
+                    Grid.Column="3"
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    Foreground="{DynamicResource TextSecondaryBrush}"
+                    Text="至" />
+
+                <!--  结束日期  -->
+                <CalendarDatePicker
+                    Grid.Column="4"
+                    VerticalAlignment="Center"
+                    MinWidth="150"
+                    PlaceholderText="结束日期"
+                    SelectedDate="{Binding UntilDate, Mode=TwoWay}" />
+
+                <!--  获取日志  -->
+                <Button
+                    Grid.Column="5"
+                    VerticalAlignment="Center"
+                    Classes="actionButton"
+                    Command="{Binding LoadLogCommand}"
+                    Content="📜 获取日志" />
+            </Grid>
+        </Border>
+
+        <!--  主内容区域  -->
+        <Grid
+            Grid.Row="2"
+            Margin="24,16"
+            RowDefinitions="Auto,Auto,*"
+            RowSpacing="12">
+            <!--  仓库信息卡（当前分支）  -->
+            <Border
+                Grid.Row="0"
+                Padding="16,12"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        Text="🌿 当前分支：" />
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource PrimaryBrush}"
+                        Text="{Binding BranchName, TargetNullValue=未选择仓库}" />
+                </StackPanel>
+            </Border>
+
+            <!--  错误显示 / 空状态提示（互斥）  -->
+            <Border
+                Grid.Row="1"
+                Padding="16"
+                Background="{DynamicResource ErrorBackgroundBrush}"
+                BorderBrush="{DynamicResource ErrorBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                IsVisible="{Binding HasErrors}">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource ErrorTextBrush}"
+                        Text="❌ 错误" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource ErrorTextBrush}"
+                        Text="{Binding ErrorMessage}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock
+                Grid.Row="1"
+                Padding="16"
+                FontSize="13"
+                Foreground="{DynamicResource TextMutedBrush}"
+                IsVisible="{Binding IsEmptyState}"
+                Text="尚未加载日志。点击「📁 选择文件夹」选择 Git 仓库，或直接输入路径后点击「📜 获取日志」。" />
+
+            <!--  日志列表  -->
+            <ListBox
+                Grid.Row="2"
+                Background="Transparent"
+                BorderThickness="0"
+                ItemsSource="{Binding LogEntries}"
+                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="gitmodels:GitLogEntry">
+                        <Border
+                            Margin="0,0,0,8"
+                            Padding="16,12"
+                            Background="{DynamicResource CardBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <!--  提交哈希  -->
+                                <TextBlock
+                                    Grid.Column="0"
+                                    Margin="0,0,16,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas,Courier New,monospace"
+                                    FontSize="13"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource PrimaryBrush}"
+                                    Text="{Binding Hash}" />
+
+                                <!--  作者与主题  -->
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Spacing="4">
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="SemiBold"
+                                        Foreground="{DynamicResource TextPrimaryBrush}"
+                                        Text="{Binding Subject}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{DynamicResource TextMutedBrush}"
+                                        Text="{Binding AuthorName}" />
+                                </StackPanel>
+
+                                <!--  提交日期  -->
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="16,0,0,0"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Consolas,Courier New,monospace"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                    Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <!--  状态栏  -->
+        <Border
+            Grid.Row="3"
+            Padding="24,12"
+            Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,1,0,0"
+            CornerRadius="0,0,12,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <!--  加载状态  -->
+                <StackPanel
+                    Grid.Column="0"
+                    IsVisible="{Binding IsLoading}"
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <Grid
+                        Width="16"
+                        Height="16">
+                        <Ellipse
+                            Width="16"
+                            Height="16"
+                            Fill="Transparent"
+                            Stroke="{DynamicResource PrimaryBrush}"
+                            StrokeThickness="2" />
+                        <Ellipse
+                            Width="16"
+                            Height="16"
+                            Fill="Transparent"
+                            Stroke="{DynamicResource PrimaryBrush}"
+                            StrokeDashArray="4,2"
+                            StrokeThickness="2">
+                            <Ellipse.Styles>
+                                <Style Selector="Ellipse">
+                                    <Style.Animations>
+                                        <!--  Avalonia 12：animator 按属性类型静态匹配。动画化
+                                              Opacity（double，命中内置 DoubleAnimator）做脉冲，
+                                              不可动画化整个 RenderTransform 对象（无匹配 animator，
+                                              挂载即抛异常导致内容区空白）。  -->
+                                        <Animation
+                                            IterationCount="INFINITE"
+                                            Duration="0:0:0.9">
+                                            <KeyFrame Cue="0%">
+                                                <Setter Property="Opacity" Value="0.25" />
+                                            </KeyFrame>
+                                            <KeyFrame Cue="50%">
+                                                <Setter Property="Opacity" Value="1" />
+                                            </KeyFrame>
+                                            <KeyFrame Cue="100%">
+                                                <Setter Property="Opacity" Value="0.25" />
+                                            </KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </Ellipse.Styles>
+                        </Ellipse>
+                    </Grid>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        Text="加载中..." />
+                </StackPanel>
+
+                <!--  状态信息  -->
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{DynamicResource TextMutedBrush}"
+                    Text="{Binding StatusMessage}" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

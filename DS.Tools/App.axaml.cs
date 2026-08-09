@@ -12,6 +12,7 @@ using DS.Tools.Core.Interfaces;
 using DS.Tools.Infrastructure.Logging;
 using DS.Tools.Module.Base.DI;
 using DS.Tools.Module.Base.Interfaces;
+using DS.Tools.Module.Git;
 using DS.Tools.Module.Text;
 using DS.Tools.ViewModels;
 using DS.Tools.Views;
@@ -30,7 +31,7 @@ public partial class App : Application
     /// <summary>
     /// 工具模块清单（编译期显式声明——新增模块只需在此追加一行）
     /// </summary>
-    private static readonly IToolModule[] ToolModules = [new TextModule()];
+    private static readonly IToolModule[] ToolModules = [new TextModule(), new GitModule()];
 
     /// <summary>
     /// 应用程序初始化

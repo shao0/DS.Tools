@@ -107,16 +107,22 @@ public sealed partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>
     /// 选择子工具命令（二级菜单）
+    /// 注意：子工具按钮可能来自任意模块（侧边栏按模块分组展开），
+    /// 导航 ID 必须以子工具所属模块为准，不能假定当前活动模块（多模块下会导致错误路由）。
     /// </summary>
     [RelayCommand]
     private void SelectSubTool(object? parameter)
     {
-        if (parameter is SubToolInfo subTool && _navigationService.CurrentTool is not null)
-        {
-            var module = _navigationService.CurrentTool;
-            var fullNavigationId = subTool.GetFullNavigationId(module.Id);
-            _navigationService.NavigateTo(fullNavigationId);
-        }
+        if (parameter is not SubToolInfo subTool)
+            return;
+
+        // 从注册表解析拥有该子工具的模块（SubToolInfo 引用相等即可匹配）
+        var ownerModule = _toolRegistry.Tools.FirstOrDefault(m => m.SubTools?.Contains(subTool) == true);
+        if (ownerModule is null)
+            return;
+
+        var fullNavigationId = subTool.GetFullNavigationId(ownerModule.Id);
+        _navigationService.NavigateTo(fullNavigationId);
     }
 
     /// <summary>

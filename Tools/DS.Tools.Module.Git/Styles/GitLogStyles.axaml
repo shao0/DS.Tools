@@ -1,0 +1,87 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 操作按钮样式（class 名与视图 Classes="actionButton" 一致——Avalonia class 匹配区分大小写） -->
+    <Style Selector="Button.actionButton">
+        <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryFgBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="MinWidth" Value="100" />
+        <Setter Property="Height" Value="40" />
+    </Style>
+
+    <Style Selector="Button.actionButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.actionButton:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource PrimaryPressedBrush}" />
+    </Style>
+
+    <Style Selector="Button.actionButton:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SecondaryHoverBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+    </Style>
+
+    <!-- 次要按钮样式 -->
+    <Style Selector="Button.secondaryButton">
+        <Setter Property="Background" Value="{DynamicResource SecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="MinWidth" Value="100" />
+        <Setter Property="Height" Value="40" />
+    </Style>
+
+    <Style Selector="Button.secondaryButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SecondaryHoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.secondaryButton:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+
+    <Style Selector="Button.secondaryButton:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+
+    <!-- 仓库路径输入框样式（置于卡片内，透明底 + 细边框） -->
+    <Style Selector="TextBox.repoPathBox">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="CaretBrush" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryBrush}" />
+        <Setter Property="SelectionForegroundBrush" Value="{DynamicResource PrimaryFgBrush}" />
+    </Style>
+
+    <Style Selector="TextBox.repoPathBox:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+
+    <!-- ScrollBar 样式 -->
+    <Style Selector="ScrollBar">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+
+    <Style Selector="ScrollBar:pointerover /template/ Thumb">
+        <Setter Property="Background" Value="{DynamicResource SecondaryHoverBrush}" />
+    </Style>
+
+</Styles>

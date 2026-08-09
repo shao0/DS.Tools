@@ -6,6 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:module="using:DS.Tools.Module.Base.Interfaces"
+    xmlns:gitviews="using:DS.Tools.Module.Git.Views"
+    xmlns:gitvm="using:DS.Tools.Module.Git.ViewModels"
     xmlns:textviews="using:DS.Tools.Module.Text.Views"
     xmlns:textvm="using:DS.Tools.Module.Text.ViewModels"
     xmlns:vm="using:DS.Tools.ViewModels"
@@ -49,6 +51,9 @@
         </DataTemplate>
         <DataTemplate x:DataType="textvm:TimestampConverterViewModel">
             <textviews:TimestampConverterView />
+        </DataTemplate>
+        <DataTemplate x:DataType="gitvm:GitLogViewModel">
+            <gitviews:GitLogView />
         </DataTemplate>
     </Window.DataTemplates>
 
