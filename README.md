@@ -73,12 +73,13 @@ dotnet run --project DS.Tools/DS.Tools.csproj --configuration Debug
 
 | 组件 | 技术选型 |
 |------|----------|
-| **UI 框架** | Avalonia 12.1.0 |
+| **UI 框架** | Avalonia 12.1.0（Desktop/Themes.Fluent/Fonts.Inter/Headless） |
 | **MVVM 框架** | CommunityToolkit.Mvvm 8.4.0 |
 | **依赖注入** | Microsoft.Extensions.DependencyInjection 10.0.0 |
-| **日志** | Serilog 4.2.0 |
-| **配置** | Microsoft.Extensions.Configuration |
-| **序列化** | System.Text.Json (Source Generator) |
+| **日志** | Serilog 4.4.0（Extensions.Logging 9.0.0 / Sinks.File 6.0.0 / Sinks.Console 5.0.0） |
+| **配置** | Microsoft.Extensions.Configuration 10.0.0 |
+| **序列化** | System.Text.Json（源生成上下文） |
+| **测试** | xUnit 2.9.2 + FluentAssertions 7.0.0 + Moq 4.20.2 + Microsoft.NET.Test.Sdk 17.12.0 |
 
 ### 项目结构
 
@@ -90,7 +91,7 @@ DS.Tools.slnx
 ├── Cores/DS.Tools.UI.Shared/      # 共享 UI 资源（样式/控件）
 ├── Tools/DS.Tools.Module.Text/    # 文本工具模块（6 个子工具）
 ├── Tools/DS.Tools.Module.Git/     # Git 日志模块（git-log 子工具）
-└── Tests/DS.Tools.Tests/          # 单元测试（116 个，含 Headless UI 集成测试）
+└── Tests/DS.Tools.Tests/          # 单元测试（235 个，含 Headless UI 集成测试）
 ```
 
 ### 模块化架构
@@ -149,7 +150,7 @@ DS.Tools.slnx
 
 ## 🧪 测试
 
-当前 **116/116** 通过（单元测试 + Avalonia Headless UI 集成测试，headless 测试须同 Collection 串行）。
+当前 **235/235** 通过（单元测试 + Avalonia Headless UI 集成测试，headless 测试须同 Collection 串行）。
 
 ```bash
 # 运行测试

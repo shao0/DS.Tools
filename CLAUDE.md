@@ -21,7 +21,7 @@ DS.Tools.slnx
 ├── Tools/
 │   ├── DS.Tools.Module.Text/   # 文本工具模块（6 个子工具）
 │   └── DS.Tools.Module.Git/    # Git 日志模块（git-log）
-└── Tests/DS.Tools.Tests/       # 单元测试（116 个，含 Headless UI 集成测试）
+└── Tests/DS.Tools.Tests/       # 单元测试（235 个，含 Headless UI 集成测试）
 ```
 
 ### 技术栈
@@ -29,12 +29,12 @@ DS.Tools.slnx
 | 组件 | 版本/配置 |
 |---|---|
 | 目标框架 | `net10.0`，`LangVersion=latest`，Nullable + ImplicitUsings |
-| UI | Avalonia 12.1.0（`AvaloniaUseCompiledBindingsByDefault=true`，编译绑定全开） |
+| UI | Avalonia 12.1.0（Desktop/Themes.Fluent/Fonts.Inter/Headless；`AvaloniaUseCompiledBindingsByDefault=true`） |
 | MVVM | CommunityToolkit.Mvvm 8.4.0（源生成器） |
-| DI/配置 | Microsoft.Extensions.* 10.0.0（`IServiceCollection` 显式注册，禁反射扫描） |
-| 日志 | Serilog（级别/文件滚动读 `appsettings.json` 的 `Logging` 节） |
+| DI/配置 | Microsoft.Extensions.* 10.0.0（DI/Configuration/Json/Binder/Logging/Options；`IServiceCollection` 显式注册，禁反射扫描） |
+| 日志 | Serilog 4.4.0 + Extensions.Logging 9.0.0 + Sinks.File 6.0.0 + Sinks.Console 5.0.0（级别/文件滚动读 `appsettings.json` 的 `Logging` 节） |
 | 序列化 | System.Text.Json 源生成上下文（禁 Newtonsoft.Json） |
-| 测试 | xUnit v2 + FluentAssertions + Avalonia.Headless |
+| 测试 | xUnit 2.9.2 + FluentAssertions 7.0.0 + Moq 4.20.2 + Microsoft.NET.Test.Sdk 17.12.0 + Avalonia.Headless 12.1.0 |
 
 ### 模块化架构（极简，AOT 全程无反射、无 Type 键）
 
@@ -116,7 +116,7 @@ services.AddSingleton<IJsonFormatterService, JsonFormatterService>();
 ## ✅ 当前验证结果
 
 - **构建**：Rider / CLI `dotnet build` 均通过，`TreatWarningsAsErrors` + `EnableTrimAnalyzer` 全开零警告
-- **测试**：**116/116** 通过（单元测试 + Headless UI 集成测试）
+- **测试**：**235/235** 通过（单元测试 + Headless UI 集成测试），覆盖：模块化服务（ToolCatalog/ToolRegistry/NavigationService/DI 注册）、Text/Git 模块全部 ViewModel 与服务、ToolViewModelBase 复制语义、GitLogMessageConverter、ThemeService、SerilogConfig/AvaloniaLogSink、Headless UI 渲染与导航
 - **冒烟**：应用启动正常；Serilog 控制台+文件日志输出启动/模块初始化链路；主页/模块视图经注册表渲染无崩溃
 
 ## ⚠️ 遗留问题
@@ -126,5 +126,5 @@ services.AddSingleton<IJsonFormatterService, JsonFormatterService>();
 
 ---
 
-**文档版本**：2.0
+**文档版本**：2.1
 **最后更新**：2026-08-10
