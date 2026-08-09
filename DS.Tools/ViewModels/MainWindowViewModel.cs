@@ -39,7 +39,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
         // 初始化工具列表
-        Tools = new ObservableCollection<IToolModule>(_toolRegistry.Tools);
+        Tools = [.. _toolRegistry.Tools];
 
         // 订阅导航变更事件
         _navigationService.NavigationChanged += OnNavigationChanged;
@@ -69,7 +69,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// 侧边栏是否打开
     /// </summary>
-    [ObservableProperty] private bool _isPaneOpen = true;
+    [ObservableProperty] private bool _isPaneOpen;
 
     /// <summary>
     /// 导航到默认工具（首个模块的仪表盘）
