@@ -66,12 +66,12 @@ public class GitLogViewRenderTests
     /// <summary>
     /// 构造带桩服务的 VM（无持久化设置 → 不触发自动加载，测试可控）
     /// </summary>
-    private static GitLogViewModel CreateViewModel()
+    private static GitLogViewModel CreateViewModel(StubClipboardService? clipboard = null)
         => new(
             new StubGitLogService(),
             new StubSettingsService(),
             new StubFolderPickerService(),
-            new StubClipboardService(),
+            clipboard ?? new StubClipboardService(),
             NullLogger<GitLogViewModel>.Instance);
 
     /// <summary>
@@ -233,10 +233,50 @@ public class GitLogViewRenderTests
     }
 
     /// <summary>
-    /// 测试用剪贴板桩（不触达系统剪贴板）
+    /// 测试用剪贴板桩（不触达系统剪贴板，记录最近一次写入内容）
     /// </summary>
     private sealed class StubClipboardService : IClipboardService
     {
-        public Task SetTextAsync(string text) => Task.CompletedTask;
+        public string? LastText { get; private set; }
+
+        public Task SetTextAsync(string text)
+        {
+            LastText = text;
+            return Task.CompletedTask;
+        }
+    }
+
+    [Fact]
+    public void GitLogView_CopyEntryButton_CommandIsBoundAndCopiesEntry()
+    {
+        // 回归：复制单条命令曾绑定到 $parent[Window]——视图渲染在 MainWindow 内容区，
+        // $parent[Window] 解析到 MainWindow（DataContext=MainWindowViewModel），强转 GitLogViewModel 失败
+        // → Command 为 null，按钮点击无反应。修复：$parent[UserControl]（最近的 UserControl 祖先即视图自身）。
+        EnsureHeadlessInitialized();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var clipboard = new StubClipboardService();
+            var vm = CreateViewModel(clipboard);
+            vm.RepositoryPath = @"D:\repo";
+            vm.BranchName = "main";
+            vm.LogEntries =
+            [
+                new GitLogEntry("abc1234", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug")
+            ];
+
+            RenderInWindow(vm, out var window, out _);
+            RenderFrame();
+
+            var copyButton = window.GetVisualDescendants().OfType<Button>()
+                .Single(b => b.Content?.ToString() == "📋");
+            copyButton.Command.Should().NotBeNull("复制单条按钮命令应经 $parent[UserControl] 绑定到 GitLogViewModel.CopyEntryCommand");
+
+            copyButton.Command!.Execute(copyButton.CommandParameter);
+            clipboard.LastText.Should().Contain("fix: critical bug", "点击复制按钮应将该条完整消息写入剪贴板");
+
+            window.Close();
+        });
     }
 }

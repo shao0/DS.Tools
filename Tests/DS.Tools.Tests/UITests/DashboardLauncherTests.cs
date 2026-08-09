@@ -133,13 +133,16 @@ public class DashboardLauncherTests
     }
 
     [Fact]
-    public void DashboardView_WithGroups_RendersToolTiles()
+    public void DashboardView_TileButton_CommandIsBoundAndNavigates()
     {
+        // 回归：磁贴命令曾绑定到 $parent[Window]——但主页视图渲染在 MainWindow 内容区，
+        // $parent[Window] 解析到 MainWindow（DataContext=MainWindowViewModel），强转 DashboardViewModel 失败
+        // → Command 为 null，磁贴不可点击。修复：$parent[UserControl]（最近的 UserControl 祖先即视图自身）。
         EnsureHeadlessInitialized();
 
         Dispatcher.UIThread.Invoke(() =>
         {
-            var (vm, _) = CreateViewModel();
+            var (vm, nav) = CreateViewModel();
             var window = new Window
             {
                 Width = 900,
@@ -151,15 +154,16 @@ public class DashboardLauncherTests
             AvaloniaHeadlessPlatform.ForceRenderTimerTick();
             Dispatcher.UIThread.RunJobs();
 
-            // 模块分组标题与工具磁贴应渲染进视觉树
-            window.GetVisualDescendants().OfType<TextBlock>()
-                .Any(t => t.Text == "文本工具").Should().BeTrue("文本模块分组标题应显示");
-            window.GetVisualDescendants().OfType<TextBlock>()
-                .Any(t => t.Text == "Git 工具").Should().BeTrue("Git 模块分组标题应显示");
-            window.GetVisualDescendants().OfType<TextBlock>()
-                .Any(t => t.Text == "Git 日志").Should().BeTrue("Git 日志磁贴应显示");
-            window.GetVisualDescendants().OfType<TextBlock>()
-                .Any(t => t.Text == "JSON格式化").Should().BeTrue("JSON格式化磁贴应显示");
+            var tiles = window.GetVisualDescendants().OfType<Button>()
+                .Where(b => b.CommandParameter is string)
+                .ToList();
+            tiles.Should().NotBeEmpty("主页应渲染出功能磁贴按钮");
+
+            var tile = tiles.First(t => (string)t.CommandParameter! == "git-tools:git-log");
+            tile.Command.Should().NotBeNull("磁贴按钮命令应经 $parent[UserControl] 绑定到 DashboardViewModel.NavigateToToolCommand");
+
+            tile.Command!.Execute(tile.CommandParameter);
+            nav.Verify(x => x.NavigateTo("git-tools:git-log"), Times.Once);
 
             window.Close();
         });

@@ -199,7 +199,7 @@
                                                 MinWidth="140"
                                                 Margin="0,0,12,12"
                                                 Classes="toolTile"
-                                                Command="{Binding $parent[Window].((vm:DashboardViewModel)DataContext).NavigateToToolCommand}"
+                                                Command="{Binding $parent[UserControl].((vm:DashboardViewModel)DataContext).NavigateToToolCommand}"
                                                 CommandParameter="{Binding NavigationId}">
                                                 <StackPanel
                                                     Orientation="Horizontal"

@@ -269,7 +269,7 @@
                                     Padding="8,4"
                                     VerticalAlignment="Center"
                                     Classes="secondary-button"
-                                    Command="{Binding $parent[Window].((vm:GitLogViewModel)DataContext).CopyEntryCommand}"
+                                    Command="{Binding $parent[UserControl].((vm:GitLogViewModel)DataContext).CopyEntryCommand}"
                                     CommandParameter="{Binding}"
                                     Content="📋"
                                     FontSize="13" />
