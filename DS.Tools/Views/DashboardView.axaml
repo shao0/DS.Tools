@@ -11,55 +11,9 @@
     x:DataType="vm:DashboardViewModel"
     mc:Ignorable="d">
 
+    <!--  主页样式（统计卡片/功能磁贴）独立于 DashboardViewStyles.axaml，经 StyleInclude 引用  -->
     <UserControl.Styles>
-        <!--  统计卡片（统一外观，4 张卡片复用）  -->
-        <Style Selector="Border.statCard">
-            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="Padding" Value="24" />
-        </Style>
-
-        <Style Selector="TextBlock.statIcon">
-            <Setter Property="Margin" Value="0,0,0,8" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="32" />
-        </Style>
-
-        <Style Selector="TextBlock.statValue">
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="24" />
-            <Setter Property="FontWeight" Value="Bold" />
-        </Style>
-
-        <Style Selector="TextBlock.statLabel">
-            <Setter Property="Margin" Value="0,4,0,0" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-        </Style>
-
-        <!--  功能入口磁贴样式  -->
-        <Style Selector="Button.toolTile">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="16,12" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        </Style>
-
-        <Style Selector="Button.toolTile:pointerover">
-            <Setter Property="Background" Value="{DynamicResource ActiveBackgroundBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-        </Style>
-
-        <Style Selector="Button.toolTile:pressed">
-            <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
-        </Style>
+        <StyleInclude Source="avares://DS.Tools/Views/DashboardViewStyles.axaml" />
     </UserControl.Styles>
 
     <!--  主页内容  -->

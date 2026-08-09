@@ -32,6 +32,7 @@
     <None Remove="Tempds-build\DS.Tools.Core.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Tempds-build-verify\" />
     <Folder Include="Tempds-build\" />
   </ItemGroup>
 

@@ -89,6 +89,15 @@
         <Setter Property="Height" Value="40" />
     </Style>
 
+    <!--  hover/按下态作用于模板部件 ContentPresenter，过渡动画挂同一层级才生效  -->
+    <Style Selector="Button.action-button /template/ ContentPresenter">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
     <Style Selector="Button.action-button:pointerover /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
     </Style>
@@ -114,6 +123,14 @@
         <Setter Property="Padding" Value="16,10" />
         <Setter Property="MinWidth" Value="100" />
         <Setter Property="Height" Value="40" />
+    </Style>
+
+    <Style Selector="Button.secondary-button /template/ ContentPresenter">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
     </Style>
 
     <Style Selector="Button.secondary-button:pointerover /template/ ContentPresenter">

@@ -67,6 +67,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Tempds-build-verify\runtimes\osx\native\" />
       <Folder Include="Tempds-build\runtimes\linux-x64\native\" />
       <Folder Include="Tempds-build\runtimes\linux-x86\native\" />
       <Folder Include="Tempds-build\runtimes\win-x64\native\" />

@@ -3,8 +3,8 @@
              x:Class="DS.Tools.App"
              RequestedThemeVariant="Default">
     <Application.Styles>
-        <!-- Fluent Theme -->
-        <FluentTheme />
+        <!-- Fluent Theme：紧凑密度（现代观感；显式设 Padding/CornerRadius 的自定义样式不受影响） -->
+        <FluentTheme DensityStyle="Compact" />
 
         <!-- Global Font Family -->
         <Style Selector="Window">
@@ -27,6 +27,11 @@
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Button.primary:pointerover">
@@ -46,6 +51,12 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="FontSize" Value="14" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="Button.secondary:pointerover">
@@ -62,6 +73,12 @@
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="FontSize" Value="14" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                </Transitions>
+            </Setter>
         </Style>
 
         <Style Selector="TextBox:focus">
@@ -77,6 +94,9 @@
              主题切换（ThemeService）即全局生效。
         ============================================================ -->
         <ResourceDictionary>
+            <!-- 全局控件圆角：覆盖 Fluent 主题默认 3（Avalonia 12 已移除 CornerRadiusStyle 属性，
+                 应用级资源优先于主题资源，等价旧版 CornerRadiusStyle=Full） -->
+            <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
             <ResourceDictionary.ThemeDictionaries>
             <!-- 深色主题（默认） -->
             <ResourceDictionary x:Key="Dark">
@@ -102,6 +122,7 @@
                 <SolidColorBrush x:Key="ErrorTextBrush" Color="#FCA5A5" />
                 <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#064E3B" />
                 <SolidColorBrush x:Key="SuccessTextBrush" Color="#6EE7B7" />
+                <SolidColorBrush x:Key="WindowCloseHoverBrush" Color="#E81123" />
             </ResourceDictionary>
 
             <!-- 浅色主题 -->
@@ -128,6 +149,7 @@
                 <SolidColorBrush x:Key="ErrorTextBrush" Color="#DC2626" />
                 <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#D1FAE5" />
                 <SolidColorBrush x:Key="SuccessTextBrush" Color="#059669" />
+                <SolidColorBrush x:Key="WindowCloseHoverBrush" Color="#E81123" />
             </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 

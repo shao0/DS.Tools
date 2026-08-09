@@ -1,0 +1,154 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ============================================================
+         MainWindow 窗口级样式（样式数超 3 个，独立资源文件）：
+         侧边栏 / 一级二级菜单 / Expander / 主题切换 / 窗口控制按钮。
+         颜色一律 DynamicResource 引用 App 主题色板。
+         经 MainWindow.axaml 的 StyleInclude 引用。
+    ============================================================ -->
+
+    <!--  窗口 chrome 自定义  -->
+    <Style Selector="Window[ExtendClientAreaToDecorationsHint=True]">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!--  侧边栏样式  -->
+    <Style Selector="Border.sidebar">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,1,0" />
+    </Style>
+
+    <!--  一级菜单项样式：Border 容器（Expander.Header 与无子工具分支均命中）  -->
+    <Style Selector="Border.moduleItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.moduleItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+    </Style>
+
+    <!--  一级菜单标题文字样式  -->
+    <Style Selector="TextBlock.moduleItemTitle">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <!--  二级菜单项样式  -->
+    <Style Selector="Button.subToolItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="28,6" />
+        <Setter Property="Margin" Value="4,1" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.subToolItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <!--  选中状态样式  -->
+    <Style Selector="Border.moduleItem.active">
+        <Setter Property="Background" Value="{DynamicResource ActiveBackgroundBrush}" />
+    </Style>
+
+    <Style Selector="Button.subToolItem.active">
+        <Setter Property="Background" Value="{DynamicResource ActiveBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+
+    <!--  Expander 样式  -->
+    <Style Selector="Expander">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <!--  主题切换按钮样式  -->
+    <Style Selector="Button.themeToggle">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.themeToggle:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <!--  窗口控制按钮（最小化/最大化/关闭，全高悬停，Windows 11 风格）  -->
+    <Style Selector="Button.windowButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="46" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Button.windowButton:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+    </Style>
+
+    <Style Selector="Button.windowButton:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SecondaryBrush}" />
+    </Style>
+
+    <Style Selector="Button.windowButton:pointerover Path">
+        <Setter Property="Stroke" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <!--  关闭按钮：悬停变红（Windows 惯例）  -->
+    <Style Selector="Button.windowButton.close:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource WindowCloseHoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.windowButton.close:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="#C1121F" />
+    </Style>
+
+    <Style Selector="Button.windowButton.close:pointerover Path">
+        <Setter Property="Stroke" Value="White" />
+    </Style>
+</Styles>

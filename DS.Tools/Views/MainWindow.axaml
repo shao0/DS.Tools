@@ -18,6 +18,9 @@
     x:DataType="vm:MainWindowViewModel"
     Background="{DynamicResource BackgroundBrush}"
     Icon="avares://DS.Tools.UI.Shared/Assets/app-icon.ico"
+    WindowDecorations="BorderOnly"
+    ExtendClientAreaToDecorationsHint="True"
+    ExtendClientAreaTitleBarHeightHint="-1"
     mc:Ignorable="d">
 
     <!--
@@ -28,108 +31,22 @@
         ContentControl 按目录渲染。
     -->
 
-    <!--  窗口 chrome 自定义  -->
+    <!--  窗口级样式（侧边栏/菜单/窗口控制按钮）独立于 MainWindowStyles.axaml，经 StyleInclude 引用  -->
     <Window.Styles>
-        <Style Selector="Window[ExtendClientAreaToDecorationsHint=True]">
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-
-        <!--  侧边栏样式  -->
-        <Style Selector="Border.sidebar">
-            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="BorderThickness" Value="0,0,1,0" />
-        </Style>
-
-        <!--  一级菜单项样式：Border 容器（Expander.Header 与无子工具分支均命中）  -->
-        <Style Selector="Border.moduleItem">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <Style Selector="Border.moduleItem:pointerover">
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
-        </Style>
-
-        <!--  一级菜单标题文字样式  -->
-        <Style Selector="TextBlock.moduleItemTitle">
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        </Style>
-
-        <!--  二级菜单项样式  -->
-        <Style Selector="Button.subToolItem">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="28,6" />
-            <Setter Property="Margin" Value="4,1" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <Style Selector="Button.subToolItem:pointerover">
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        </Style>
-
-        <!--  选中状态样式  -->
-        <Style Selector="Border.moduleItem.active">
-            <Setter Property="Background" Value="{DynamicResource ActiveBackgroundBrush}" />
-        </Style>
-
-        <Style Selector="Button.subToolItem.active">
-            <Setter Property="Background" Value="{DynamicResource ActiveBackgroundBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
-        </Style>
-
-        <!--  Expander 样式  -->
-        <Style Selector="Expander">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0" />
-        </Style>
-
-        <Style Selector="Expander ToggleButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="4" />
-            <Setter Property="Margin" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-        </Style>
-
-        <Style Selector="Expander ToggleButton:pointerover">
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        </Style>
-
-        <!--  主题切换按钮样式  -->
-        <Style Selector="Button.themeToggle">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="8" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-        </Style>
-
-        <Style Selector="Button.themeToggle:pointerover">
-            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-        </Style>
+        <StyleInclude Source="avares://DS.Tools/Views/MainWindowStyles.axaml" />
     </Window.Styles>
 
     <DockPanel>
-        <!--  自定义标题栏  -->
+        <!--  自定义标题栏（无边框窗口：拖拽移动 / 双击最大化；按钮区域排除拖拽，见 TitleBar_OnPointerPressed）  -->
         <Border
-            Height="40"
+            x:Name="TitleBar"
+            Height="44"
             Background="{DynamicResource SurfaceBrush}"
-            DockPanel.Dock="Top">
-            <Grid ColumnDefinitions="*,Auto">
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,0,0,1"
+            DockPanel.Dock="Top"
+            PointerPressed="TitleBar_OnPointerPressed">
+            <Grid ColumnDefinitions="*,Auto,Auto">
 
                 <!--  窗口标题和图标（点击返回主页）  -->
                 <Button
@@ -189,6 +106,61 @@
                         </Button>
                     </StackPanel>
                 </Border>
+
+                <!--  窗口控制按钮：最小化 / 最大化 / 关闭  -->
+                <StackPanel
+                    Grid.Column="2"
+                    Orientation="Horizontal">
+                    <Button
+                        Classes="windowButton"
+                        Click="MinimizeButton_OnClick"
+                        ToolTip.Tip="最小化">
+                        <!-- Stretch 不可用：最小化图标 bounds 零高度，Uniform 拉伸会被裁切消失；数据坐标直渲（默认 None） -->
+                        <Path
+                            Width="16"
+                            Height="16"
+                            Fill="Transparent"
+                            Stroke="{DynamicResource TextSecondaryBrush}"
+                            StrokeThickness="1.2"
+                            Data="M3.5 11.5 H12.5" />
+                    </Button>
+
+                    <Button
+                        Classes="windowButton"
+                        Click="MaximizeButton_OnClick"
+                        ToolTip.Tip="最大化/还原">
+                        <Grid
+                            Width="16"
+                            Height="16">
+                            <Path
+                                x:Name="MaximizeIcon"
+                                Fill="Transparent"
+                                Stroke="{DynamicResource TextSecondaryBrush}"
+                                StrokeThickness="1.2"
+                                Data="M3.5 3.5 H12.5 V12.5 H3.5 Z" />
+                            <Path
+                                x:Name="RestoreIcon"
+                                IsVisible="False"
+                                Fill="Transparent"
+                                Stroke="{DynamicResource TextSecondaryBrush}"
+                                StrokeThickness="1.2"
+                                Data="M5.5 3.5 H12.5 V10.5 H3.5 V12.5 H10.5 V5.5 H5.5 Z" />
+                        </Grid>
+                    </Button>
+
+                    <Button
+                        Classes="windowButton close"
+                        Click="CloseButton_OnClick"
+                        ToolTip.Tip="关闭">
+                        <Path
+                            Width="16"
+                            Height="16"
+                            Fill="Transparent"
+                            Stroke="{DynamicResource TextSecondaryBrush}"
+                            StrokeThickness="1.2"
+                            Data="M4.5 4.5 L11.5 11.5 M11.5 4.5 L4.5 11.5" />
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 

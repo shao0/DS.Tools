@@ -117,9 +117,32 @@
     <None Remove="Tempds-build\zh-Hant\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" />
     <None Remove="Tempds-build\zh-Hant\Microsoft.TestPlatform.CoreUtilities.resources.dll" />
     <None Remove="Tempds-build\zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll" />
+    <None Remove="Tempds-build-verify\Avalonia.Themes.Fluent.dll" />
+    <None Remove="Tempds-build-verify\DS.Tools.Module.Text.dll" />
+    <None Remove="Tempds-build-verify\DS.Tools.Tests.deps.json" />
+    <None Remove="Tempds-build-verify\DS.Tools.dll" />
+    <None Remove="Tempds-build-verify\DS.Tools.exe" />
+    <None Remove="Tempds-build-verify\MicroCom.Runtime.dll" />
+    <None Remove="Tempds-build-verify\Microsoft.Extensions.Configuration.FileExtensions.dll" />
+    <None Remove="Tempds-build-verify\Microsoft.Extensions.Configuration.dll" />
+    <None Remove="Tempds-build-verify\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <None Remove="Tempds-build-verify\Microsoft.Extensions.DependencyInjection.dll" />
+    <None Remove="Tempds-build-verify\runtimes\win-arm64\native\libHarfBuzzSharp.pdb" />
+    <None Remove="Tempds-build-verify\runtimes\win-x64\native\av_libglesv2.dll" />
+    <None Remove="Tempds-build-verify\runtimes\win-x64\native\libHarfBuzzSharp.dll" />
+    <None Remove="Tempds-build-verify\runtimes\win-x64\native\libSkiaSharp.dll" />
+    <None Remove="Tempds-build-verify\runtimes\win-x86\native\av_libglesv2.dll" />
+    <None Remove="Tempds-build-verify\runtimes\win-x86\native\libSkiaSharp.dll" />
+    <None Remove="Tempds-build-verify\runtimes\win\lib\net6.0\System.Drawing.Common.dll" />
+    <None Remove="Tempds-build-verify\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll" />
+    <None Remove="Tempds-build-verify\testhost.exe" />
+    <None Remove="Tempds-build-verify\tr\Microsoft.TestPlatform.CommunicationUtilities.resources.dll" />
+    <None Remove="Tempds-build-verify\tr\Microsoft.TestPlatform.CoreUtilities.resources.dll" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Tempds-build-verify\runtimes\win-arm64\native\" />
+    <Folder Include="Tempds-build-verify\runtimes\win\lib\net6.0\" />
     <Folder Include="Tempds-build\de\" />
     <Folder Include="Tempds-build\es\" />
     <Folder Include="Tempds-build\ja\" />
