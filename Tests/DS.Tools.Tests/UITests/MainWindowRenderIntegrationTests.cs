@@ -87,6 +87,17 @@ public class MainWindowRenderIntegrationTests
     }
 
     /// <summary>
+    /// 展开侧边栏指定模块（模块默认折叠，子工具不在视觉树中——需展开后才能点击）
+    /// </summary>
+    private static void ExpandModule(Window window, string moduleName)
+    {
+        var headerText = window.GetVisualDescendants().OfType<TextBlock>()
+            .First(t => t.Text == moduleName);
+        headerText.GetVisualAncestors().OfType<Expander>().First().IsExpanded = true;
+        RenderFrame();
+    }
+
+    /// <summary>
     /// 构建与 App.axaml.cs 等价的组合根容器
     /// </summary>
     private static IServiceProvider BuildContainer()
@@ -106,6 +117,7 @@ public class MainWindowRenderIntegrationTests
         services.AddSingleton(gitModule);
 
         services.AddTransient<MainWindowViewModel>();
+        services.AddTransient<DashboardViewModel>(); // 主页（应用级）
         services.AddTransient<MainWindow>();
 
         var sp = services.BuildServiceProvider();
@@ -125,14 +137,20 @@ public class MainWindowRenderIntegrationTests
 
         Dispatcher.UIThread.Invoke(() =>
         {
+            // 侧边栏默认收起：Show 前先展开，避免 SplitView 收起时窗格内容不在视觉树中
+            var mainViewModel = sp.GetRequiredService<MainWindowViewModel>();
+            mainViewModel.IsPaneOpen = true;
             var window = sp.GetRequiredService<MainWindow>();
-            window.DataContext = sp.GetRequiredService<MainWindowViewModel>();
+            window.DataContext = mainViewModel;
             window.Show();
             RenderFrame();
 
             // 默认导航应为仪表盘
             var vm = ((MainWindowViewModel)window.DataContext!).ActiveToolViewModel;
             vm.Should().BeOfType<DashboardViewModel>();
+
+            // 模块默认折叠：先展开「文本工具」模块再通过侧边栏点击子工具
+            ExpandModule(window, "文本工具");
 
             // 通过侧边栏菜单导航到 JSON 格式化
             var jsonText = window.GetVisualDescendants().OfType<TextBlock>()
@@ -178,10 +196,16 @@ public class MainWindowRenderIntegrationTests
 
         Dispatcher.UIThread.Invoke(() =>
         {
+            // 侧边栏默认收起：Show 前先展开，避免 SplitView 收起时窗格内容不在视觉树中
+            var mainViewModel = sp.GetRequiredService<MainWindowViewModel>();
+            mainViewModel.IsPaneOpen = true;
             var window = sp.GetRequiredService<MainWindow>();
-            window.DataContext = sp.GetRequiredService<MainWindowViewModel>();
+            window.DataContext = mainViewModel;
             window.Show();
             RenderFrame();
+
+            // 模块默认折叠：先展开「Git 工具」模块再通过侧边栏点击子工具
+            ExpandModule(window, "Git 工具");
 
             // 通过侧边栏菜单导航到 Git 日志
             var gitText = window.GetVisualDescendants().OfType<TextBlock>()

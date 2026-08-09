@@ -486,7 +486,18 @@ DS.Tools.slnx
 
 **默认时间范围**：打开工具即默认本周一至本周日（`SetDefaultDateRange`，`DayOfWeek` 周日=0 的周一偏移 `(dow+6)%7`）。注意 git `--until` 是排他边界——结束日期必须按"含当天"处理：VM 传参 `until.AddDays(1)`（次日零点），否则周日当天提交会被排除（服务层 `GetLog_UntilBoundary_IsExclusiveAtBoundaryInstant` 锁定该语义）。
 
-测试 101/101 通过（新增 39 个：Settings 6、GitLogService 18（真实 git 临时仓库 + 固定日期提交 + 中文编码回归 + 边界语义）、VM 11、视图渲染 3、导航回归 2）。
+**复制结果**：信息栏右侧「📋 复制结果」按钮（`CopyLogCommand`，CanExecute=有日志条目）——全部日志按 `hash | 作者 | yyyy-MM-dd HH:mm | 主题` 每行一条写入剪贴板，成功提示 2 秒后自动清除。
+
+**侧边栏默认状态（2026-08-09 用户调整）**：`MainWindowViewModel.IsPaneOpen` 默认 false（侧边栏收起）+ MainWindow.axaml Expander 去掉 `IsExpanded="True"`（模块默认折叠）——headless 导航测试须先 `IsPaneOpen=true`（Show 前设置）再 `ExpandModule` 展开目标模块，才能点击子工具（SplitView 收起时窗格内容不在视觉树、折叠 Expander 的子工具同样不在）。
+
+### 主页改造（2026-08-09）
+
+1. **Dashboard 移入主应用成为主页**：`DashboardViewModel`/`DashboardView` 从 Module.Text 移至 `DS.Tools/ViewModels`、`DS.Tools/Views`（命名空间同步改 DS.Tools.*）；TextModule 移除 `ToolIds.Dashboard`、`AddTransient<DashboardViewModel>`、仪表盘 SubToolInfo，`CreateMainViewModel` 兜底改为 JsonFormatterViewModel；appsettings.json EnabledTools 移除 "dashboard"、补 "git-log"
+2. **主页 = 功能总览**：`DashboardViewModel(IToolRegistry, INavigationService, ILogger)` 遍历注册表构建 `ModuleGroups`（每模块一组：图标+名称+子工具磁贴，磁贴携带完整导航 ID）；保留时钟卡片（时间/日期/时间戳）+ 新增功能总数卡片；磁贴点击 → `NavigateToToolCommand` → `NavigateTo(module:subTool)`
+3. **左上角图标回主页**：MainWindow.axaml 标题栏 🧰+DS.Tools 包成透明 Button 绑 `NavigateToHomeCommand`；`MainWindowViewModel` 新增 `NavigateHome()`（应用级主页经 DI 创建，缓存在 `("__home__", null)` 键——主页不属于任何模块，不经过 NavigationService）；启动默认导航即主页
+4. **主页磁贴命令绑定技巧**：磁贴在双层 DataTemplate 内（组/工具），命令绑定用 `{Binding ElementName=Root, Path=DataContext.NavigateToToolCommand}`（UserControl 根命名 Root，模式同主窗口 `ElementName=RootWindow`）——compiled binding 下可用
+
+测试 108/108 通过（新增 46 个：Settings 6、GitLogService 18、Git VM 12、视图渲染 3、导航回归 2、复制 3、主页 4（分组构建/导航命令/磁贴渲染/回主页命令））。
 
 ---
 

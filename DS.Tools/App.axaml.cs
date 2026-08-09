@@ -112,6 +112,7 @@ public partial class App : Application
 
         // 注册 ViewModel 和 View
         services.AddTransient<MainWindowViewModel>();
+        services.AddTransient<DashboardViewModel>(); // 主页（应用级，经 DI 创建）
         services.AddTransient<MainWindow>();
 
         return services;

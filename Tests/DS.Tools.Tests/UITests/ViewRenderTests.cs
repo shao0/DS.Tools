@@ -10,6 +10,7 @@ using DS.Tools.Core.Interfaces;
 using DS.Tools.Module.Text.Services;
 using DS.Tools.Module.Text.ViewModels;
 using DS.Tools.Module.Text.Views;
+using DS.Tools.Views;
 
 namespace DS.Tools.Tests.UITests;
 

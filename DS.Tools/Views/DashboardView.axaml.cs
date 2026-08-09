@@ -1,15 +1,12 @@
 using Avalonia.Controls;
 
-namespace DS.Tools.Module.Text.Views;
+namespace DS.Tools.Views;
 
 /// <summary>
-/// 仪表盘视图代码后置
+/// 主页视图 - 按模块分组展示全部功能入口
 /// </summary>
 public partial class DashboardView : UserControl
 {
-    /// <summary>
-    /// 构造函数
-    /// </summary>
     public DashboardView()
     {
         InitializeComponent();

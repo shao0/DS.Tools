@@ -20,9 +20,6 @@ public sealed class TextModule : ToolModule
         /// <summary>模块 ID</summary>
         public const string Module = "text-tools";
 
-        /// <summary>子工具：仪表盘</summary>
-        public const string Dashboard = "dashboard";
-
         /// <summary>子工具：JSON 格式化</summary>
         public const string JsonFormatter = "json-formatter";
 
@@ -52,10 +49,11 @@ public sealed class TextModule : ToolModule
 
     /// <inheritdoc />
     /// <summary>
-    /// 主 ViewModel 工厂：经 DI 容器按强类型解析（IoC，无 Type 键、无反射）
+    /// 主 ViewModel 工厂：经 DI 容器按强类型解析（IoC，无 Type 键、无反射）。
+    /// 模块无独立主页，返回首个子工具（JSON 格式化）作为兜底。
     /// </summary>
     public override ViewModelBase CreateMainViewModel(IServiceProvider services)
-        => services.GetRequiredService<DashboardViewModel>();
+        => services.GetRequiredService<JsonFormatterViewModel>();
 
     /// <summary>
     /// 构造函数 - 启用子工具支持
@@ -69,7 +67,6 @@ public sealed class TextModule : ToolModule
     public override IServiceCollection Register(IServiceCollection services)
     {
         // 注册所有 ViewModel
-        services.AddTransient<DashboardViewModel>();
         services.AddTransient<JsonFormatterViewModel>();
         services.AddTransient<Base64ViewModel>();
         services.AddTransient<ColorConverterViewModel>();
@@ -103,7 +100,6 @@ public sealed class TextModule : ToolModule
         // 工厂一律经 DI 容器创建（IoC）：编译期强类型，无 Type 键、无反射
         SubToolManager.AddSubTools(
         [
-            new SubToolInfo(ToolIds.Dashboard, "仪表盘", "⏰", sp => sp.GetRequiredService<DashboardViewModel>()),
             new SubToolInfo(ToolIds.JsonFormatter, "JSON格式化", "📋", sp => sp.GetRequiredService<JsonFormatterViewModel>()),
             new SubToolInfo(ToolIds.Base64Converter, "Base64编码", "🔐", sp => sp.GetRequiredService<Base64ViewModel>()),
             new SubToolInfo(ToolIds.ColorConverter, "颜色转换", "🎨", sp => sp.GetRequiredService<ColorConverterViewModel>()),

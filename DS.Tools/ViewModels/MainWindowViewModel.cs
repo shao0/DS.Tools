@@ -2,11 +2,11 @@ using System.Collections.ObjectModel;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using DS.Tools.Core.Interfaces;
 using DS.Tools.Core.Models;
 using DS.Tools.Module.Base;
 using DS.Tools.Module.Base.Interfaces;
-using DS.Tools.Module.Text;
 
 namespace DS.Tools.ViewModels;
 
@@ -23,6 +23,9 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private readonly INavigationService _navigationService;
     private readonly IServiceProvider _serviceProvider;
     private readonly Dictionary<(string ToolId, string? SubToolId), ViewModelBase> _viewModelCache = [];
+
+    /// <summary>主页在 ViewModel 缓存中的保留键（主页为应用级，不属于任何模块）</summary>
+    private const string HomeCacheKey = "__home__";
 
     /// <summary>
     /// 构造函数 - 显式依赖注入
@@ -72,15 +75,30 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private bool _isPaneOpen;
 
     /// <summary>
-    /// 导航到默认工具（首个模块的仪表盘）
+    /// 导航到默认工具（主页）
     /// </summary>
-    private void NavigateToDefaultTool()
+    private void NavigateToDefaultTool() => NavigateHome();
+
+    /// <summary>
+    /// 导航到主页：应用级 DashboardViewModel，经 DI 创建并缓存复用（与模块导航同缓存策略）
+    /// </summary>
+    private void NavigateHome()
     {
-        if (_toolRegistry.GetTool(TextModule.ToolIds.Module) is not null)
+        var key = (HomeCacheKey, (string?)null);
+        if (!_viewModelCache.TryGetValue(key, out var viewModel))
         {
-            _navigationService.NavigateTo(TextModule.ToolIds.Full(TextModule.ToolIds.Dashboard));
+            viewModel = _serviceProvider.GetRequiredService<DashboardViewModel>();
+            _viewModelCache[key] = viewModel;
         }
+
+        ActiveToolViewModel = viewModel;
     }
+
+    /// <summary>
+    /// 返回主页命令（左上角图标触发）
+    /// </summary>
+    [RelayCommand]
+    private void NavigateToHome() => NavigateHome();
 
     /// <summary>
     /// 导航变更回调 - 按导航键缓存并复用 ViewModel 实例

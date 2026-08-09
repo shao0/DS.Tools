@@ -14,6 +14,7 @@ public sealed partial class GitLogViewModel : ViewModelBase
     private readonly IGitLogService _gitLogService;
     private readonly IGitSettingsService _settingsService;
     private readonly IFolderPickerService _folderPickerService;
+    private readonly IClipboardService _clipboardService;
     private readonly ILogger<GitLogViewModel> _logger;
 
     /// <summary>
@@ -23,11 +24,13 @@ public sealed partial class GitLogViewModel : ViewModelBase
         IGitLogService gitLogService,
         IGitSettingsService settingsService,
         IFolderPickerService folderPickerService,
+        IClipboardService clipboardService,
         ILogger<GitLogViewModel> logger)
     {
         _gitLogService = gitLogService ?? throw new ArgumentNullException(nameof(gitLogService));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _folderPickerService = folderPickerService ?? throw new ArgumentNullException(nameof(folderPickerService));
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         DisplayName = "Git 日志";
@@ -85,6 +88,7 @@ public sealed partial class GitLogViewModel : ViewModelBase
     /// 日志条目数（与 LogEntries 同步维护）
     /// </summary>
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CopyLogCommand))]
     private int _logCount;
 
     /// <summary>
@@ -138,6 +142,39 @@ public sealed partial class GitLogViewModel : ViewModelBase
     }
 
     private bool CanLoadLog() => !string.IsNullOrWhiteSpace(RepositoryPath);
+
+    /// <summary>
+    /// 复制全部日志到剪贴板命令
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanCopyLog))]
+    private async Task CopyLogAsync()
+    {
+        var text = BuildCopyText();
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        try
+        {
+            await _clipboardService.SetTextAsync(text);
+            StatusMessage = $"✓ 已复制 {LogCount} 条日志到剪贴板";
+            await Task.Delay(2000); // 显示成功消息后清除
+            StatusMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "复制日志到剪贴板失败");
+            ShowError($"复制失败: {ex.Message}");
+        }
+    }
+
+    private bool CanCopyLog() => LogCount > 0;
+
+    /// <summary>
+    /// 生成剪贴板文本：每条日志一行（hash | 作者 | 日期 | 主题）
+    /// </summary>
+    private string BuildCopyText()
+        => string.Join(Environment.NewLine, LogEntries.Select(e =>
+            $"{e.Hash} | {e.AuthorName} | {e.Date:yyyy-MM-dd HH:mm} | {e.Subject}"));
 
     /// <summary>
     /// 加载仓库状态：校验仓库 → 获取分支 → 拉取日志

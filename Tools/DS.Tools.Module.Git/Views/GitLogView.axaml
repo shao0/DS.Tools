@@ -112,28 +112,43 @@
             Margin="24,16"
             RowDefinitions="Auto,Auto,*"
             RowSpacing="12">
-            <!--  仓库信息卡（当前分支）  -->
+            <!--  仓库信息卡（当前分支 + 复制结果操作）  -->
             <Border
                 Grid.Row="0"
-                Padding="16,12"
+                Padding="16,8"
                 Background="{DynamicResource CardBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8">
-                <StackPanel
-                    Orientation="Horizontal"
-                    Spacing="12">
-                    <TextBlock
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextSecondaryBrush}"
-                        Text="🌿 当前分支：" />
-                    <TextBlock
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource PrimaryBrush}"
-                        Text="{Binding BranchName, TargetNullValue=未选择仓库}" />
-                </StackPanel>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal"
+                        Spacing="12">
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
+                            Text="🌿 当前分支：" />
+                        <TextBlock
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource PrimaryBrush}"
+                            Text="{Binding BranchName, TargetNullValue=未选择仓库}" />
+                    </StackPanel>
+
+                    <!--  复制全部日志到剪贴板  -->
+                    <Button
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        MinWidth="0"
+                        Padding="12,6"
+                        Height="32"
+                        Classes="secondaryButton"
+                        Command="{Binding CopyLogCommand}"
+                        Content="📋 复制结果" />
+                </Grid>
             </Border>
 
             <!--  错误显示 / 空状态提示（互斥）  -->

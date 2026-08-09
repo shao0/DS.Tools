@@ -71,6 +71,7 @@ public class GitLogViewRenderTests
             new StubGitLogService(),
             new StubSettingsService(),
             new StubFolderPickerService(),
+            new StubClipboardService(),
             NullLogger<GitLogViewModel>.Instance);
 
     /// <summary>
@@ -189,5 +190,15 @@ public class GitLogViewRenderTests
         public void Save(GitSettings settings)
         {
         }
+    }
+
+    /// <summary>
+    /// 测试用剪贴板桩（不触达系统剪贴板）
+    /// </summary>
+    private sealed class StubClipboardService : IClipboardService
+    {
+        public Task SetTextAsync(string text) => Task.CompletedTask;
+
+        public Task<string?> GetTextAsync() => Task.FromResult<string?>(null);
     }
 }

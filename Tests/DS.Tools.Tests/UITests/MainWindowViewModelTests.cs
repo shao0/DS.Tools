@@ -2,6 +2,7 @@ using Xunit;
 using FluentAssertions;
 using Moq;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging.Abstractions;
 using DS.Tools.ViewModels;
 using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Module.Base;
@@ -51,6 +52,14 @@ public sealed class MainWindowViewModelTests
         _mockToolRegistry.Setup(x => x.Tools).Returns(tools);
         _mockToolRegistry.Setup(x => x.GetTool("text-tools")).Returns(_mockTextModule.Object);
 
+        // 主页（应用级 DashboardViewModel）经 DI 解析——与生产代码同构
+        _mockServiceProvider
+            .Setup(x => x.GetService(typeof(DashboardViewModel)))
+            .Returns(new DashboardViewModel(
+                _mockToolRegistry.Object,
+                _mockNavigationService.Object,
+                NullLogger<DashboardViewModel>.Instance));
+
         _mockThemeService.Setup(x => x.CurrentTheme).Returns(ThemeVariant.Light);
     }
 
@@ -66,7 +75,7 @@ public sealed class MainWindowViewModelTests
 
         // Assert
         viewModel.Tools.Should().HaveCount(1);
-        viewModel.IsPaneOpen.Should().BeTrue();
+        viewModel.IsPaneOpen.Should().BeFalse(); // 侧边栏默认收起
         viewModel.CurrentThemeIcon.Should().Be("🌙");
     }
 
@@ -189,6 +198,28 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
+    public void NavigateToHomeCommand_ShouldShowHomeViewModel()
+    {
+        // Arrange
+        var viewModel = new MainWindowViewModel(
+            _mockToolRegistry.Object,
+            _mockThemeService.Object,
+            _mockNavigationService.Object,
+            _mockServiceProvider.Object);
+
+        // 启动即主页
+        viewModel.ActiveToolViewModel.Should().BeOfType<DashboardViewModel>();
+        var home = viewModel.ActiveToolViewModel;
+
+        // 导航到子工具后返回主页（应复用同一实例，缓存命中）
+        _mockNavigationService.Raise(x => x.NavigationChanged += null, _mockTextModule.Object, "subtool1");
+        viewModel.ActiveToolViewModel.Should().BeOfType<DummyViewModel>();
+
+        viewModel.NavigateToHomeCommand.Execute(null);
+        viewModel.ActiveToolViewModel.Should().BeSameAs(home);
+    }
+
+    [Fact]
     public void NavigationChanged_ShouldUpdateActiveToolViewModel()
     {
         // Arrange
@@ -253,7 +284,7 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
-    public void IsPaneOpen_DefaultValue_ShouldBeTrue()
+    public void IsPaneOpen_DefaultValue_ShouldBeFalse()
     {
         // Arrange & Act
         var viewModel = new MainWindowViewModel(
@@ -262,8 +293,8 @@ public sealed class MainWindowViewModelTests
             _mockNavigationService.Object,
             _mockServiceProvider.Object);
 
-        // Assert
-        viewModel.IsPaneOpen.Should().BeTrue();
+        // Assert（侧边栏默认收起）
+        viewModel.IsPaneOpen.Should().BeFalse();
     }
 
     [Fact]
@@ -314,6 +345,8 @@ public sealed class MainWindowViewModelTests
         module.Setup(x => x.CreateMainViewModel(It.IsAny<IServiceProvider>())).Returns(() => new DummyViewModel());
         registry.Setup(x => x.Tools).Returns([]);
         registry.Setup(x => x.GetTool("m1")).Returns(module.Object);
+        sp.Setup(x => x.GetService(typeof(DashboardViewModel)))
+            .Returns(new DashboardViewModel(registry.Object, nav.Object, NullLogger<DashboardViewModel>.Instance));
 
         var viewModel = new MainWindowViewModel(registry.Object, theme.Object, nav.Object, sp.Object);
 
@@ -343,6 +376,8 @@ public sealed class MainWindowViewModelTests
         module.Setup(x => x.CreateSubToolViewModel("sub1", It.IsAny<IServiceProvider>())).Returns(() => new DummyViewModel());
         registry.Setup(x => x.Tools).Returns([]);
         registry.Setup(x => x.GetTool("m1")).Returns(module.Object);
+        sp.Setup(x => x.GetService(typeof(DashboardViewModel)))
+            .Returns(new DashboardViewModel(registry.Object, nav.Object, NullLogger<DashboardViewModel>.Instance));
 
         var viewModel = new MainWindowViewModel(registry.Object, theme.Object, nav.Object, sp.Object);
 

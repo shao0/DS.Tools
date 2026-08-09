@@ -11,7 +11,7 @@ namespace DS.Tools.Module.Base;
 /// 初始化逻辑放在 Initialize，所需服务从 IServiceProvider 解析）。
 ///
 /// ViewModel 一律经 DI 容器（IoC）创建：模块提供强类型工厂
-/// （如 <c>sp =&gt; sp.GetRequiredService&lt;DashboardViewModel&gt;()</c>），
+/// （如 <c>sp =&gt; sp.GetRequiredService&lt;JsonFormatterViewModel&gt;()</c>），
 /// 杜绝 Type 键解析与运行时反射。
 ///
 /// 子类须实现所有 abstract 成员。

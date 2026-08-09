@@ -1,0 +1,150 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Themes.Fluent;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
+using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using Xunit;
+using DS.Tools.Module.Base.Interfaces;
+using DS.Tools.Module.Base.Services;
+using DS.Tools.Module.Git;
+using DS.Tools.Module.Text;
+using DS.Tools.ViewModels;
+using DS.Tools.Views;
+
+namespace DS.Tools.Tests.UITests;
+
+/// <summary>
+/// 主页（Dashboard）测试 - 按模块分组展示全部功能 + 导航命令 + 视图渲染。
+/// 与其他 Headless UI 测试同集合：Avalonia 平台仅可初始化一次，须串行执行。
+/// </summary>
+[Collection("HeadlessUi")]
+public class DashboardLauncherTests
+{
+    private static readonly object InitLock = new();
+    private static bool _initialized;
+
+    /// <summary>
+    /// 初始化 Headless 平台（线程安全，整个测试程序集只初始化一次）
+    /// </summary>
+    private static void EnsureHeadlessInitialized()
+    {
+        lock (InitLock)
+        {
+            if (_initialized)
+                return;
+
+            if (Application.Current is null)
+            {
+                AppBuilder.Configure<HeadlessTestApp>()
+                    .UseHeadless(new AvaloniaHeadlessPlatformOptions())
+                    .SetupWithoutStarting();
+            }
+
+            var app = (HeadlessTestApp)Application.Current!;
+            if (app.Styles.Count == 0)
+            {
+                app.Styles.Add(new FluentTheme());
+            }
+
+            _initialized = true;
+        }
+    }
+
+    /// <summary>
+    /// 用真实模块构建主页 VM（真实 ToolRegistry + TextModule + GitModule）
+    /// </summary>
+    private static (DashboardViewModel Vm, Mock<INavigationService> Nav) CreateViewModel()
+    {
+        var registry = new ToolRegistry();
+        registry.Register(new TextModule());
+        registry.Register(new GitModule());
+
+        var nav = new Mock<INavigationService>();
+        var vm = new DashboardViewModel(registry, nav.Object, NullLogger<DashboardViewModel>.Instance);
+        return (vm, nav);
+    }
+
+    [Fact]
+    public void DashboardViewModel_WithRealModules_BuildsGroupedTools()
+    {
+        EnsureHeadlessInitialized();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var (vm, _) = CreateViewModel();
+
+            // 两个模块 → 两个分组
+            vm.ModuleGroups.Should().HaveCount(2);
+            vm.ToolCount.Should().Be(7); // 文本 6 个子工具 + Git 1 个
+
+            var textGroup = vm.ModuleGroups.First(g => g.ModuleName == "文本工具");
+            textGroup.ModuleIcon.Should().Be("📝");
+            textGroup.Tools.Should().HaveCount(6);
+            textGroup.Tools.Should().Contain(t => t.NavigationId == "text-tools:json-formatter");
+            textGroup.Tools.Should().Contain(t => t.NavigationId == "text-tools:base64-converter");
+            // 主页仪表盘已移出文本模块
+            textGroup.Tools.Should().NotContain(t => t.NavigationId == "text-tools:dashboard");
+
+            var gitGroup = vm.ModuleGroups.First(g => g.ModuleName == "Git 工具");
+            gitGroup.ModuleIcon.Should().Be("🐙");
+            gitGroup.Tools.Should().HaveCount(1);
+            gitGroup.Tools[0].NavigationId.Should().Be("git-tools:git-log");
+        });
+    }
+
+    [Fact]
+    public void DashboardViewModel_NavigateToTool_InvokesNavigationService()
+    {
+        EnsureHeadlessInitialized();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var (vm, nav) = CreateViewModel();
+
+            vm.NavigateToToolCommand.Execute("git-tools:git-log");
+            nav.Verify(x => x.NavigateTo("git-tools:git-log"), Times.Once);
+
+            // 空/空白导航 ID 不触发导航
+            vm.NavigateToToolCommand.Execute(null);
+            vm.NavigateToToolCommand.Execute("   ");
+            nav.Verify(x => x.NavigateTo(It.IsAny<string>()), Times.Once);
+        });
+    }
+
+    [Fact]
+    public void DashboardView_WithGroups_RendersToolTiles()
+    {
+        EnsureHeadlessInitialized();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var (vm, _) = CreateViewModel();
+            var window = new Window
+            {
+                Width = 900,
+                Height = 700,
+                Content = new DashboardView { DataContext = vm }
+            };
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            Dispatcher.UIThread.RunJobs();
+
+            // 模块分组标题与工具磁贴应渲染进视觉树
+            window.GetVisualDescendants().OfType<TextBlock>()
+                .Any(t => t.Text == "文本工具").Should().BeTrue("文本模块分组标题应显示");
+            window.GetVisualDescendants().OfType<TextBlock>()
+                .Any(t => t.Text == "Git 工具").Should().BeTrue("Git 模块分组标题应显示");
+            window.GetVisualDescendants().OfType<TextBlock>()
+                .Any(t => t.Text == "Git 日志").Should().BeTrue("Git 日志磁贴应显示");
+            window.GetVisualDescendants().OfType<TextBlock>()
+                .Any(t => t.Text == "JSON格式化").Should().BeTrue("JSON格式化磁贴应显示");
+
+            window.Close();
+        });
+    }
+}

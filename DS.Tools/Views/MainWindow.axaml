@@ -4,12 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:base="using:DS.Tools.Module.Base"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:module="using:DS.Tools.Module.Base.Interfaces"
     xmlns:gitviews="using:DS.Tools.Module.Git.Views"
     xmlns:gitvm="using:DS.Tools.Module.Git.ViewModels"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:module="using:DS.Tools.Module.Base.Interfaces"
     xmlns:textviews="using:DS.Tools.Module.Text.Views"
     xmlns:textvm="using:DS.Tools.Module.Text.ViewModels"
+    xmlns:views="using:DS.Tools.Views"
     xmlns:vm="using:DS.Tools.ViewModels"
     x:Name="RootWindow"
     Title="DS.Tools - Developer Utilities"
@@ -31,8 +32,8 @@
         生成强类型绑定与直接 new View() 的实例化代码。
     -->
     <Window.DataTemplates>
-        <DataTemplate x:DataType="textvm:DashboardViewModel">
-            <textviews:DashboardView />
+        <DataTemplate x:DataType="vm:DashboardViewModel">
+            <views:DashboardView />
         </DataTemplate>
         <DataTemplate x:DataType="textvm:JsonFormatterViewModel">
             <textviews:JsonFormatterView />
@@ -160,23 +161,34 @@
             DockPanel.Dock="Top">
             <Grid ColumnDefinitions="*,Auto">
 
-                <!--  窗口标题和图标  -->
-                <StackPanel
+                <!--  窗口标题和图标（点击返回主页）  -->
+                <Button
                     Grid.Column="0"
                     Margin="16,0,0,0"
-                    Orientation="Horizontal">
-                    <TextBlock
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Command="{Binding NavigateToHomeCommand}"
+                    ToolTip.Tip="返回主页">
+                    <StackPanel
                         VerticalAlignment="Center"
-                        FontSize="16"
-                        Text="🧰" />
-                    <TextBlock
-                        Margin="8,0,0,0"
-                        VerticalAlignment="Center"
-                        FontSize="14"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextPrimaryBrush}"
-                        Text="DS.Tools" />
-                </StackPanel>
+                        Orientation="Horizontal">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            Text="🧰" />
+                        <TextBlock
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
+                            Text="DS.Tools" />
+                    </StackPanel>
+                </Button>
 
                 <!--  窗口控制按钮和主题切换  -->
                 <Border
@@ -280,7 +292,6 @@
                                                 VerticalAlignment="Stretch"
                                                 BorderThickness="0"
                                                 DockPanel.Dock="Top"
-                                                IsExpanded="True"
                                                 IsVisible="{Binding HasSubTools}">
                                                 <Expander.Header>
                                                     <!--  一级菜单：模块标题（moduleItem 样式 + 内联内边距）  -->

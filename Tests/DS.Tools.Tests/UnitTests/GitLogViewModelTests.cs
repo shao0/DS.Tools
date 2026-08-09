@@ -17,15 +17,17 @@ public sealed class GitLogViewModelTests
     private readonly Mock<IGitLogService> _gitLog = new();
     private readonly Mock<IGitSettingsService> _settings = new();
     private readonly Mock<IFolderPickerService> _folderPicker = new();
+    private readonly Mock<IClipboardService> _clipboard = new();
 
     public GitLogViewModelTests()
     {
         // 默认：无持久化文件夹 → ctor 不触发自动加载
         _settings.Setup(s => s.Load()).Returns(new GitSettings());
+        _clipboard.Setup(c => c.SetTextAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
     }
 
     private GitLogViewModel CreateViewModel()
-        => new(_gitLog.Object, _settings.Object, _folderPicker.Object, NullLogger<GitLogViewModel>.Instance);
+        => new(_gitLog.Object, _settings.Object, _folderPicker.Object, _clipboard.Object, NullLogger<GitLogViewModel>.Instance);
 
     /// <summary>
     /// 轮询等待异步流程完成（fire-and-forget 场景用）
@@ -218,6 +220,69 @@ public sealed class GitLogViewModelTests
 
         vm.SinceDate.Should().Be(expectedMonday);
         vm.UntilDate.Should().Be(expectedSunday);
+    }
+
+    [Fact]
+    public async Task CopyLog_WithEntries_CopiesFormattedTextToClipboard()
+    {
+        // Arrange
+        var vm = CreateViewModel();
+        vm.RepositoryPath = @"D:\repo";
+        _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitLogEntry("abc1234", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: bug"),
+                new GitLogEntry("def5678", "小毛 邵", "xiaomao@example.com",
+                    new DateTimeOffset(2026, 3, 2, 9, 30, 0, TimeSpan.FromHours(8)), "feat: new feature")
+            ]));
+        await vm.LoadLogCommand.ExecuteAsync(null);
+
+        string? captured = null;
+        _clipboard.Setup(c => c.SetTextAsync(It.IsAny<string>()))
+            .Callback<string>(t => captured = t)
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await vm.CopyLogCommand.ExecuteAsync(null);
+
+        // Assert（每条日志一行：hash | 作者 | 日期 | 主题）
+        captured.Should().Contain("abc1234 | Test User | 2026-03-01 10:00 | fix: bug");
+        captured.Should().Contain("def5678 | 小毛 邵 | 2026-03-02 09:30 | feat: new feature");
+        captured.Should().Contain(Environment.NewLine);
+    }
+
+    [Fact]
+    public async Task CopyLog_WhenNoEntries_DoesNotTouchClipboard()
+    {
+        // Arrange
+        var vm = CreateViewModel();
+
+        // Act
+        await vm.CopyLogCommand.ExecuteAsync(null);
+
+        // Assert（无日志时复制应静默跳过）
+        _clipboard.Verify(c => c.SetTextAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CopyLogCommand_CanExecute_RequiresEntries()
+    {
+        // Arrange
+        var vm = CreateViewModel();
+        vm.CopyLogCommand.CanExecute(null).Should().BeFalse();
+
+        // 加载成功后有条目 → 可复制
+        vm.RepositoryPath = @"D:\repo";
+        _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "s1")]));
+        await vm.LoadLogCommand.ExecuteAsync(null);
+        vm.CopyLogCommand.CanExecute(null).Should().BeTrue();
+
+        // 加载失败清空条目 → 不可复制
+        _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Failure("失败"));
+        await vm.LoadLogCommand.ExecuteAsync(null);
+        vm.CopyLogCommand.CanExecute(null).Should().BeFalse();
     }
 
     [Fact]
