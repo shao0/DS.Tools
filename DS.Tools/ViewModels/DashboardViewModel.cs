@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Avalonia.Threading;
 using DS.Tools.Core.Models;
-using DS.Tools.Module.Base;
 using DS.Tools.Module.Base.Interfaces;
 
 namespace DS.Tools.ViewModels;
