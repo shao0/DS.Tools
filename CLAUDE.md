@@ -493,6 +493,20 @@ DS.Tools.slnx
 
 **侧边栏默认状态（2026-08-09 用户调整）**：`MainWindowViewModel.IsPaneOpen` 默认 false（侧边栏收起）+ MainWindow.axaml Expander 去掉 `IsExpanded="True"`（模块默认折叠）——headless 导航测试须先 `IsPaneOpen=true`（Show 前设置）再 `ExpandModule` 展开目标模块，才能点击子工具（SplitView 收起时窗格内容不在视觉树、折叠 Expander 的子工具同样不在）。
 
+### Avalonia 12.1.x 框架 bug：TextWrapping=Wrap + 空段落布局死循环（2026-08-10 定位并规避）
+
+**现象**：`GitLogView_WithMultiLineMessages_ShouldRenderFullMessages`（多行消息含 `\n\n` 空段落）执行到 `window.Show()` 即卡死；testhost 内存以 7.2GB/45s 暴涨（600 万个 TextLineImpl/GlyphRun/ShapedTextRun 对象，原生分配累计 GB 级），VSTest 永久挂起。
+
+**根因（已用最小复现 + 调试器 + 反编译三重证实）**：**Avalonia 12.1.0/12.1.1 的 `TextLayout` 对「含空段落的文本 + `TextWrapping.Wrap`」断行循环不终止**——空段落 → `TextFormatterImpl.PerformTextWrapping` → `CreateEmptyTextLine` → 行对象无限累积。与字体无关（默认字体/Arial 均挂）、与视图无关、与 headless 无关（TextLayout 是纯测量路径，**真实应用渲染含空行正文的 git 提交消息时同样会内存爆炸挂死**）。最小复现：`new TextLayout("a\n\nb", typeface, 13, textWrapping: TextWrapping.Wrap)`。对照组：单 `\n`（无空段落）通过；`NoWrap` + 空段落通过。
+
+**修复（显示层防御，复制保原始）**：`GitLogMessageConverter`（`Tools/DS.Tools.Module.Git/Converters/`，静态编译 Regex 压缩 `\n{2,}`→`\n`）挂到 GitLogView 提交消息与错误消息两个 `TextWrapping="Wrap"` 绑定的 `Converter`——空段落消失即绕开死循环；复制功能仍读 VM 原始 `Message`（含 `\n\n` 段落结构不受影响）。测试断言相应改为压缩后显示文本。测试 116/116 通过。
+
+**教训**：
+1. **Wrap + 任意用户可控文本是雷区**（git 消息正文天然含空行）：凡是 `TextWrapping="Wrap"` 绑定外部文本的 TextBlock，显示层需防空段落（本仓库其他 Wrap 绑定——Base64/JSON/哈希输出——均为机器生成不含空段落，安全）
+2. headless 测试卡死的第一现场是**内存爆炸**：`dotnet test --blame-hang-timeout` 会在超时后出 hang dump，但 45 秒就能爆 7GB dump——先用探针二分（单 `\n` vs `\n\n`、换字体、NoGCRegion、手动 TextLayout）把触发条件缩到最小，再 attach 调试器（`xdebug_attach_to_process` + PAUSE + 线程栈）或 `dotnet-dump`（`dumpheap -stat` 看 Top 分配类型定位循环分配）确认机制
+3. 判断"锁等待"类栈帧要小心：调试器快照可能恰好停在循环中的锁获取瞬间，栈顶 `ReaderWriterLockSlim` 帧 ≠ 死锁（本案例是布局循环的过路帧）——**对照堆统计中同类对象的数量级（6M 个 = 循环分配）才是铁证**
+4. `GitLogViewModel.CopyEntryAsync` 补 null 条目早退（原 `FormatEntry(null)` NRE，headless 绑定未解析时可能传 null）
+
 ### 主页改造（2026-08-09）
 
 1. **Dashboard 移入主应用成为主页**：`DashboardViewModel`/`DashboardView` 从 Module.Text 移至 `DS.Tools/ViewModels`、`DS.Tools/Views`（命名空间同步改 DS.Tools.*）；TextModule 移除 `ToolIds.Dashboard`、`AddTransient<DashboardViewModel>`、仪表盘 SubToolInfo，`CreateMainViewModel` 兜底改为 JsonFormatterViewModel；appsettings.json EnabledTools 移除 "dashboard"、补 "git-log"

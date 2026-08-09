@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:DS.Tools.UI.Shared.Controls"
+    xmlns:converters="using:DS.Tools.Module.Git.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:gitmodels="using:DS.Tools.Module.Git.Models"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -12,6 +13,11 @@
     x:CompileBindings="True"
     x:DataType="vm:GitLogViewModel"
     mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <!--  提交消息显示转换：压缩空段落（规避 Avalonia 12.1.x Wrap 空段落布局死循环）  -->
+        <converters:GitLogMessageConverter x:Key="GitLogMessageConverter" />
+    </UserControl.Resources>
 
     <UserControl.Styles>
         <!--  共享样式（按钮/滚动条）  -->
@@ -192,7 +198,7 @@
                     <TextBlock
                         FontSize="13"
                         Foreground="{DynamicResource ErrorTextBrush}"
-                        Text="{Binding ErrorMessage}"
+                        Text="{Binding ErrorMessage, Converter={StaticResource GitLogMessageConverter}}"
                         TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
@@ -241,7 +247,7 @@
                                         FontSize="14"
                                         FontWeight="SemiBold"
                                         Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Text="{Binding Message}"
+                                        Text="{Binding Message, Converter={StaticResource GitLogMessageConverter}}"
                                         TextWrapping="Wrap" />
                                     <TextBlock
                                         FontSize="12"

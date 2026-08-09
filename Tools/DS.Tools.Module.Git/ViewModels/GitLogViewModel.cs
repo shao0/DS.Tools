@@ -159,7 +159,13 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     /// </summary>
     [RelayCommand]
     private Task CopyEntryAsync(GitLogEntry entry)
-        => CopyToClipboardAsync(_clipboardService, FormatEntry(entry), "✓ 已复制该条日志到剪贴板");
+    {
+        // null 参数（如 DataTemplate 内未解析绑定）安全早退，不触达剪贴板
+        if (entry is null)
+            return Task.CompletedTask;
+
+        return CopyToClipboardAsync(_clipboardService, FormatEntry(entry), "✓ 已复制该条日志到剪贴板");
+    }
 
     /// <summary>
     /// 生成剪贴板文本：每条为元数据行（hash | 作者 | 日期）+

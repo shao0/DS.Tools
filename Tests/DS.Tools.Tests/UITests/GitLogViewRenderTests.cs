@@ -162,9 +162,11 @@ public class GitLogViewRenderTests
             RenderInWindow(vm, out var window, out _);
             RenderFrame();
 
-            // 多行消息完整渲染（正文段落可见，而非仅首行主题）
+            // 多行消息完整渲染（正文段落可见，而非仅首行主题）。
+            // 显示层经 GitLogMessageConverter 压缩连续换行（规避 Avalonia 12.1.x Wrap 空段落布局死循环），
+            // 复制仍走 VM 原始 Message（保留 \n\n 空段落），见复制测试断言。
             window.GetVisualDescendants().OfType<TextBlock>()
-                .Any(t => t.Text == "feat: multi-line body\n\nline one\n\nline three").Should().BeTrue("多行提交消息应完整显示在日志列表中");
+                .Any(t => t.Text == "feat: multi-line body\nline one\nline three").Should().BeTrue("多行提交消息应完整显示在日志列表中");
             // 多条记录全部渲染（非仅第一条）
             window.GetVisualDescendants().OfType<TextBlock>()
                 .Any(t => t.Text == "fix: second commit").Should().BeTrue("第二条提交应显示在日志列表中");
