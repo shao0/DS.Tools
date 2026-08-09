@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DS.Tools.Module.Base.Interfaces;
 
 
 namespace DS.Tools.Module.Text.ViewModels;
@@ -10,8 +11,14 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// 颜色转换器 ViewModel - 在 HEX、RGB、HSL 之间转换颜色
 /// AOT 兼容，使用数学计算和 Avalonia Color 结构体
 /// </summary>
-public sealed partial class ColorConverterViewModel : ViewModelBase
+public sealed partial class ColorConverterViewModel : ViewModelBase, ISubTool
 {
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    static string ISubTool.ModuleId => TextModule.ToolIds.Module;
+    static string ISubTool.Id => TextModule.ToolIds.ColorConverter;
+    static string ISubTool.Name => "颜色转换";
+    static string ISubTool.Icon => "🎨";
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ColorPreview))]
     private string _hexInput = "#3B82F6";

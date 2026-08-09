@@ -78,7 +78,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
         foreach (var module in _toolRegistry.Tools)
         {
             var items = module.SubTools?
-                .Select(s => new DashboardToolItem(s.Icon, s.Name, s.GetFullNavigationId(module.Id)))
+                .Select(s => new DashboardToolItem(s.Icon, s.Name, s.GetFullNavigationId()))
                 .ToList() ?? [];
 
             ToolCount += items.Count;

@@ -2,6 +2,7 @@ using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DS.Tools.Core.Interfaces;
+using DS.Tools.Module.Base.Interfaces;
 
 namespace DS.Tools.Module.Text.ViewModels;
 
@@ -9,8 +10,14 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// Base64 编解码 ViewModel - 文本与 Base64 之间的相互转换
 /// 基于 CommunityToolkit.Mvvm（源生成器），NativeAOT 兼容，无运行时反射
 /// </summary>
-public sealed partial class Base64ViewModel : ViewModelBase
+public sealed partial class Base64ViewModel : ViewModelBase, ISubTool
 {
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    static string ISubTool.ModuleId => TextModule.ToolIds.Module;
+    static string ISubTool.Id => TextModule.ToolIds.Base64Converter;
+    static string ISubTool.Name => "Base64编码";
+    static string ISubTool.Icon => "🔐";
+
     private readonly IClipboardService _clipboardService;
 
     /// <summary>

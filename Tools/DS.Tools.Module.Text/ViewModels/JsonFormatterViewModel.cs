@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using DS.Tools.Core.Interfaces;
+using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Module.Text.Models;
 using DS.Tools.Module.Text.Services;
 
@@ -11,8 +12,14 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// JSON 格式化工具 ViewModel
 /// 使用 CommunityToolkit.Mvvm 源生成器，AOT 兼容，无反射调用
 /// </summary>
-public sealed partial class JsonFormatterViewModel : ViewModelBase
+public sealed partial class JsonFormatterViewModel : ViewModelBase, ISubTool
 {
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    static string ISubTool.ModuleId => TextModule.ToolIds.Module;
+    static string ISubTool.Id => TextModule.ToolIds.JsonFormatter;
+    static string ISubTool.Name => "JSON格式化";
+    static string ISubTool.Icon => "📋";
+
     private readonly IJsonFormatterService _service;
     private readonly IClipboardService _clipboardService;
     private readonly ILogger<JsonFormatterViewModel> _logger;

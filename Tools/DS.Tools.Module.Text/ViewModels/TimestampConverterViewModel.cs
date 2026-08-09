@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DS.Tools.Module.Base.Interfaces;
 
 
 namespace DS.Tools.Module.Text.ViewModels;
@@ -8,8 +9,14 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// 时间戳转换 ViewModel - 时间戳与日期时间相互转换
 /// AOT 兼容，使用 DateTimeOffset.FromUnixTime*
 /// </summary>
-public sealed partial class TimestampConverterViewModel : ViewModelBase
+public sealed partial class TimestampConverterViewModel : ViewModelBase, ISubTool
 {
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    static string ISubTool.ModuleId => TextModule.ToolIds.Module;
+    static string ISubTool.Id => TextModule.ToolIds.TimestampConverter;
+    static string ISubTool.Name => "时间戳转换";
+    static string ISubTool.Icon => "⏰";
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TimestampToDateCommand))]
     [NotifyCanExecuteChangedFor(nameof(ClearTimestampCommand))]

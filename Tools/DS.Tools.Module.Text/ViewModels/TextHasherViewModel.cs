@@ -3,6 +3,7 @@ using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DS.Tools.Core.Interfaces;
+using DS.Tools.Module.Base.Interfaces;
 
 
 namespace DS.Tools.Module.Text.ViewModels;
@@ -11,8 +12,14 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// 文本哈希 ViewModel - 计算文本的 MD5 和 SHA-256 哈希值
 /// AOT 兼容，使用 SHA256.HashData 和 MD5.HashData 静态方法
 /// </summary>
-public sealed partial class TextHasherViewModel : ViewModelBase
+public sealed partial class TextHasherViewModel : ViewModelBase, ISubTool
 {
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    static string ISubTool.ModuleId => TextModule.ToolIds.Module;
+    static string ISubTool.Id => TextModule.ToolIds.TextHasher;
+    static string ISubTool.Name => "文本哈希";
+    static string ISubTool.Icon => "🔒";
+
     private readonly IClipboardService _clipboardService;
 
     /// <summary>

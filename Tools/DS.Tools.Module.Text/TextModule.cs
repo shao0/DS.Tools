@@ -10,7 +10,8 @@ namespace DS.Tools.Module.Text;
 
 /// <summary>
 /// 文本工具模块 - 包含多个独立的子工具。
-/// 扩展友好：使用 SubToolManager 管理子工具，ViewModel 经 DI 容器按强类型解析（IoC，无 Type 键、无反射）。
+/// 子工具经 AddSubTool 在 Register 阶段注册进 DI 容器（SubToolInfo 含 IoC 工厂，无 Type 键、无反射），
+/// 由 IToolCatalog 统一目录按模块查询并经 ToolRegistry 挂载到基类。
 /// </summary>
 public sealed class TextModule : ToolModule
 {
@@ -57,18 +58,19 @@ public sealed class TextModule : ToolModule
     public override ViewModelBase CreateMainViewModel(IServiceProvider services)
         => services.GetRequiredService<JsonFormatterViewModel>();
 
-    /// <summary>
-    /// 构造函数 - 启用子工具支持
-    /// </summary>
-    public TextModule()
-    {
-        EnableSubTools();
-        InitializeSubTools();
-    }
-
     public override IServiceCollection Register(IServiceCollection services)
     {
-        // 注册所有子工具：AddViewMapping 一行完成「VM + View 入容器 + ViewModel→View 映射」——
+        // 注册子工具：AddSubTool 一行完成「ViewModel 入容器 + SubToolInfo（含 IoC 工厂）入容器」——
+        // 元数据由 ViewModel 实现的 ISubTool 静态抽象接口提供（编译期读取），无 Type 键、零反射，AOT 兼容；
+        // Build 后经 IToolCatalog 统一目录按模块查询
+        services.AddSubTool<JsonFormatterViewModel>();
+        services.AddSubTool<Base64ViewModel>();
+        services.AddSubTool<ColorConverterViewModel>();
+        services.AddSubTool<PasswordGeneratorViewModel>();
+        services.AddSubTool<TextHasherViewModel>();
+        services.AddSubTool<TimestampConverterViewModel>();
+
+        // 注册 View 映射：AddViewMapping 一行完成「VM + View 入容器 + ViewModel→View 映射」——
         // IoC 经 DI 容器创建，类型模式匹配无 Type 键，AOT 兼容零反射，替代 XAML DataTemplate 手写列表
         services.AddViewMapping<JsonFormatterViewModel, JsonFormatterView>();
         services.AddViewMapping<Base64ViewModel, Base64View>();
@@ -87,25 +89,5 @@ public sealed class TextModule : ToolModule
     {
         var logger = services.GetRequiredService<ILogger<TextModule>>();
         logger.LogInformation("模块 {ModuleId} 初始化完成，子工具 {SubToolCount} 个", Id, SubTools?.Count ?? 0);
-    }
-
-    /// <summary>
-    /// 初始化子工具列表（扩展友好）
-    /// </summary>
-    private void InitializeSubTools()
-    {
-        if (SubToolManager is null)
-            return;
-
-        // 工厂一律经 DI 容器创建（IoC）：编译期强类型，无 Type 键、无反射
-        SubToolManager.AddSubTools(
-        [
-            new SubToolInfo(ToolIds.JsonFormatter, "JSON格式化", "📋", sp => sp.GetRequiredService<JsonFormatterViewModel>()),
-            new SubToolInfo(ToolIds.Base64Converter, "Base64编码", "🔐", sp => sp.GetRequiredService<Base64ViewModel>()),
-            new SubToolInfo(ToolIds.ColorConverter, "颜色转换", "🎨", sp => sp.GetRequiredService<ColorConverterViewModel>()),
-            new SubToolInfo(ToolIds.PasswordGenerator, "密码生成", "🔑", sp => sp.GetRequiredService<PasswordGeneratorViewModel>()),
-            new SubToolInfo(ToolIds.TextHasher, "文本哈希", "🔒", sp => sp.GetRequiredService<TextHasherViewModel>()),
-            new SubToolInfo(ToolIds.TimestampConverter, "时间戳转换", "⏰", sp => sp.GetRequiredService<TimestampConverterViewModel>())
-        ]);
     }
 }

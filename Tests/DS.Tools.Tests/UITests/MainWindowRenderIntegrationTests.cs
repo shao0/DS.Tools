@@ -128,7 +128,7 @@ public class MainWindowRenderIntegrationTests
         var sp = services.BuildServiceProvider();
 
         // 等价于 App.InitializeToolModules：模块注册进 ToolRegistry
-        // （MainWindow 构造时挂载 ViewRegistryDataTemplate，按映射注册表 IoC 渲染内容区）
+        // （MainWindow 构造时挂载 ViewRegistryDataTemplate，按统一目录 IoC 渲染内容区）
         var toolRegistry = sp.GetRequiredService<IToolRegistry>();
         toolRegistry.Register(module);
         toolRegistry.Register(gitModule);

@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using DS.Tools.Core.DI;
 using DS.Tools.Module.Base.DI;
+using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Module.Text;
 
 namespace DS.Tools.Tests.UnitTests;
@@ -28,6 +29,10 @@ public sealed class ToolModuleContainerTests
         services.AddSingleton(module);
 
         var sp = services.BuildServiceProvider();
+
+        // 经真实 ToolRegistry 注册（挂载子工具目录：SubToolInfo 在 Register 阶段已入容器）
+        var toolRegistry = sp.GetRequiredService<IToolRegistry>();
+        toolRegistry.Register(module);
 
         // Act & Assert：模块主 VM 与全部子工具 VM 均能解析
         module.CreateMainViewModel(sp).Should().NotBeNull();

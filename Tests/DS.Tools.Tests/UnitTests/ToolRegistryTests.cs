@@ -16,6 +16,11 @@ public sealed class ToolRegistryTests
     private readonly Mock<IToolModule> _mockModule1;
     private readonly Mock<IToolModule> _mockModule2;
 
+    /// <summary>
+    /// 创建注册表（统一目录为必需构造依赖；本组测试用 mock 模块，空目录即可）
+    /// </summary>
+    private static ToolRegistry CreateRegistry() => new(new ToolCatalog([], [], Mock.Of<IServiceProvider>()));
+
     public ToolRegistryTests()
     {
         _mockModule1 = new Mock<IToolModule>();
@@ -35,7 +40,7 @@ public sealed class ToolRegistryTests
     public void Constructor_ShouldCreateEmptyRegistry()
     {
         // Act
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
 
         // Assert
         registry.Tools.Should().BeEmpty();
@@ -45,7 +50,7 @@ public sealed class ToolRegistryTests
     public void Register_WithValidModule_ShouldAddSuccessfully()
     {
         // Arrange
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
         var module = _mockModule1.Object;
 
         // Act
@@ -60,7 +65,7 @@ public sealed class ToolRegistryTests
     public void Register_WithDuplicateId_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
         var module1 = _mockModule1.Object;
         var module2 = _mockModule1.Object; // Same ID
         registry.Register(module1);
@@ -73,7 +78,7 @@ public sealed class ToolRegistryTests
     public void Register_WithNullModule_ShouldThrowArgumentNullException()
     {
         // Arrange
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => registry.Register(null!));
@@ -83,7 +88,7 @@ public sealed class ToolRegistryTests
     public void GetTool_WithExistingId_ShouldReturnCorrectModule()
     {
         // Arrange
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
         var module = _mockModule1.Object;
         registry.Register(module);
 
@@ -99,7 +104,7 @@ public sealed class ToolRegistryTests
     public void GetTool_WithNonExistingId_ShouldReturnNull()
     {
         // Arrange
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
 
         // Act
         var result = registry.GetTool("nonexistent");
@@ -112,7 +117,7 @@ public sealed class ToolRegistryTests
     public void Tools_ShouldReturnReadOnlyList()
     {
         // Arrange
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
         var module1 = _mockModule1.Object;
         var module2 = _mockModule2.Object;
         registry.Register(module1);
@@ -130,7 +135,7 @@ public sealed class ToolRegistryTests
     public void Register_MultipleModules_ShouldMaintainOrder()
     {
         // Arrange
-        var registry = new ToolRegistry();
+        var registry = CreateRegistry();
         var module1 = _mockModule1.Object;
         var module2 = _mockModule2.Object;
 

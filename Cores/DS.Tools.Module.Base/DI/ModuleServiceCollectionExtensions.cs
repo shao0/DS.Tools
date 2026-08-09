@@ -21,7 +21,7 @@ public static class ModuleServiceCollectionExtensions
         // ========================================
         services.AddSingleton<IToolRegistry, ToolRegistry>();
         services.AddSingleton<INavigationService, NavigationService>();
-        services.AddSingleton<IViewRegistry, ViewRegistry>();
+        services.AddSingleton<IToolCatalog, ToolCatalog>();
 
         return services;
     }

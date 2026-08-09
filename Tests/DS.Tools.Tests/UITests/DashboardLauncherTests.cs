@@ -5,6 +5,7 @@ using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -55,13 +56,29 @@ public class DashboardLauncherTests
     }
 
     /// <summary>
-    /// 用真实模块构建主页 VM（真实 ToolRegistry + TextModule + GitModule）
+    /// 用真实模块构建主页 VM（与生产同构：模块 Register 入容器 + 真实 ToolRegistry 注册挂载子工具目录）
     /// </summary>
     private static (DashboardViewModel Vm, Mock<INavigationService> Nav) CreateViewModel()
     {
-        var registry = new ToolRegistry();
-        registry.Register(new TextModule());
-        registry.Register(new GitModule());
+        var services = new ServiceCollection();
+
+        var textModule = new TextModule();
+        textModule.Register(services);
+        services.AddSingleton(textModule);
+
+        var gitModule = new GitModule();
+        gitModule.Register(services);
+        services.AddSingleton(gitModule);
+
+        services.AddSingleton<IToolCatalog, ToolCatalog>();
+        services.AddSingleton<IToolRegistry, ToolRegistry>();
+
+        var sp = services.BuildServiceProvider();
+
+        // ToolRegistry.Register 挂载子工具目录到模块基类（SubToolInfo 在 Register 阶段已入容器）
+        var registry = sp.GetRequiredService<IToolRegistry>();
+        registry.Register(textModule);
+        registry.Register(gitModule);
 
         var nav = new Mock<INavigationService>();
         var vm = new DashboardViewModel(registry, nav.Object, NullLogger<DashboardViewModel>.Instance);

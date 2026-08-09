@@ -134,13 +134,12 @@ public sealed partial class MainWindowViewModel : ViewModelBase
         if (parameter is not SubToolInfo subTool)
             return;
 
-        // 从注册表解析拥有该子工具的模块（SubToolInfo 引用相等即可匹配）
-        var ownerModule = _toolRegistry.Tools.FirstOrDefault(m => m.SubTools?.Contains(subTool) == true);
+        // 从注册表解析拥有该子工具的模块（SubToolInfo 自带 ModuleId，直接匹配即可）
+        var ownerModule = _toolRegistry.Tools.FirstOrDefault(m => m.Id == subTool.ModuleId);
         if (ownerModule is null)
             return;
 
-        var fullNavigationId = subTool.GetFullNavigationId(ownerModule.Id);
-        _navigationService.NavigateTo(fullNavigationId);
+        _navigationService.NavigateTo(subTool.GetFullNavigationId());
     }
 
     /// <summary>

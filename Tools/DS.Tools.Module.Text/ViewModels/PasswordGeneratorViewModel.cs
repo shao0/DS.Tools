@@ -3,6 +3,7 @@ using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DS.Tools.Core.Interfaces;
+using DS.Tools.Module.Base.Interfaces;
 
 
 namespace DS.Tools.Module.Text.ViewModels;
@@ -11,8 +12,14 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// 密码生成器 ViewModel - 生成安全强密码
 /// AOT 兼容，使用 RandomNumberGenerator（密码学安全）
 /// </summary>
-public sealed partial class PasswordGeneratorViewModel : ViewModelBase
+public sealed partial class PasswordGeneratorViewModel : ViewModelBase, ISubTool
 {
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    static string ISubTool.ModuleId => TextModule.ToolIds.Module;
+    static string ISubTool.Id => TextModule.ToolIds.PasswordGenerator;
+    static string ISubTool.Name => "密码生成";
+    static string ISubTool.Icon => "🔑";
+
     private readonly IClipboardService _clipboardService;
 
     /// <summary>

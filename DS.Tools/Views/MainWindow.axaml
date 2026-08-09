@@ -22,9 +22,10 @@
     mc:Ignorable="d">
 
     <!--
-        ViewModel→View 映射：由 IViewRegistry 注册表统一管理（AOT 兼容，零反射）——
-        注册点收敛为各模块 RegisterViews + 组合根主页注册；MainWindow 构造时挂载
-        ViewRegistryDataTemplate（见 MainWindow.axaml.cs），ContentControl 按注册表渲染。
+        ViewModel→View 映射：由 IToolCatalog 统一目录管理（AOT 兼容，零反射）——
+        注册点收敛为各模块 Register（ToolRegistration.AddViewMapping）+ 组合根主页注册；
+        MainWindow 构造时挂载 ViewRegistryDataTemplate（见 MainWindow.axaml.cs），
+        ContentControl 按目录渲染。
     -->
 
     <!--  窗口 chrome 自定义  -->

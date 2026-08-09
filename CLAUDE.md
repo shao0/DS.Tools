@@ -499,18 +499,22 @@ DS.Tools.slnx
 
 测试 108/108 通过（新增 46 个：Settings 6、GitLogService 18、Git VM 12、视图渲染 3、导航回归 2、复制 3、主页 4（分组构建/导航命令/磁贴渲染/回主页命令））。
 
-### View 注册表（2026-08-09）
+### 注册表服务（2026-08-09 三合一）
 
-ViewModel→View 渲染机制从「MainWindow.axaml 手写 DataTemplate 列表」升级为**注册管理服务**（替代逐条 XAML 声明，注册点收敛到各模块自身的 `Register` 方法）。
+View 映射与子工具注册最终统一为**单一注册表服务**：注册侧 `ToolRegistration`（2 个扩展方法）+ 查询侧 `IToolCatalog`/`ToolCatalog`（1 个接口 + 1 个实现，含 `ViewMappingEntry`）。演进路径：MainWindow.axaml 手写 DataTemplate → ViewMappingRegistry/ViewRegistry（View 映射）→ +SubToolRegistry/SubToolCatalog（子工具）→ **结合封装**为统一服务（六个类型合并为三个文件）。
 
-1. **`ViewMappingRegistry`（静态类 + IServiceCollection 扩展方法）**（`Cores/DS.Tools.Module.Base/Services`）：**单方法** `AddViewMapping<TViewModel, TView>()` 一行完成「VM + View 均以 Transient 入容器」+「映射声明」；每个映射以 `ViewMappingEntry`（public 类、internal 构造/成员）实例 `AddSingleton` 进容器（Build 前纯数据）；泛型参数带 `[DynamicallyAccessedMembers(PublicConstructors)]` 注解（满足 AddTransient 的 trim 要求）；**无 Type 键**——条目持 `Match` 委托（`vm is TViewModel` 类型模式，编译期静态类型检查）与 `Build` 委托（`sp.GetRequiredService<TView>()` IoC 工厂）
-2. **`IViewRegistry`/`ViewRegistry`**（查询侧，Build 后）：单例注入 `IEnumerable<ViewMappingEntry>`（**MEL 集合注入**，按注册顺序收集）+ `IServiceProvider`，构造时**反转**集合（后注册者优先匹配，覆盖语义）；`GetView`/`IsRegistered` 逐条目调 `Match` 委托判定——**无 Type 键、无字典查询**，派生类 VM 天然命中基类映射；View 实例经 IoC 工厂创建——**AOT 纪律保持**：is 模式与泛型工厂均为编译期静态引用，无反射创建路径
-3. **`ViewRegistryDataTemplate`**（Module.Base）：桥接 Avalonia `IDataTemplate` 与查询侧注册表——`Match` = 已注册、`Build` = 经 IoC 工厂创建 View；MainWindow 构造时挂入窗口 DataTemplates（内容区 ContentControl 绑定 ActiveToolViewModel 的渲染路径不变）
-4. **模块单方法注册**：`IToolModule.Register(IServiceCollection)`（单参）一个方法完成全部注册——`services.AddViewMapping<GitLogViewModel, GitLogView>()` 一行搞定 VM+View 接线；原 `RegisterViews`/`IViewMappingRegistry`/`AddViewModel`/`AddView` 均已删除；组合根 `RegisterToolModules` 只加主页映射 `services.AddViewMapping<DashboardViewModel, DashboardView>()`（应用级，不属于任何模块）
-5. **MainWindow 双构造**：`MainWindow(IViewRegistry?)` 经 DI 解析并挂载模板；无参构造 `: this(null)` 仅为满足 Avalonia XAML 编译器（AVLN3000 要求 x:Class 有无参构造），运行时不走此路径
-6. **MainWindow.axaml 已删除** `Window.DataTemplates` 块与 5 个不再使用的 xmlns（textvm/textviews/gitvm/gitviews/views）——新增模块无需再改主窗口 XAML，只在 `Register` 里加一行 `services.AddViewMapping<VM, View>()`
+1. **`ToolRegistration`（静态类 + IServiceCollection 扩展方法）**（`Services/ToolRegistration.cs`，注册侧）：**两个方法**——`AddViewMapping<TViewModel, TView>()`（VM + View 均以 Transient 入容器 + `ViewMappingEntry` 映射声明）与 `AddSubTool<TViewModel>()`（VM 以 Transient 入容器 + `SubToolInfo` 元数据以单例入容器）；泛型参数均带 `[DynamicallyAccessedMembers(PublicConstructors)]` 注解（满足 AddTransient 的 trim 要求）；**无 Type 键**——View 条目持 `Match` 委托（`vm is TViewModel` 类型模式）与 `Build` 委托（`sp.GetRequiredService<TView>()` IoC 工厂），子工具工厂为编译期泛型调用，AOT 安全
+2. **`ISubTool`（静态抽象接口，C# 14）**（`Interfaces/ISubTool.cs`）：子工具元数据的**单一事实来源**——ViewModel 以显式接口实现声明 `ModuleId`/`Id`/`Name`/`Icon` 四个静态属性（如 `static string ISubTool.Id => TextModule.ToolIds.JsonFormatter`）；`AddSubTool<TViewModel>()` 约束 `TViewModel : ViewModelBase, ISubTool`，经 `TViewModel.ModuleId` 等 **constrained call 编译期读取**——无需实例化、无参数传递、无 Type 键、零反射（模块 `Register` 在 Build 前执行，静态成员此时可安全读取）；显示名称/图标从「注册参数」收敛为「ViewModel 自声明」，消灭魔法字符串散落
+3. **`IToolCatalog`/`ToolCatalog`**（查询侧，Build 后）：单例注入 `IEnumerable<ViewMappingEntry>` + `IEnumerable<SubToolInfo>`（**MEL 集合注入**，按注册顺序收集）+ `IServiceProvider`；构造时 View 映射**反转**集合（后注册者优先匹配，覆盖语义）、子工具 `ToLookup(s => s.ModuleId)` 建索引；`GetView`/`IsRegistered` 逐条目调 `Match` 委托判定（派生类 VM 天然命中基类映射，View 经 IoC 工厂创建）；`GetSubTools(moduleId)`/`GetSubTool(moduleId, subToolId)` 纯 string 键匹配——**无 Type 键、无字典查询、零反射**
+4. **`ViewRegistryDataTemplate`**（Module.Base）：桥接 Avalonia `IDataTemplate` 与 `IToolCatalog`——`Match` = 已注册、`Build` = 经 IoC 工厂创建 View；MainWindow 构造时挂入窗口 DataTemplates（内容区 ContentControl 绑定 ActiveToolViewModel 的渲染路径不变）
+5. **`SubToolInfo`**（`Cores/DS.Tools.Module.Base/Models`）：**自带 `ModuleId`**（导航 ID 前缀），`GetFullNavigationId()` 无参化（用自身 ModuleId 拼 `moduleId:subToolId`）——调用方（SelectSubTool/Dashboard）不再传模块 ID
+6. **`ToolModule` 基类瘦身**：删除 `SubToolManager` 字段/属性、`EnableSubTools()`、模块构造函数里的子工具初始化；`SubTools`/`HasSubTools`/`CreateSubToolViewModel` 经 `_toolCatalog` 查询（挂载前返回 null，等价于无子工具）；`internal AttachToolCatalog` 由 **`ToolRegistry.Register` 挂载**（构造注入 `IToolCatalog`，App 与测试的 `BuildContainer` 都走 Register，无需额外接线）——**子类构造函数彻底空壳化**（TextModule/GitModule 构造函数已删除）
+7. **`SubToolManager` 类整体删除**（连同 13 个测试）；`IToolModule` 契约的 `SubTools`/`HasSubTools`/`CreateSubToolViewModel` 保留（侧边栏 XAML `x:DataType="base:SubToolInfo"` 绑定不变）；`SelectSubTool` 定位所属模块从 `SubTools.Contains` 改为 `m.Id == subTool.ModuleId`（string 匹配，不再依赖引用相等）
+8. **MainWindow 双构造**：`MainWindow(IToolCatalog?)` 经 DI 解析并挂载模板；无参构造 `: this(null)` 仅为满足 Avalonia XAML 编译器（AVLN3000 要求 x:Class 有无参构造），运行时不走此路径；MainWindow.axaml 无手写 DataTemplates——新增模块只在 `Register` 里加 `AddViewMapping`/`AddSubTool` 各一行
 
-测试 115/115 通过（ViewRegistryTests 7 个：AddViewMapping VM+View 容器注册/映射→新实例/未注册 null/覆盖注册/派生 VM 命中基类映射/IoC 依赖注入/模板桥接 Match+Build 委托；MainWindowRenderIntegrationTests 的 BuildContainer 与 App 同构接线，渲染断言不变）。
+**模块注册范式**：`Register` 内 `services.AddViewMapping<TVM, TView>()`（View 接线）+ `services.AddSubTool<TVM>()`（子工具接线，元数据由 VM 的 ISubTool 声明）+ 服务注册；组合根只加主页映射 `services.AddViewMapping<DashboardViewModel, DashboardView>()`（应用级）。
+
+测试 109/109 通过（ToolCatalogTests 14 个合并自 ViewRegistryTests 7 + SubToolCatalogTests 7：View 映射容器注册/映射→新实例/未注册 null/覆盖注册/派生 VM 命中基类映射/IoC 依赖注入/模板桥接/子工具容器注册/按模块过滤/未知模块空/按 ID 查询/未知 ID null/完整导航 ID/模块挂载集成——集成测试走真实 TextModule + ToolRegistry.Register，验证 `SubTools`/`CreateSubToolViewModel` 挂载即用；ToolRegistryTests 构造依赖 `new ToolCatalog([], [], Mock.Of<IServiceProvider>())`；DashboardLauncherTests 的 CreateViewModel 改容器构建）。
 
 ---
 

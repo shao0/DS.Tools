@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
+using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Module.Git.Models;
 using DS.Tools.Module.Git.Services;
 
@@ -9,8 +10,14 @@ namespace DS.Tools.Module.Git.ViewModels;
 /// Git 日志工具 ViewModel
 /// 使用 CommunityToolkit.Mvvm 源生成器，AOT 兼容，无反射调用
 /// </summary>
-public sealed partial class GitLogViewModel : ViewModelBase
+public sealed partial class GitLogViewModel : ViewModelBase, ISubTool
 {
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    static string ISubTool.ModuleId => GitModule.ToolIds.Module;
+    static string ISubTool.Id => GitModule.ToolIds.Log;
+    static string ISubTool.Name => "Git 日志";
+    static string ISubTool.Icon => "📜";
+
     private readonly IGitLogService _gitLogService;
     private readonly IGitSettingsService _settingsService;
     private readonly IFolderPickerService _folderPickerService;

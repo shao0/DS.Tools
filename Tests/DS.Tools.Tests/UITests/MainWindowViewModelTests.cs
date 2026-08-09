@@ -162,8 +162,8 @@ public sealed class MainWindowViewModelTests
             _mockThemeService.Object,
             _mockNavigationService.Object,
             _mockServiceProvider.Object);
-        var subTool = new SubToolInfo("test1", "Test Tool 1", "🔧", _ => new DummyViewModel());
-        _mockTextModule.Setup(x => x.SubTools).Returns([subTool]);
+        // SubToolInfo 自带 ModuleId：SelectSubTool 按它定位所属模块并拼接完整导航 ID
+        var subTool = new SubToolInfo("text-tools", "test1", "Test Tool 1", "🔧", _ => new DummyViewModel());
 
         // Act
         viewModel.SelectSubToolCommand.Execute(subTool);
@@ -182,10 +182,9 @@ public sealed class MainWindowViewModelTests
             _mockThemeService.Object,
             _mockNavigationService.Object,
             _mockServiceProvider.Object);
-        var gitSubTool = new SubToolInfo("git-log", "Git 日志", "📜", _ => new DummyViewModel());
+        var gitSubTool = new SubToolInfo("git-tools", "git-log", "Git 日志", "📜", _ => new DummyViewModel());
         var gitModule = new Mock<IToolModule>();
         gitModule.Setup(x => x.Id).Returns("git-tools");
-        gitModule.Setup(x => x.SubTools).Returns([gitSubTool]);
         _mockToolRegistry.Setup(x => x.Tools).Returns(new List<IToolModule> { _mockTextModule.Object, gitModule.Object });
         // 当前活动模块是文本模块，但点击的是 Git 模块的子工具
         _mockNavigationService.Setup(x => x.CurrentTool).Returns(_mockTextModule.Object);

@@ -96,22 +96,23 @@ DS.Tools.slnx
 项目采用**极简模块化设计**（AOT 全程无反射、无 Type 键创建）：
 
 - **`IToolModule` / `ToolModule`**：工具模块契约与抽象基类
-- **`ToolRegistry`**：模块注册表（编译期显式注册 + 标准 .NET 事件）
+- **`ToolRegistry`**：模块注册表（编译期显式注册；注册时挂载子工具目录到模块基类）
 - **`INavigationService`**：导航服务，管理模块/子工具切换与历史记录
 - **IoC ViewModel 创建**：模块提供 `Func<IServiceProvider, ViewModelBase>` 强类型工厂，
   经 DI 容器 `GetRequiredService<T>()` 解析实例（无 `Type` 键、无反射）
-- **编译期 View 映射**：`MainWindow.axaml` 中 `x:DataType` DataTemplate 声明
-  ViewModel→View 映射，由 Avalonia XAML 编译器生成直接实例化代码
+- **统一注册表服务**：`ToolRegistration`（`AddViewMapping`/`AddSubTool` 一行注册）+
+  `IToolCatalog`/`ToolCatalog` 查询（View 映射 + 子工具目录），
+  `ViewRegistryDataTemplate` 桥接 Avalonia 渲染（无手写 XAML DataTemplate 列表）
 
 #### 添加新工具
 
 1. 继承 `ToolModule` 基类
 2. 实现必需的成员（Id、Name、Icon、Description、`CreateMainViewModel`）
-3. 在 `Register` 方法中注册 ViewModel 和服务（`AddTransient<T>`）
-4. 子工具通过 `SubToolInfo(id, name, icon, sp => sp.GetRequiredService<T>())` 添加
-5. 在 `App.axaml.cs` 的 `ToolModules` 数组中追加一行：`new XxxModule()`
-6. 在 `MainWindow.axaml` 的 `Window.DataTemplates` 中追加一条
-   `<DataTemplate x:DataType="vm:XxxViewModel"><views:XxxView /></DataTemplate>`
+3. 在 `Register` 方法中注册：
+   - 子工具：`services.AddSubTool<TViewModel>()`（元数据由 ViewModel 实现 `ISubTool` 接口声明）
+   - View 映射：`services.AddViewMapping<TViewModel, TView>()`
+   - 服务：`services.AddSingleton<IXxxService, XxxService>()`
+4. 在 `App.axaml.cs` 的 `ToolModules` 数组中追加一行：`new XxxModule()`
 
 详细开发指南请参考 [CLAUDE.md](CLAUDE.md)。
 
