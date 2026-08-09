@@ -168,7 +168,5 @@ public sealed partial class Base64ViewModel : ViewModelBase
         !string.IsNullOrEmpty(EncodedResult) ||
         !string.IsNullOrEmpty(DecodedResult);
     private bool CanCopyEncoded() => !string.IsNullOrEmpty(EncodedResult);
-    private bool CanCopyEncodedAsync() => !string.IsNullOrEmpty(EncodedResult);
     private bool CanCopyDecoded() => !string.IsNullOrEmpty(DecodedResult);
-    private bool CanCopyDecodedAsync() => !string.IsNullOrEmpty(DecodedResult);
 }

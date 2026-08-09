@@ -1,8 +1,7 @@
-using System.Runtime.CompilerServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using DS.Tools.Core.Interfaces;
-
 using DS.Tools.Module.Text.Models;
 using DS.Tools.Module.Text.Services;
 
@@ -16,14 +15,19 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase
 {
     private readonly IJsonFormatterService _service;
     private readonly IClipboardService _clipboardService;
+    private readonly ILogger<JsonFormatterViewModel> _logger;
 
     /// <summary>
-    /// 构造函数 —— 通过 DI 注入 IJsonFormatterService 和 IClipboardService
+    /// 构造函数 —— 通过 DI 注入服务
     /// </summary>
-    public JsonFormatterViewModel(IJsonFormatterService service, IClipboardService clipboardService)
+    public JsonFormatterViewModel(
+        IJsonFormatterService service,
+        IClipboardService clipboardService,
+        ILogger<JsonFormatterViewModel> logger)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -75,55 +79,40 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase
         ClearOutput();
     }
 
-    /// <summary>
-    /// 判断是否可以执行格式化操作（输入不为空且不在处理中）
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanExecuteFormat() => !string.IsNullOrWhiteSpace(InputJson) && !IsProcessing;
 
-    /// <summary>
-    /// 判断是否可以清空
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanClear() =>
         !string.IsNullOrEmpty(InputJson) ||
         !string.IsNullOrEmpty(OutputJson) ||
         !string.IsNullOrEmpty(StatusMessage);
 
-    /// <summary>
-    /// 判断是否可以复制输出（有输出内容）
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanCopyOutput() => !string.IsNullOrWhiteSpace(OutputJson);
 
     /// <summary>
-    /// 执行格式化（异步）
+    /// 执行格式化
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteFormat))]
-    private async Task FormatAsync()
+    private void Format()
     {
-        await ExecuteOperationAsync(async () =>
-            await _service.FormatAsync(InputJson));
+        ExecuteOperation(() => _service.Format(InputJson));
     }
 
     /// <summary>
-    /// 执行压缩（异步）
+    /// 执行压缩
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteFormat))]
-    private async Task CompressAsync()
+    private void Compress()
     {
-        await ExecuteOperationAsync(async () =>
-            await _service.CompressAsync(InputJson));
+        ExecuteOperation(() => _service.Compress(InputJson));
     }
 
     /// <summary>
-    /// 执行验证（异步）
+    /// 执行验证
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanExecuteFormat))]
-    private async Task ValidateAsync()
+    private void Validate()
     {
-        await ExecuteOperationAsync(async () =>
-            await _service.ValidateAsync(InputJson));
+        ExecuteOperation(() => _service.Validate(InputJson));
     }
 
     /// <summary>
@@ -138,7 +127,7 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// 执行复制输出（异步）
+    /// 执行复制输出（异步，剪贴板需 UI 线程）
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCopyOutput))]
     private async Task CopyOutputAsync()
@@ -160,9 +149,9 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// 执行通用操作逻辑
+    /// 执行通用操作逻辑（同步；数据量小，无阻塞风险）
     /// </summary>
-    private async Task ExecuteOperationAsync(Func<Task<JsonFormatterResult>> operation)
+    private void ExecuteOperation(Func<JsonFormatterResult> operation)
     {
         if (IsProcessing)
             return;
@@ -172,7 +161,7 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase
 
         try
         {
-            var result = await operation();
+            var result = operation();
 
             if (result.IsSuccess)
             {
@@ -185,6 +174,7 @@ public sealed partial class JsonFormatterViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "JSON 操作异常（{Operation}）", nameof(ExecuteOperation));
             ShowError($"操作异常: {ex.Message}");
         }
         finally

@@ -19,13 +19,9 @@
     d:DesignWidth="1200"
     x:CompileBindings="True"
     x:DataType="vm:MainWindowViewModel"
-    Background="#0F172A"
+    Background="{DynamicResource BackgroundBrush}"
     Icon="avares://DS.Tools.UI.Shared/Assets/app-icon.ico"
     mc:Ignorable="d">
-
-    <Design.DataContext>
-        <vm:MainWindowViewModel />
-    </Design.DataContext>
 
     <!--  ViewModel→View 映射：编译期 DataTemplate（NativeAOT 兼容，零反射）。
           每个工具 ViewModel 通过 x:DataType 显式声明，由 Avalonia XAML 编译器
@@ -62,8 +58,8 @@
 
         <!--  侧边栏样式  -->
         <Style Selector="Border.sidebar">
-            <Setter Property="Background" Value="#1E293B" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="0,0,1,0" />
         </Style>
 
@@ -76,12 +72,12 @@
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
         <Style Selector="Button.moduleItem:pointerover">
-            <Setter Property="Background" Value="#334155" />
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
         </Style>
 
         <!--  二级菜单项样式  -->
@@ -93,19 +89,19 @@
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Foreground" Value="#94A3B8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="Cursor" Value="Hand" />
         </Style>
 
         <Style Selector="Button.subToolItem:pointerover">
-            <Setter Property="Background" Value="#334155" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <!--  选中状态样式  -->
         <Style Selector="Button.moduleItem.active, Button.subToolItem.active">
-            <Setter Property="Background" Value="rgba(59, 130, 246, 0.15)" />
-            <Setter Property="Foreground" Value="#3B82F6" />
+            <Setter Property="Background" Value="{DynamicResource ActiveBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
         </Style>
 
         <!--  Expander 样式  -->
@@ -123,12 +119,12 @@
             <Setter Property="Margin" Value="0" />
             <Setter Property="Width" Value="20" />
             <Setter Property="Height" Value="20" />
-            <Setter Property="Foreground" Value="#94A3B8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         </Style>
 
         <Style Selector="Expander ToggleButton:pointerover">
-            <Setter Property="Background" Value="#334155" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <!--  主题切换按钮样式  -->
@@ -137,12 +133,12 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="8" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Foreground" Value="#94A3B8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         </Style>
 
         <Style Selector="Button.themeToggle:pointerover">
-            <Setter Property="Background" Value="#334155" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Background" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
     </Window.Styles>
 
@@ -150,7 +146,7 @@
         <!--  自定义标题栏  -->
         <Border
             Height="40"
-            Background="#1E293B"
+            Background="{DynamicResource SurfaceBrush}"
             DockPanel.Dock="Top">
             <Grid ColumnDefinitions="*,Auto">
 
@@ -168,7 +164,7 @@
                         VerticalAlignment="Center"
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Foreground="#F1F5F9"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
                         Text="DS.Tools" />
                 </StackPanel>
 
@@ -206,7 +202,7 @@
 
         <!--  主内容区：SplitView 支持侧边栏  -->
         <SplitView
-            Background="#0F172A"
+            Background="{DynamicResource BackgroundBrush}"
             DisplayMode="Inline"
             IsPaneOpen="{Binding IsPaneOpen}"
             OpenPaneLength="280">
@@ -217,7 +213,7 @@
                         <!--  Logo 区域  -->
                         <Border
                             Padding="16,12"
-                            BorderBrush="#334155"
+                            BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="0,0,0,1"
                             DockPanel.Dock="Top">
                             <StackPanel
@@ -231,7 +227,7 @@
                                     VerticalAlignment="Center"
                                     FontSize="16"
                                     FontWeight="SemiBold"
-                                    Foreground="#F1F5F9"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                     Text="工具箱" />
                             </StackPanel>
                         </Border>
@@ -326,17 +322,17 @@
                         <!--  底部信息区  -->
                         <Border
                             Padding="16,12"
-                            BorderBrush="#334155"
+                            BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="0,1,0,0"
                             DockPanel.Dock="Bottom">
                             <StackPanel Spacing="4">
                                 <TextBlock
                                     FontSize="11"
-                                    Foreground="#64748B"
+                                    Foreground="{DynamicResource TextMutedBrush}"
                                     Text="DS.Tools v1.0" />
                                 <TextBlock
                                     FontSize="11"
-                                    Foreground="#64748B"
+                                    Foreground="{DynamicResource TextMutedBrush}"
                                     Text="本地运行" />
                             </StackPanel>
                         </Border>
@@ -345,7 +341,7 @@
             </SplitView.Pane>
 
             <!--  内容区：当前工具的视图 - 由窗口级 DataTemplate 按编译期映射渲染  -->
-            <Border Background="#0F172A">
+            <Border Background="{DynamicResource BackgroundBrush}">
                 <ContentControl Content="{Binding ActiveToolViewModel}" />
             </Border>
         </SplitView>

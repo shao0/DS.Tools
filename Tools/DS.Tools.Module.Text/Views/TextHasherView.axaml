@@ -13,8 +13,8 @@
 
     <UserControl.Styles>
         <Style Selector="Border.card">
-            <Setter Property="Background" Value="#1E293B" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="20" />
@@ -23,26 +23,26 @@
         <Style Selector="TextBlock.cardTitle">
             <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="Margin" Value="0,0,0,16" />
         </Style>
 
         <Style Selector="TextBox.formInput">
-            <Setter Property="Background" Value="#0F172A" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12" />
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="MinHeight" Value="80" />
             <Setter Property="AcceptsReturn" Value="True" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
 
         <Style Selector="Border.resultBox">
-            <Setter Property="Background" Value="#0F172A" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12" />
@@ -58,12 +58,12 @@
                 <TextBlock
                     FontSize="28"
                     FontWeight="Bold"
-                    Foreground="#F1F5F9"
+                    Foreground="{DynamicResource TextPrimaryBrush}"
                     Text="文本哈希" />
                 <TextBlock
                     Margin="0,8,0,0"
                     FontSize="16"
-                    Foreground="#94A3B8"
+                    Foreground="{DynamicResource TextSecondaryBrush}"
                     Text="计算文本的 MD5 和 SHA-256 哈希值" />
             </StackPanel>
 
@@ -81,14 +81,14 @@
                     <Button
                         Margin="0,12,0,0"
                         Padding="16,20"
-                        Background="#3B82F6"
+                        Background="{DynamicResource PrimaryBrush}"
                         BorderThickness="0"
                         Command="{Binding CalculateHashCommand}"
                         Content="计算哈希"
                         CornerRadius="8"
                         Cursor="Hand"
                         FontWeight="Medium"
-                        Foreground="White" />
+                        Foreground="{DynamicResource PrimaryFgBrush}" />
 
                     <!--  SHA-256 结果  -->
                     <Border
@@ -98,24 +98,24 @@
                             <Button
                                 Margin="0,0,0,0"
                                 Padding="8,12"
-                                Background="#334155"
+                                Background="{DynamicResource SecondaryBrush}"
                                 BorderThickness="0"
                                 Command="{Binding CopySha256Command}"
                                 Content="复制"
                                 CornerRadius="6"
                                 DockPanel.Dock="Right"
-                                Foreground="White" />
+                                Foreground="{DynamicResource PrimaryFgBrush}" />
 
                             <StackPanel>
                                 <TextBlock
                                     Margin="0,0,0,8"
                                     FontSize="12"
-                                    Foreground="#94A3B8"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                     Text="SHA-256" />
                                 <TextBlock
                                     FontFamily="Consolas,monospace"
                                     FontSize="13"
-                                    Foreground="#10B981"
+                                    Foreground="{DynamicResource AccentSuccessBrush}"
                                     Text="{Binding Sha256Result}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
@@ -130,24 +130,24 @@
                             <Button
                                 Margin="0,0,0,0"
                                 Padding="8,12"
-                                Background="#334155"
+                                Background="{DynamicResource SecondaryBrush}"
                                 BorderThickness="0"
                                 Command="{Binding CopyMd5Command}"
                                 Content="复制"
                                 CornerRadius="6"
                                 DockPanel.Dock="Right"
-                                Foreground="White" />
+                                Foreground="{DynamicResource PrimaryFgBrush}" />
 
                             <StackPanel>
                                 <TextBlock
                                     Margin="0,0,0,8"
                                     FontSize="12"
-                                    Foreground="#94A3B8"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
                                     Text="MD5" />
                                 <TextBlock
                                     FontFamily="Consolas,monospace"
                                     FontSize="13"
-                                    Foreground="#F59E0B"
+                                    Foreground="{DynamicResource AccentWarningBrush}"
                                     Text="{Binding Md5Result}"
                                     TextWrapping="Wrap" />
                             </StackPanel>
@@ -157,14 +157,14 @@
                     <Button
                         Margin="0,12,0,0"
                         Padding="16,20"
-                        Background="#334155"
+                        Background="{DynamicResource SecondaryBrush}"
                         BorderThickness="0"
                         Command="{Binding ClearCommand}"
                         Content="清空"
                         CornerRadius="8"
                         Cursor="Hand"
                         FontWeight="Medium"
-                        Foreground="White" />
+                        Foreground="{DynamicResource PrimaryFgBrush}" />
                 </StackPanel>
             </Border>
         </StackPanel>

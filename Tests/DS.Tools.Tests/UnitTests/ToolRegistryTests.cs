@@ -39,7 +39,6 @@ public sealed class ToolRegistryTests
 
         // Assert
         registry.Tools.Should().BeEmpty();
-        registry.ActiveTool.Should().BeNull();
     }
 
     [Fact]
@@ -107,44 +106,6 @@ public sealed class ToolRegistryTests
 
         // Assert
         result.Should().BeNull();
-    }
-
-    [Fact]
-    public void ActiveTool_Setter_ShouldTriggerToolChangedEvent()
-    {
-        // Arrange
-        var registry = new ToolRegistry();
-        var module = _mockModule1.Object;
-        registry.Register(module);
-
-        IToolModule? capturedTool = null;
-        registry.ToolChanged += (tool) => capturedTool = tool;
-
-        // Act
-        registry.ActiveTool = module;
-
-        // Assert
-        capturedTool.Should().Be(module);
-        registry.ActiveTool.Should().Be(module);
-    }
-
-    [Fact]
-    public void ActiveTool_SettingSameValueTwice_ShouldNotTriggerEvent()
-    {
-        // Arrange
-        var registry = new ToolRegistry();
-        var module = _mockModule1.Object;
-        registry.Register(module);
-        registry.ActiveTool = module;
-
-        int eventCallCount = 0;
-        registry.ToolChanged += (tool) => eventCallCount++;
-
-        // Act
-        registry.ActiveTool = module;
-
-        // Assert
-        eventCallCount.Should().Be(0);
     }
 
     [Fact]

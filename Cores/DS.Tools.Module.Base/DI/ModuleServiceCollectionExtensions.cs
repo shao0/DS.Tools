@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Module.Base.Services;
-using System.Runtime.CompilerServices;
 
 namespace DS.Tools.Module.Base.DI;
 
@@ -15,7 +14,6 @@ public static class ModuleServiceCollectionExtensions
     /// </summary>
     /// <param name="services">服务集合</param>
     /// <returns>服务集合（链式调用）</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IServiceCollection AddModuleServices(this IServiceCollection services)
     {
         // ========================================

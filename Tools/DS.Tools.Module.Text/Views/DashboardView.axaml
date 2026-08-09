@@ -32,8 +32,8 @@
                 Grid.Column="0"
                 Margin="0,0,8,16"
                 Padding="24"
-                Background="#1E293B"
-                BorderBrush="#334155"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="12">
                 <StackPanel>
@@ -46,13 +46,13 @@
                         HorizontalAlignment="Center"
                         FontSize="24"
                         FontWeight="Bold"
-                        Foreground="#3B82F6"
+                        Foreground="{DynamicResource PrimaryBrush}"
                         Text="{Binding CurrentTime}" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"
                         FontSize="12"
-                        Foreground="#94A3B8"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
                         Text="当前时间" />
                 </StackPanel>
             </Border>
@@ -63,8 +63,8 @@
                 Grid.Column="1"
                 Margin="0,0,8,16"
                 Padding="24"
-                Background="#1E293B"
-                BorderBrush="#334155"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="12">
                 <StackPanel>
@@ -77,13 +77,13 @@
                         HorizontalAlignment="Center"
                         FontSize="24"
                         FontWeight="Bold"
-                        Foreground="#10B981"
+                        Foreground="{DynamicResource AccentSuccessBrush}"
                         Text="{Binding CurrentDate}" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"
                         FontSize="12"
-                        Foreground="#94A3B8"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
                         Text="今日日期" />
                 </StackPanel>
             </Border>
@@ -94,8 +94,8 @@
                 Grid.Column="0"
                 Margin="0,0,8,0"
                 Padding="24"
-                Background="#1E293B"
-                BorderBrush="#334155"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="12">
                 <StackPanel>
@@ -108,13 +108,13 @@
                         HorizontalAlignment="Center"
                         FontSize="24"
                         FontWeight="Bold"
-                        Foreground="#F59E0B"
+                        Foreground="{DynamicResource AccentWarningBrush}"
                         Text="{Binding Timestamp}" />
                     <TextBlock
                         Margin="0,4,0,0"
                         HorizontalAlignment="Center"
                         FontSize="12"
-                        Foreground="#94A3B8"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
                         Text="当前时间戳（秒）" />
                 </StackPanel>
             </Border>
@@ -125,8 +125,8 @@
                 Grid.Column="1"
                 Margin="0,0,8,0"
                 Padding="24"
-                Background="#1E293B"
-                BorderBrush="#334155"
+                Background="{DynamicResource CardBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="12">
                 <TextBlock
@@ -141,8 +141,8 @@
         <Border
             Margin="0,24,0,0"
             Padding="24"
-            Background="#1E293B"
-            BorderBrush="#334155"
+            Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1"
             CornerRadius="12">
             <StackPanel>
@@ -157,36 +157,36 @@
                     Spacing="12">
                     <Button
                         Padding="12,8"
-                        Background="#3B82F6"
+                        Background="{DynamicResource PrimaryBrush}"
                         Command="{Binding NavigateToJsonCommand}"
                         Content="JSON 格式化"
                         CornerRadius="8"
                         FontWeight="SemiBold"
-                        Foreground="White" />
+                        Foreground="{DynamicResource PrimaryFgBrush}" />
 
                     <Button
                         Padding="12,8"
-                        Background="#334155"
+                        Background="{DynamicResource SecondaryBrush}"
                         Command="{Binding NavigateToBase64Command}"
                         Content="Base64 编码"
                         CornerRadius="8"
-                        Foreground="#F1F5F9" />
+                        Foreground="{DynamicResource TextPrimaryBrush}" />
 
                     <Button
                         Padding="12,8"
-                        Background="#334155"
+                        Background="{DynamicResource SecondaryBrush}"
                         Command="{Binding NavigateToColorCommand}"
                         Content="颜色转换"
                         CornerRadius="8"
-                        Foreground="#F1F5F9" />
+                        Foreground="{DynamicResource TextPrimaryBrush}" />
 
                     <Button
                         Padding="12,8"
-                        Background="#334155"
+                        Background="{DynamicResource SecondaryBrush}"
                         Command="{Binding NavigateToPasswordCommand}"
                         Content="生成密码"
                         CornerRadius="8"
-                        Foreground="#F1F5F9" />
+                        Foreground="{DynamicResource TextPrimaryBrush}" />
                 </StackPanel>
             </StackPanel>
         </Border>

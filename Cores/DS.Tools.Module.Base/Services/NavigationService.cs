@@ -1,6 +1,4 @@
 using DS.Tools.Module.Base.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
-using System.Runtime.CompilerServices;
 
 namespace DS.Tools.Module.Base.Services;
 
@@ -10,7 +8,6 @@ namespace DS.Tools.Module.Base.Services;
 /// </summary>
 public sealed class NavigationService : INavigationService
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly IToolRegistry _toolRegistry;
     private readonly Stack<NavigationHistoryEntry> _navigationHistory = new();
     private IToolModule? _currentTool;
@@ -19,9 +16,8 @@ public sealed class NavigationService : INavigationService
     /// <summary>
     /// 构造函数
     /// </summary>
-    public NavigationService(IServiceProvider serviceProvider, IToolRegistry toolRegistry)
+    public NavigationService(IToolRegistry toolRegistry)
     {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _toolRegistry = toolRegistry ?? throw new ArgumentNullException(nameof(toolRegistry));
     }
 
@@ -84,7 +80,6 @@ public sealed class NavigationService : INavigationService
 
         _currentTool = tool;
         _currentSubToolId = null; // 重置子工具ID
-        _toolRegistry.ActiveTool = tool;
 
         // 触发导航变更事件
         NavigationChanged?.Invoke(tool, null);
@@ -93,7 +88,6 @@ public sealed class NavigationService : INavigationService
     /// <summary>
     /// 导航到指定子工具
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void NavigateToSubTool(string moduleId, string subToolId)
     {
         var tool = _toolRegistry.GetTool(moduleId);
@@ -110,7 +104,6 @@ public sealed class NavigationService : INavigationService
 
         _currentTool = tool;
         _currentSubToolId = subToolId;
-        _toolRegistry.ActiveTool = tool;
 
         // 触发导航变更事件
         NavigationChanged?.Invoke(tool, subToolId);
@@ -127,7 +120,6 @@ public sealed class NavigationService : INavigationService
         var previousEntry = _navigationHistory.Pop();
         _currentTool = previousEntry.Tool;
         _currentSubToolId = previousEntry.SubToolId;
-        _toolRegistry.ActiveTool = previousEntry.Tool;
 
         // 触发导航变更事件
         NavigationChanged?.Invoke(previousEntry.Tool, previousEntry.SubToolId);

@@ -14,8 +14,8 @@
 
     <UserControl.Styles>
         <Style Selector="Border.card">
-            <Setter Property="Background" Value="#1E293B" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="20" />
@@ -24,24 +24,24 @@
         <Style Selector="TextBlock.cardTitle">
             <Setter Property="FontSize" Value="18" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="Margin" Value="0,0,0,16" />
         </Style>
 
         <Style Selector="TextBox.formInput">
-            <Setter Property="Background" Value="#0F172A" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12" />
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
 
         <Style Selector="Border.colorPreview">
             <Setter Property="Height" Value="100" />
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Margin" Value="0,0,0,16" />
         </Style>
@@ -55,12 +55,12 @@
                 <TextBlock
                     FontSize="28"
                     FontWeight="Bold"
-                    Foreground="#F1F5F9"
+                    Foreground="{DynamicResource TextPrimaryBrush}"
                     Text="颜色转换器" />
                 <TextBlock
                     Margin="0,8,0,0"
                     FontSize="16"
-                    Foreground="#94A3B8"
+                    Foreground="{DynamicResource TextSecondaryBrush}"
                     Text="在 HEX、RGB、HSL 之间转换颜色" />
             </StackPanel>
 
@@ -79,7 +79,7 @@
                             VerticalAlignment="Center"
                             FontSize="18"
                             FontWeight="SemiBold"
-                            Foreground="White"
+                            Foreground="{DynamicResource PrimaryFgBrush}"
                             Text="{Binding HexInput}">
                             <TextBlock.Effect>
                                 <DropShadowEffect
@@ -96,7 +96,7 @@
                         <TextBlock
                             Margin="0,0,0,8"
                             FontSize="13"
-                            Foreground="#94A3B8"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
                             Text="HEX" />
                         <TextBox
                             Classes="formInput"
@@ -108,7 +108,7 @@
                         <TextBlock
                             Margin="0,0,0,8"
                             FontSize="13"
-                            Foreground="#94A3B8"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
                             Text="RGB" />
                         <TextBox
                             Classes="formInput"
@@ -121,7 +121,7 @@
                         <TextBlock
                             Margin="0,0,0,8"
                             FontSize="13"
-                            Foreground="#94A3B8"
+                            Foreground="{DynamicResource TextSecondaryBrush}"
                             Text="HSL" />
                         <TextBox
                             Classes="formInput"
@@ -132,14 +132,14 @@
                     <!--  重置按钮  -->
                     <Button
                         Padding="12,20"
-                        Background="#334155"
+                        Background="{DynamicResource SecondaryBrush}"
                         BorderThickness="0"
                         Command="{Binding ResetCommand}"
                         Content="重置"
                         CornerRadius="8"
                         Cursor="Hand"
                         FontWeight="Medium"
-                        Foreground="White" />
+                        Foreground="{DynamicResource PrimaryFgBrush}" />
                 </StackPanel>
             </Border>
         </StackPanel>

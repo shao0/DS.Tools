@@ -1,7 +1,8 @@
 namespace DS.Tools.Module.Base.Interfaces;
 
 /// <summary>
-/// 工具注册表接口 - 管理所有工具模块的注册和查询
+/// 工具注册表接口 - 管理所有工具模块的注册和查询。
+/// 当前选中工具状态由 INavigationService 持有，注册表不维护重复状态。
 /// </summary>
 public interface IToolRegistry
 {
@@ -22,14 +23,4 @@ public interface IToolRegistry
     /// </summary>
     /// <param name="tool">工具模块实例</param>
     void Register(IToolModule tool);
-
-    /// <summary>
-    /// 当前选中的工具
-    /// </summary>
-    IToolModule? ActiveTool { get; set; }
-
-    /// <summary>
-    /// 工具变更事件（当 ActiveTool 改变时触发，标准 .NET 事件）
-    /// </summary>
-    event Action<IToolModule?>? ToolChanged;
 }

@@ -5,25 +5,31 @@ using Avalonia.Styling;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using DS.Tools.Module.Base.Interfaces;
+using Serilog;
 using DS.Tools.Core.DI;
 using DS.Tools.Core.Interfaces;
+using DS.Tools.Infrastructure.Logging;
 using DS.Tools.Module.Base.DI;
-using DS.Tools.Views;
-using DS.Tools.ViewModels;
+using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Module.Text;
-using System.Runtime.CompilerServices;
+using DS.Tools.ViewModels;
+using DS.Tools.Views;
 
 namespace DS.Tools;
 
 /// <summary>
 /// 应用程序入口 - 基于极简模块化架构（IToolModule + ToolRegistry + INavigationService）。
-/// 模块在编译期显式注册，由IServiceProvider管理生命周期。
-/// NativeAOT兼容，无运行时反射。
+/// 模块在编译期显式注册（<see cref="ToolModules"/> 数组），由 IServiceProvider 管理生命周期。
+/// NativeAOT 兼容，无运行时反射。
 /// </summary>
 public partial class App : Application
 {
     private IServiceProvider? _serviceProvider;
+
+    /// <summary>
+    /// 工具模块清单（编译期显式声明——新增模块只需在此追加一行）
+    /// </summary>
+    private static readonly IToolModule[] ToolModules = [new TextModule()];
 
     /// <summary>
     /// 应用程序初始化
@@ -34,7 +40,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// 框架初始化完成后：模块化注册 + 服务构建 + 主窗口启动
+    /// 框架初始化完成后：配置 + 服务构建 + 模块注册/初始化 + 主窗口启动
     /// </summary>
     public override void OnFrameworkInitializationCompleted()
     {
@@ -48,8 +54,11 @@ public partial class App : Application
         // ===== 阶段3：Build 容器 =====
         _serviceProvider = services.BuildServiceProvider();
 
-        // ===== 阶段4：初始化工具模块 =====
-        InitializeToolModules();
+        var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
+        logger.LogInformation("应用启动：{AppName} v{AppVersion}，工具模块 {ModuleCount} 个", "DS.Tools", "1.0.0", ToolModules.Length);
+
+        // ===== 阶段4：初始化工具模块（注册到 ToolRegistry）=====
+        InitializeToolModules(logger);
 
         // ===== 阶段5：主题设置 =====
         ApplyThemeSettings(_serviceProvider.GetRequiredService<IThemeService>(), configuration);
@@ -68,20 +77,17 @@ public partial class App : Application
     /// <summary>
     /// 构建配置（AOT 兼容）
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IConfiguration BuildConfiguration()
     {
-        var configurationBuilder = new ConfigurationBuilder()
+        return new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-        return configurationBuilder.Build();
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
     }
 
     /// <summary>
     /// 配置服务（显式注册，AOT 兼容，禁止反射扫描）
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IServiceCollection ConfigureServices(IConfiguration configuration)
     {
         var services = new ServiceCollection();
@@ -89,14 +95,13 @@ public partial class App : Application
         // 添加配置
         services.AddSingleton(configuration);
 
-        // 添加日志服务
+        // 添加日志服务（Serilog 实现，级别从 appsettings.json 读取）
         services.AddLogging(builder =>
         {
-            builder.SetMinimumLevel(LogLevel.Information);
+            builder.AddSerilog(SerilogConfig.CreateLogger(configuration), dispose: true);
         });
 
         // 添加核心服务（显式注册，AOT 兼容）
-        services.AddCoreServices();
         services.AddApplicationServices();
         services.AddModuleServices();
 
@@ -108,56 +113,46 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// 注册工具模块（编译期显式注册，无反射）
+    /// 注册工具模块：模块服务入 DI 容器 + 模块实例注册为单例（编译期显式，无反射）
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RegisterToolModules(IServiceCollection services)
     {
-        // 实例化文本工具模块
-        var textModule = new TextModule();
-
-        // 注册模块的服务到 DI 容器
-        textModule.Register(services);
-
-        // 将模块本身注册为临时服务，以便后续初始化
-        services.AddSingleton(textModule);
+        foreach (var module in ToolModules)
+        {
+            module.Register(services);
+            services.AddSingleton(module);
+        }
     }
 
     /// <summary>
-    /// 初始化工具模块（在容器构建后）
+    /// 初始化工具模块（在容器构建后）：注册到 ToolRegistry + 调用模块 Initialize
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void InitializeToolModules()
+    private void InitializeToolModules(ILogger<App> logger)
     {
         if (_serviceProvider is null)
             return;
 
-        // 从容器获取已注册的模块实例
-        var textModule = _serviceProvider.GetRequiredService<TextModule>();
-
-        // 获取 ToolRegistry 并注册模块
         var toolRegistry = _serviceProvider.GetRequiredService<IToolRegistry>();
-        toolRegistry.Register(textModule);
 
-        // 初始化模块
-        textModule.Initialize(_serviceProvider);
+        foreach (var module in ToolModules)
+        {
+            toolRegistry.Register(module);
+            module.Initialize(_serviceProvider);
+            logger.LogInformation("模块 {ModuleId} 已注册并初始化", module.Id);
+        }
     }
 
     /// <summary>
-    /// 应用主题设置
+    /// 应用主题设置（从配置读取默认主题）
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyThemeSettings(IThemeService themeService, IConfiguration configuration)
     {
-        // 从配置读取默认主题
         var defaultTheme = configuration["Theme:DefaultTheme"] ?? "System";
 
-        // 应用主题
         var theme = defaultTheme switch
         {
             "Light" => ThemeVariant.Light,
             "Dark" => ThemeVariant.Dark,
-            "System" => ThemeVariant.Default,
             _ => ThemeVariant.Default
         };
 

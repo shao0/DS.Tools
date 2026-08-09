@@ -1,7 +1,6 @@
 using DS.Tools.Core.Models;
 using DS.Tools.Module.Base.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using System.Runtime.CompilerServices;
 
 namespace DS.Tools.Module.Base;
 
@@ -51,7 +50,6 @@ public abstract class ToolModule : IToolModule
     /// <summary>
     /// 初始化子工具管理器（在构造函数中调用）
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void EnableSubTools()
     {
         _subToolManager = new SubToolManager(Id);

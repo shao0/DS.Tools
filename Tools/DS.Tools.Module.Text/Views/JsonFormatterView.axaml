@@ -19,8 +19,8 @@
         <Border
             Grid.Row="0"
             Padding="24,16"
-            Background="#1E293B"
-            BorderBrush="#334155"
+            Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,0,0,1"
             CornerRadius="12,12,0,0">
             <Grid ColumnDefinitions="Auto,*">
@@ -36,12 +36,12 @@
                     <TextBlock
                         FontSize="20"
                         FontWeight="SemiBold"
-                        Foreground="#F1F5F9"
+                        Foreground="{DynamicResource TextPrimaryBrush}"
                         Text="JSON 格式化" />
                     <TextBlock
                         Margin="0,4,0,0"
                         FontSize="12"
-                        Foreground="#94A3B8"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
                         Text="格式化、压缩和验证 JSON 数据" />
                 </StackPanel>
             </Grid>
@@ -51,8 +51,8 @@
         <Border
             Grid.Row="1"
             Padding="24,16,24,0"
-            Background="#1E293B"
-            BorderBrush="#334155"
+            Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,0,0,1">
             <StackPanel
                 Orientation="Horizontal"
@@ -103,8 +103,8 @@
             <Border
                 Grid.Column="0"
                 Padding="16"
-                Background="#0F172A"
-                BorderBrush="#334155"
+                Background="{DynamicResource BackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8">
                 <Grid RowDefinitions="Auto,*">
@@ -114,15 +114,15 @@
                         Margin="0,0,0,12"
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Foreground="#94A3B8"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
                         Text="📥 输入 JSON" />
 
                     <!--  输入文本框  -->
                     <Border
                         Grid.Row="1"
                         Padding="12"
-                        Background="#1E293B"
-                        BorderBrush="#334155"
+                        Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1"
                         CornerRadius="6">
                         <TextBox
@@ -131,13 +131,13 @@
                             VerticalAlignment="Stretch"
                             VerticalContentAlignment="Top"
                             AcceptsReturn="True"
-                            CaretBrush="#E2E8F0"
+                            CaretBrush="{DynamicResource TextPrimaryBrush}"
                             FontFamily="Consolas,Courier New,monospace"
                             FontSize="13"
-                            Foreground="#E2E8F0"
+                            Foreground="{DynamicResource TextPrimaryBrush}"
                             PlaceholderText="在此粘贴或输入 JSON 文本..."
-                            SelectionBrush="#3B82F6"
-                            SelectionForegroundBrush="#FFFFFF"
+                            SelectionBrush="{DynamicResource PrimaryBrush}"
+                            SelectionForegroundBrush="{DynamicResource PrimaryFgBrush}"
                             Text="{Binding InputJson, Mode=TwoWay}"
                             TextWrapping="Wrap" />
                     </Border>
@@ -147,7 +147,7 @@
             <!--  分隔线  -->
             <Border
                 Grid.Column="1"
-                Background="#334155"
+                Background="{DynamicResource SecondaryBrush}"
                 BorderThickness="1,0,0,0"
                 Opacity="0.3" />
 
@@ -155,8 +155,8 @@
             <Border
                 Grid.Column="2"
                 Padding="16"
-                Background="#0F172A"
-                BorderBrush="#334155"
+                Background="{DynamicResource BackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="1"
                 CornerRadius="8">
                 <Grid RowDefinitions="Auto,*">
@@ -166,7 +166,7 @@
                         Margin="0,0,0,12"
                         FontSize="14"
                         FontWeight="SemiBold"
-                        Foreground="#94A3B8"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
                         Text="📤 输出结果" />
 
                     <!--  输出内容（错误信息或格式化结果）  -->
@@ -178,8 +178,8 @@
                             <!--  错误显示  -->
                             <Border
                                 Padding="16"
-                                Background="#450A0A"
-                                BorderBrush="#DC2626"
+                                Background="{DynamicResource ErrorBackgroundBrush}"
+                                BorderBrush="{DynamicResource ErrorBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 IsVisible="{Binding HasErrors}">
@@ -187,11 +187,11 @@
                                     <TextBlock
                                         FontSize="14"
                                         FontWeight="SemiBold"
-                                        Foreground="#FCA5A5"
+                                        Foreground="{DynamicResource ErrorTextBrush}"
                                         Text="❌ 错误" />
                                     <TextBlock
                                         FontSize="13"
-                                        Foreground="#FCA5A5"
+                                        Foreground="{DynamicResource ErrorTextBrush}"
                                         Text="{Binding ErrorMessage}"
                                         TextWrapping="Wrap" />
                                 </StackPanel>
@@ -200,14 +200,14 @@
                             <!--  成功状态消息  -->
                             <Border
                                 Padding="12,16"
-                                Background="#064E3B"
-                                BorderBrush="#10B981"
+                                Background="{DynamicResource SuccessBackgroundBrush}"
+                                BorderBrush="{DynamicResource AccentSuccessBrush}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 IsVisible="{Binding HasOutput}">
                                 <TextBlock
                                     FontSize="13"
-                                    Foreground="#6EE7B7"
+                                    Foreground="{DynamicResource SuccessTextBrush}"
                                     Text="{Binding StatusMessage}" />
                             </Border>
 
@@ -216,8 +216,8 @@
                                 MinHeight="150"
                                 MaxHeight="350"
                                 Padding="12"
-                                Background="#1E293B"
-                                BorderBrush="#334155"
+                                Background="{DynamicResource CardBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 IsVisible="{Binding HasOutput}">
@@ -227,13 +227,13 @@
                                     AcceptsReturn="True"
                                     Background="Transparent"
                                     BorderThickness="0"
-                                    CaretBrush="#E2E8F0"
+                                    CaretBrush="{DynamicResource TextPrimaryBrush}"
                                     FontFamily="Consolas,Courier New,monospace"
                                     FontSize="13"
-                                    Foreground="#E2E8F0"
+                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                     IsReadOnly="True"
-                                    SelectionBrush="#3B82F6"
-                                    SelectionForegroundBrush="#FFFFFF"
+                                    SelectionBrush="{DynamicResource PrimaryBrush}"
+                                    SelectionForegroundBrush="{DynamicResource PrimaryFgBrush}"
                                     Text="{Binding OutputJson, Mode=OneWay}"
                                     TextWrapping="Wrap" />
                             </Border>
@@ -247,8 +247,8 @@
         <Border
             Grid.Row="3"
             Padding="24,12"
-            Background="#1E293B"
-            BorderBrush="#334155"
+            Background="{DynamicResource CardBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,1,0,0"
             CornerRadius="0,0,12,12">
             <Grid ColumnDefinitions="*,Auto">
@@ -265,13 +265,13 @@
                             Width="16"
                             Height="16"
                             Fill="Transparent"
-                            Stroke="#3B82F6"
+                            Stroke="{DynamicResource PrimaryBrush}"
                             StrokeThickness="2" />
                         <Ellipse
                             Width="16"
                             Height="16"
                             Fill="Transparent"
-                            Stroke="#3B82F6"
+                            Stroke="{DynamicResource PrimaryBrush}"
                             StrokeDashArray="4,2"
                             StrokeThickness="2">
                             <Ellipse.RenderTransform>
@@ -302,7 +302,7 @@
                     <TextBlock
                         VerticalAlignment="Center"
                         FontSize="13"
-                        Foreground="#94A3B8"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
                         Text="处理中..." />
                 </StackPanel>
 
@@ -311,7 +311,7 @@
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     FontSize="12"
-                    Foreground="#64748B">
+                    Foreground="{DynamicResource TextMutedBrush}">
                     <Run Text="支持 JSON 格式化、压缩和验证" />
                 </TextBlock>
             </Grid>

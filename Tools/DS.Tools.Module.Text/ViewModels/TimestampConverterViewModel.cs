@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -130,17 +129,13 @@ public sealed partial class TimestampConverterViewModel : ViewModelBase
         ErrorMessage = null;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanTimestampToDate() => !string.IsNullOrWhiteSpace(TimestampInput);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanDateToTimestamp() => !string.IsNullOrWhiteSpace(DateInput);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanClearTimestamp() => !string.IsNullOrEmpty(TimestampInput) ||
                                           !string.IsNullOrEmpty(ConvertedDateTime);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanClearDate() => !string.IsNullOrEmpty(DateInput) ||
                                      !string.IsNullOrEmpty(SecondsTimestamp);
 }

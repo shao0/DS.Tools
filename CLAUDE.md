@@ -116,12 +116,14 @@ public override Type ViewModelType => typeof(TextModule); // 语义错误！
 
 ```
 DS.Tools.slnx
-├── DS.Tools/                    # 主应用（Avalonia UI）
-├── DS.Tools.Core/              # 统一的核心层（合并后）
-├── DS.Tools.Module.Base/       # 工具模块基类
-├── DS.Tools.Module.Text/       # 文本工具模块
-├── DS.Tools.UI.Shared/         # 共享UI资源
-└── DS.Tools.Tests/             # 单元测试
+├── DS.Tools/                    # 主应用（Avalonia UI，组合根：模块注册/Serilog/主题）
+├── Cores/
+│   ├── DS.Tools.Core/          # 统一核心层（接口/模型/服务/DI，仅依赖 MEL 抽象与 Avalonia 基础类型）
+│   ├── DS.Tools.Module.Base/   # 工具模块基类（IToolModule/IToolRegistry/INavigationService）
+│   └── DS.Tools.UI.Shared/     # 共享UI资源（图标）
+├── Tools/
+│   └── DS.Tools.Module.Text/   # 文本工具模块（7 个子工具）
+└── Tests/DS.Tools.Tests/       # 单元测试
 ```
 
 ### 核心设计原则
@@ -434,6 +436,7 @@ DS.Tools.slnx
 | 阶段2：模块化接线 | ✅ 已完成 | TextModule 完整实现；`App.axaml.cs` 中注册；IoC 工厂化（见下） |
 | 阶段3：文档更新 | ✅ 已完成 | 本文档 + README 已同步 |
 | 阶段4：架构优化 | ✅ 已完成（部分） | 见「AOT 纪律」说明 |
+| 二轮清理（2026-08-09） | ✅ 已完成 | 死代码移除/日志接线/模块数组注册/主题双色板/剪贴板真实现，见「二轮架构清理」 |
 
 ### 反射清除结论（AOT 保证）
 
@@ -445,9 +448,21 @@ DS.Tools.slnx
 
 ### 当前验证结果
 
-- 构建：Rider / CLI `dotnet build` 均通过，零警告
-- 测试：47/47 通过（含新增的 IoC 工厂分支测试）
-- 冒烟：应用启动后正常运行，DashboardView 经 DataTemplate 渲染无崩溃
+- 构建：Rider / CLI `dotnet build` 均通过，`TreatWarningsAsErrors` 全开零警告
+- 测试：56/56 通过（含 JsonFormatterService 10 个、IoC 工厂分支、VM 缓存分支测试）
+- 冒烟：应用启动后正常运行；Serilog 控制台+文件日志输出启动/模块初始化链路；DashboardView 经 DataTemplate 渲染无崩溃
+
+### 二轮架构清理（2026-08-09）
+
+在重构计划全部落地后执行的第二轮清理，目标：更干净、更高效、更易迭代与扩展。
+
+1. **死代码移除**（约 14 个文件 + 8 个 NuGet 包）：EventAggregator（全库零订阅）、AppConfigManager + 整套配置模型 + AppJsonContext（未接线）、LocalizationService（注册无消费者且每次调用重建字典）、RegexPatterns、`IToolRegistry.ActiveTool`/`ToolChanged`（无读取方，当前选中状态唯一归 INavigationService）、手写 SerilogLoggerFactory（改标准 `AddSerilog` 接线）
+2. **日志接线**：Serilog 实现下沉到主应用组合根（`Infrastructure/Logging/SerilogConfig.cs`），级别读 `appsettings.json` 的 `Logging:DefaultLevel`；`ILogger<T>` 使用点：App 启动/模块初始化、模块 Initialize、JSON 操作异常、剪贴板失败
+3. **模块注册泛化**：`App.axaml.cs` 收敛为 `ToolModules` 数组（新增模块 = 数组加一行，`Register`/`Initialize` 统一 foreach）；导航 ID 收敛为 `TextModule.ToolIds` 常量类（消灭 `"text-tools:xxx"` 魔法字符串）
+4. **ViewModel 缓存**：`MainWindowViewModel` 按 `(toolId, subToolId)` 缓存复用 VM 实例——修复 Dashboard 时钟定时器随每次导航泄漏的问题，切换工具保留输入状态
+5. **主题双色板**：`App.axaml` 定义 Light/Dark `ThemeDictionaries` 语义化色板（约 25 个键），全部 axaml（主窗口/7 个工具视图/样式）硬编码颜色收敛为 `DynamicResource`——主题切换按钮真实生效
+6. **效率**：JsonFormatterService 去伪异步（无 await 的 async 方法改同步）且单次 `JsonDocument.Parse` 完成验证+输出+深度（原 3 次解析）；删除全库 ~30 处 `[MethodImpl(AggressiveInlining)]` 滥用；`ClipboardService` 占位 Console 输出改为 Avalonia 12 真实剪贴板 API（`DataTransferItem.CreateText` / `TryGetDataAsync`）；`NavigationService` 移除未使用的 `IServiceProvider` 依赖
+7. **配置对齐**：Microsoft.Extensions.* 升到 10.0.0（与 net10.0 对齐）；`appsettings.json` 子工具 ID 与 `ToolIds` 常量一致；`Directory.Build.props` 全开 `TreatWarningsAsErrors`（移除覆盖它的 `WarningsAsErrors` 列表）
 
 ---
 

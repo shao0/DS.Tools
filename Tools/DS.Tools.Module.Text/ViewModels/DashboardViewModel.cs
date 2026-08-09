@@ -3,16 +3,16 @@ using CommunityToolkit.Mvvm.Input;
 using DS.Tools.Module.Base.Interfaces;
 using Avalonia.Threading;
 
-
 namespace DS.Tools.Module.Text.ViewModels;
 
 /// <summary>
-/// 仪表盘 ViewModel - 显示实时时间和快速操作
-/// AOT 兼容，无反射调用
+/// 仪表盘 ViewModel - 显示实时时间和快速操作。
+/// 实例由 MainWindowViewModel 按导航键缓存复用（单实例），DispatcherTimer 不会泄漏。
+/// AOT 兼容，无反射调用。
 /// </summary>
 public sealed partial class DashboardViewModel : ViewModelBase
 {
-    private readonly INavigationService? _navigationService;
+    private readonly INavigationService _navigationService;
     private readonly DispatcherTimer _clockTimer;
 
     /// <summary>当前时间（HH:mm 格式）</summary>
@@ -30,7 +30,7 @@ public sealed partial class DashboardViewModel : ViewModelBase
     /// <summary>
     /// 构造函数
     /// </summary>
-    public DashboardViewModel(INavigationService? navigationService = null)
+    public DashboardViewModel(INavigationService navigationService)
     {
         _navigationService = navigationService;
 
@@ -93,27 +93,27 @@ public sealed partial class DashboardViewModel : ViewModelBase
     [RelayCommand]
     private void NavigateToJson()
     {
-        _navigationService?.NavigateTo("text-tools:json-formatter");
+        _navigationService.NavigateTo(TextModule.ToolIds.Full(TextModule.ToolIds.JsonFormatter));
     }
 
     /// <summary>导航到 Base64 工具</summary>
     [RelayCommand]
     private void NavigateToBase64()
     {
-        _navigationService?.NavigateTo("text-tools:base64-converter");
+        _navigationService.NavigateTo(TextModule.ToolIds.Full(TextModule.ToolIds.Base64Converter));
     }
 
     /// <summary>导航到颜色转换工具</summary>
     [RelayCommand]
     private void NavigateToColor()
     {
-        _navigationService?.NavigateTo("text-tools:color-converter");
+        _navigationService.NavigateTo(TextModule.ToolIds.Full(TextModule.ToolIds.ColorConverter));
     }
 
     /// <summary>导航到密码生成器</summary>
     [RelayCommand]
     private void NavigateToPassword()
     {
-        _navigationService?.NavigateTo("text-tools:password-generator");
+        _navigationService.NavigateTo(TextModule.ToolIds.Full(TextModule.ToolIds.PasswordGenerator));
     }
 }

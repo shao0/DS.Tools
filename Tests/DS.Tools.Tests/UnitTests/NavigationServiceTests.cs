@@ -1,7 +1,6 @@
 using Xunit;
 using FluentAssertions;
 using Moq;
-using Microsoft.Extensions.DependencyInjection;
 using DS.Tools.Module.Base.Interfaces;
 using DS.Tools.Module.Base.Services;
 
@@ -13,14 +12,12 @@ namespace DS.Tools.Tests.UnitTests;
 /// </summary>
 public sealed class NavigationServiceTests
 {
-    private readonly Mock<IServiceProvider> _mockServiceProvider;
     private readonly Mock<IToolRegistry> _mockToolRegistry;
     private readonly Mock<IToolModule> _mockModule1;
     private readonly Mock<IToolModule> _mockModule2;
 
     public NavigationServiceTests()
     {
-        _mockServiceProvider = new Mock<IServiceProvider>();
         _mockToolRegistry = new Mock<IToolRegistry>();
 
         _mockModule1 = new Mock<IToolModule>();
@@ -43,7 +40,7 @@ public sealed class NavigationServiceTests
     public void Constructor_ShouldCreateService()
     {
         // Act
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
 
         // Assert
         service.Should().NotBeNull();
@@ -52,26 +49,18 @@ public sealed class NavigationServiceTests
     }
 
     [Fact]
-    public void Constructor_WithNullServiceProvider_ShouldThrowArgumentNullException()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() =>
-            new NavigationService(null!, _mockToolRegistry.Object));
-    }
-
-    [Fact]
     public void Constructor_WithNullToolRegistry_ShouldThrowArgumentNullException()
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new NavigationService(_mockServiceProvider.Object, null!));
+            new NavigationService(null!));
     }
 
     [Fact]
     public void NavigateTo_WithValidModuleId_ShouldNavigateSuccessfully()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
         IToolModule? capturedTool = null;
         string? capturedSubToolId = null;
         service.NavigationChanged += (tool, subToolId) =>
@@ -88,14 +77,13 @@ public sealed class NavigationServiceTests
         capturedSubToolId.Should().BeNull();
         service.CurrentTool.Should().Be(_mockModule1.Object);
         service.CurrentSubToolId.Should().BeNull();
-        _mockToolRegistry.VerifySet(x => x.ActiveTool = _mockModule1.Object, Times.Once);
     }
 
     [Fact]
     public void NavigateTo_WithInvalidModuleId_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
         _mockToolRegistry.Setup(x => x.GetTool("invalid")).Returns((IToolModule?)null);
 
         // Act & Assert
@@ -106,7 +94,7 @@ public sealed class NavigationServiceTests
     public void NavigateTo_WithModuleObject_ShouldNavigateSuccessfully()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
         var module = _mockModule1.Object;
         IToolModule? capturedTool = null;
         string? capturedSubToolId = null;
@@ -129,7 +117,7 @@ public sealed class NavigationServiceTests
     public void NavigateTo_WithSubToolId_ShouldNavigateSuccessfully()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
         IToolModule? capturedTool = null;
         string? capturedSubToolId = null;
         service.NavigationChanged += (tool, subToolId) =>
@@ -152,7 +140,7 @@ public sealed class NavigationServiceTests
     public void NavigateTo_WithNullModuleObject_ShouldThrowArgumentNullException()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => service.NavigateTo((IToolModule)null!));
@@ -162,7 +150,7 @@ public sealed class NavigationServiceTests
     public void NavigateBack_WithEmptyHistory_ShouldDoNothing()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
         int eventCallCount = 0;
         service.NavigationChanged += (tool, subToolId) => eventCallCount++;
 
@@ -177,7 +165,7 @@ public sealed class NavigationServiceTests
     public void NavigateBack_WithHistory_ShouldNavigateToPreviousTool()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
         service.NavigateTo("module1");
         service.NavigateTo("module2");
 
@@ -201,7 +189,7 @@ public sealed class NavigationServiceTests
     public void NavigateTo_ShouldMaintainNavigationHistory()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
 
         // Act
         service.NavigateTo("module1");
@@ -221,7 +209,7 @@ public sealed class NavigationServiceTests
     public void NavigationChanged_Event_ShouldProvideCorrectParameters()
     {
         // Arrange
-        var service = new NavigationService(_mockServiceProvider.Object, _mockToolRegistry.Object);
+        var service = new NavigationService(_mockToolRegistry.Object);
         IToolModule? capturedTool = null;
         string? capturedSubToolId = null;
         service.NavigationChanged += (tool, subToolId) =>

@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
 using DS.Tools.Core.Models;
 
 namespace DS.Tools.Module.Base;
@@ -67,7 +66,6 @@ public sealed class SubToolManager
     /// <summary>
     /// 添加子工具（AOT 兼容）
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddSubTool(SubToolInfo subTool)
     {
         ArgumentNullException.ThrowIfNull(subTool);
@@ -83,7 +81,6 @@ public sealed class SubToolManager
     /// <summary>
     /// 批量添加子工具
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddSubTools(IEnumerable<SubToolInfo> subTools)
     {
         foreach (var subTool in subTools)
@@ -95,7 +92,6 @@ public sealed class SubToolManager
     /// <summary>
     /// 根据ID获取子工具
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SubToolInfo? GetSubTool(string subToolId)
     {
         return _subTools.GetValueOrDefault(subToolId);
@@ -104,7 +100,6 @@ public sealed class SubToolManager
     /// <summary>
     /// 获取子工具的 ViewModel 工厂（IoC 创建，AOT 兼容）
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Func<IServiceProvider, ViewModelBase>? GetSubToolViewModelFactory(string subToolId)
     {
         return GetSubTool(subToolId)?.CreateViewModel;
@@ -113,7 +108,6 @@ public sealed class SubToolManager
     /// <summary>
     /// 检查是否包含指定子工具
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsSubTool(string subToolId)
     {
         return _subTools.ContainsKey(subToolId);
@@ -127,7 +121,6 @@ public sealed class SubToolManager
     /// <summary>
     /// 清空所有子工具
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {
         _subTools.Clear();

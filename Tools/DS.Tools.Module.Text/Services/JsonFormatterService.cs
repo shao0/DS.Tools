@@ -1,32 +1,20 @@
+using System.Text;
 using System.Text.Json;
-using System.Diagnostics;
 using DS.Tools.Module.Text.Models;
 
 namespace DS.Tools.Module.Text.Services;
 
 /// <summary>
-/// JSON 格式化服务实现
-/// 使用 AOT 兼容的 System.Text.Json，无反射
+/// JSON 格式化服务实现。
+/// 每次操作仅解析一次 JsonDocument，验证、输出与深度计算在同一次遍历中完成；
+/// 使用 Utf8JsonWriter 输出（AOT 兼容，无反射）。
 /// </summary>
 public sealed class JsonFormatterService : IJsonFormatterService
 {
-    private readonly JsonWriterOptions _prettyOptions = new()
-    {
-        Indented = true
-    };
-
-    private readonly JsonWriterOptions _compactOptions = new()
-    {
-        Indented = false
-    };
-
     /// <summary>
-    /// 格式化 JSON 字符串
+    /// 格式化 JSON 字符串（美化）
     /// </summary>
-    public async Task<JsonFormatterResult> FormatAsync(
-        string json,
-        int indentSize = 2,
-        CancellationToken cancellationToken = default)
+    public JsonFormatterResult Format(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -37,20 +25,14 @@ public sealed class JsonFormatterService : IJsonFormatterService
 
         try
         {
-            // 验证 JSON 有效性
-            using (var doc = JsonDocument.Parse(json))
-            {
-                // 如果有效，重新序列化为格式化的字符串
-                var originalLength = json.Length;
-                var formattedJson = FormatJsonDocument(doc, indentSize);
-                var depth = CalculateJsonDepth(json);
+            using var doc = JsonDocument.Parse(json);
+            var (output, depth) = WriteJson(doc.RootElement, indented: true);
 
-                return JsonFormatterResult.CreateSuccess(
-                    formattedJson,
-                    originalLength,
-                    JsonFormatterOperationType.Format,
-                    depth);
-            }
+            return JsonFormatterResult.CreateSuccess(
+                output,
+                json.Length,
+                JsonFormatterOperationType.Format,
+                depth);
         }
         catch (JsonException ex)
         {
@@ -67,11 +49,9 @@ public sealed class JsonFormatterService : IJsonFormatterService
     }
 
     /// <summary>
-    /// 压缩 JSON 字符串
+    /// 压缩 JSON 字符串（最小化）
     /// </summary>
-    public async Task<JsonFormatterResult> CompressAsync(
-        string json,
-        CancellationToken cancellationToken = default)
+    public JsonFormatterResult Compress(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -82,19 +62,14 @@ public sealed class JsonFormatterService : IJsonFormatterService
 
         try
         {
-            // 验证并压缩 JSON
-            using (var doc = JsonDocument.Parse(json))
-            {
-                var originalLength = json.Length;
-                var compressedJson = WriteElementCompact(doc.RootElement);
-                var depth = CalculateJsonDepth(json);
+            using var doc = JsonDocument.Parse(json);
+            var (output, depth) = WriteJson(doc.RootElement, indented: false);
 
-                return JsonFormatterResult.CreateSuccess(
-                    compressedJson,
-                    originalLength,
-                    JsonFormatterOperationType.Compress,
-                    depth);
-            }
+            return JsonFormatterResult.CreateSuccess(
+                output,
+                json.Length,
+                JsonFormatterOperationType.Compress,
+                depth);
         }
         catch (JsonException ex)
         {
@@ -113,9 +88,7 @@ public sealed class JsonFormatterService : IJsonFormatterService
     /// <summary>
     /// 验证 JSON 字符串
     /// </summary>
-    public async Task<JsonFormatterResult> ValidateAsync(
-        string json,
-        CancellationToken cancellationToken = default)
+    public JsonFormatterResult Validate(string json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {
@@ -126,17 +99,15 @@ public sealed class JsonFormatterService : IJsonFormatterService
 
         try
         {
-            using (var doc = JsonDocument.Parse(json))
-            {
-                var depth = CalculateJsonDepth(json);
+            using var doc = JsonDocument.Parse(json);
+            var depth = CalculateElementDepth(doc.RootElement, 0);
 
-                // 验证成功，返回格式化的 JSON 作为结果
-                return JsonFormatterResult.CreateSuccess(
-                    "✓ JSON 格式有效",
-                    json.Length,
-                    JsonFormatterOperationType.Validate,
-                    depth);
-            }
+            // 验证成功，返回格式化的 JSON 作为结果
+            return JsonFormatterResult.CreateSuccess(
+                "✓ JSON 格式有效",
+                json.Length,
+                JsonFormatterOperationType.Validate,
+                depth);
         }
         catch (JsonException ex)
         {
@@ -174,7 +145,7 @@ public sealed class JsonFormatterService : IJsonFormatterService
     /// <summary>
     /// 递归计算 JSON 元素深度
     /// </summary>
-    private int CalculateElementDepth(JsonElement element, int currentDepth)
+    private static int CalculateElementDepth(JsonElement element, int currentDepth)
     {
         int maxChildDepth = currentDepth;
 
@@ -199,38 +170,25 @@ public sealed class JsonFormatterService : IJsonFormatterService
     }
 
     /// <summary>
-    /// 手动格式化 JsonDocument（支持自定义缩进）
+    /// 单遍写出 JSON：递归写入 Utf8JsonWriter 并计算嵌套深度
     /// </summary>
-    private string FormatJsonDocument(JsonDocument doc, int indentSize)
+    private static (string Text, int Depth) WriteJson(JsonElement element, bool indented)
     {
         using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
-
-        WriteElement(doc.RootElement, writer, 0, indentSize);
+        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = indented });
+        var depth = WriteElement(element, writer, 0);
         writer.Flush();
 
-        return System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        return (Encoding.UTF8.GetString(stream.ToArray()), depth);
     }
 
     /// <summary>
-    /// 紧凑写入 JsonElement（AOT 兼容，避免 JsonSerializer.Serialize 反射调用）
+    /// 递归写入 JSON 元素，返回子树最大深度
     /// </summary>
-    private string WriteElementCompact(JsonElement element)
+    private static int WriteElement(JsonElement element, Utf8JsonWriter writer, int depth)
     {
-        using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream, _compactOptions);
+        int maxDepth = depth;
 
-        WriteElement(element, writer, 0, 0);
-        writer.Flush();
-
-        return System.Text.Encoding.UTF8.GetString(stream.ToArray());
-    }
-
-    /// <summary>
-    /// 递归写入 JSON 元素
-    /// </summary>
-    private void WriteElement(JsonElement element, Utf8JsonWriter writer, int depth, int indentSize)
-    {
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
@@ -238,7 +196,7 @@ public sealed class JsonFormatterService : IJsonFormatterService
                 foreach (var property in element.EnumerateObject())
                 {
                     writer.WritePropertyName(property.Name);
-                    WriteElement(property.Value, writer, depth + 1, indentSize);
+                    maxDepth = Math.Max(maxDepth, WriteElement(property.Value, writer, depth + 1));
                 }
                 writer.WriteEndObject();
                 break;
@@ -247,7 +205,7 @@ public sealed class JsonFormatterService : IJsonFormatterService
                 writer.WriteStartArray();
                 foreach (var item in element.EnumerateArray())
                 {
-                    WriteElement(item, writer, depth + 1, indentSize);
+                    maxDepth = Math.Max(maxDepth, WriteElement(item, writer, depth + 1));
                 }
                 writer.WriteEndArray();
                 break;
@@ -277,5 +235,7 @@ public sealed class JsonFormatterService : IJsonFormatterService
                 writer.WriteNullValue();
                 break;
         }
+
+        return maxDepth;
     }
 }

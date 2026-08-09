@@ -1,14 +1,18 @@
-using System.Runtime.CompilerServices;
 using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Threading;
+using Microsoft.Extensions.Logging;
 using DS.Tools.Core.Interfaces;
 
 namespace DS.Tools.Core.Services;
 
 /// <summary>
-/// 剪贴板服务实现 - Avalonia版本，AOT兼容
+/// 剪贴板服务实现 - 经主窗口的 TopLevel.Clipboard 访问系统剪贴板（Avalonia 12 异步剪贴板 API，AOT 兼容）。
+/// 所有剪贴板操作必须在 UI 线程执行，由 Dispatcher 桥接。
 /// </summary>
-public sealed class ClipboardService : IClipboardService
+public sealed class ClipboardService(ILogger<ClipboardService> logger) : IClipboardService
 {
     /// <summary>
     /// 设置文本到剪贴板
@@ -20,18 +24,26 @@ public sealed class ClipboardService : IClipboardService
             return;
         }
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        try
         {
-            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                if (desktop.MainWindow is not null)
+                if (GetClipboard() is { } clipboard)
                 {
-                    // 暂时使用Console输出作为占位符
-                    // TODO: 实现真正的Avalonia剪贴板API调用
-                    Console.WriteLine($"剪贴板复制（占位符）: {text.Substring(0, Math.Min(50, text.Length))}...");
+                    var dataTransfer = new DataTransfer();
+                    dataTransfer.Add(DataTransferItem.CreateText(text));
+                    await clipboard.SetDataAsync(dataTransfer);
                 }
-            }
-        });
+                else
+                {
+                    logger.LogWarning("剪贴板不可用（主窗口尚未就绪）");
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "写入剪贴板失败");
+        }
     }
 
     /// <summary>
@@ -39,19 +51,49 @@ public sealed class ClipboardService : IClipboardService
     /// </summary>
     public async Task<string?> GetTextAsync()
     {
-        return await Dispatcher.UIThread.InvokeAsync(async () =>
+        try
         {
-            if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+            return await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                if (desktop.MainWindow is not null)
+                if (GetClipboard() is not { } clipboard)
                 {
-                    // 暂时返回占位符文本
-                    // TODO: 实现真正的Avalonia剪贴板API调用
-                    await Task.Delay(100);
-                    return "剪贴板文本（占位符）";
+                    logger.LogWarning("剪贴板不可用（主窗口尚未就绪）");
+                    return null;
                 }
-            }
+
+                // 调用方负责释放 IAsyncDataTransfer
+                using var dataTransfer = await clipboard.TryGetDataAsync();
+                if (dataTransfer is null)
+                {
+                    return null;
+                }
+
+                foreach (var item in dataTransfer.GetItems(DataFormat.Text))
+                {
+                    var text = await item.TryGetTextAsync();
+                    if (text is not null)
+                    {
+                        return text;
+                    }
+                }
+
+                return null;
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "读取剪贴板失败");
             return null;
-        });
+        }
+    }
+
+    /// <summary>
+    /// 获取当前主窗口的剪贴板（Window 继承 TopLevel）
+    /// </summary>
+    private static IClipboard? GetClipboard()
+    {
+        return Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } mainWindow }
+            ? mainWindow.Clipboard
+            : null;
     }
 }

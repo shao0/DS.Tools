@@ -74,7 +74,7 @@ dotnet run --project DS.Tools/DS.Tools.csproj --configuration Debug
 |------|----------|
 | **UI 框架** | Avalonia 12.1.0 |
 | **MVVM 框架** | CommunityToolkit.Mvvm 8.4.0 |
-| **依赖注入** | Microsoft.Extensions.DependencyInjection 9.0.0 |
+| **依赖注入** | Microsoft.Extensions.DependencyInjection 10.0.0 |
 | **日志** | Serilog 4.2.0 |
 | **配置** | Microsoft.Extensions.Configuration |
 | **序列化** | System.Text.Json (Source Generator) |
@@ -109,7 +109,7 @@ DS.Tools.slnx
 2. 实现必需的成员（Id、Name、Icon、Description、`CreateMainViewModel`）
 3. 在 `Register` 方法中注册 ViewModel 和服务（`AddTransient<T>`）
 4. 子工具通过 `SubToolInfo(id, name, icon, sp => sp.GetRequiredService<T>())` 添加
-5. 在 `App.axaml.cs` 中注册模块
+5. 在 `App.axaml.cs` 的 `ToolModules` 数组中追加一行：`new XxxModule()`
 6. 在 `MainWindow.axaml` 的 `Window.DataTemplates` 中追加一条
    `<DataTemplate x:DataType="vm:XxxViewModel"><views:XxxView /></DataTemplate>`
 
@@ -141,8 +141,11 @@ DS.Tools.slnx
     "EnabledTools": [
       "dashboard",
       "json-formatter",
-      "base64",
-      "color-converter"
+      "base64-converter",
+      "color-converter",
+      "timestamp-converter",
+      "password-generator",
+      "text-hasher"
     ]
   }
 }

@@ -275,6 +275,64 @@ public sealed class MainWindowViewModelTests
         viewModel.CurrentThemeIcon.Should().Be("🌙");
     }
 
+    [Fact]
+    public void NavigationChanged_TwiceWithSameKey_ShouldReuseCachedViewModel()
+    {
+        // Arrange（每次工厂调用返回新实例，用于区分缓存命中与否）
+        var registry = new Mock<IToolRegistry>();
+        var theme = new Mock<IThemeService>();
+        theme.Setup(x => x.CurrentTheme).Returns(ThemeVariant.Light);
+        var nav = new Mock<INavigationService>();
+        var sp = new Mock<IServiceProvider>();
+        var module = new Mock<IToolModule>();
+        module.Setup(x => x.Id).Returns("m1");
+        module.Setup(x => x.CreateMainViewModel(It.IsAny<IServiceProvider>())).Returns(() => new DummyViewModel());
+        registry.Setup(x => x.Tools).Returns([]);
+        registry.Setup(x => x.GetTool("m1")).Returns(module.Object);
+
+        var viewModel = new MainWindowViewModel(registry.Object, theme.Object, nav.Object, sp.Object);
+
+        // Act
+        nav.Raise(x => x.NavigationChanged += null, module.Object, (string?)null!);
+        var first = viewModel.ActiveToolViewModel;
+        nav.Raise(x => x.NavigationChanged += null, module.Object, (string?)null!);
+        var second = viewModel.ActiveToolViewModel;
+
+        // Assert
+        second.Should().BeSameAs(first);
+        module.Verify(x => x.CreateMainViewModel(It.IsAny<IServiceProvider>()), Times.Once);
+    }
+
+    [Fact]
+    public void NavigationChanged_WithDifferentKeys_ShouldCreateSeparateViewModels()
+    {
+        // Arrange
+        var registry = new Mock<IToolRegistry>();
+        var theme = new Mock<IThemeService>();
+        theme.Setup(x => x.CurrentTheme).Returns(ThemeVariant.Light);
+        var nav = new Mock<INavigationService>();
+        var sp = new Mock<IServiceProvider>();
+        var module = new Mock<IToolModule>();
+        module.Setup(x => x.Id).Returns("m1");
+        module.Setup(x => x.CreateMainViewModel(It.IsAny<IServiceProvider>())).Returns(() => new DummyViewModel());
+        module.Setup(x => x.CreateSubToolViewModel("sub1", It.IsAny<IServiceProvider>())).Returns(() => new DummyViewModel());
+        registry.Setup(x => x.Tools).Returns([]);
+        registry.Setup(x => x.GetTool("m1")).Returns(module.Object);
+
+        var viewModel = new MainWindowViewModel(registry.Object, theme.Object, nav.Object, sp.Object);
+
+        // Act：主视图 → 子工具视图 → 返回主视图
+        nav.Raise(x => x.NavigationChanged += null, module.Object, (string?)null!);
+        var mainVm = viewModel.ActiveToolViewModel;
+        nav.Raise(x => x.NavigationChanged += null, module.Object, "sub1");
+        var subVm = viewModel.ActiveToolViewModel;
+        nav.Raise(x => x.NavigationChanged += null, module.Object, (string?)null!);
+
+        // Assert
+        subVm.Should().NotBeSameAs(mainVm);
+        viewModel.ActiveToolViewModel.Should().BeSameAs(mainVm); // 返回时复用缓存
+    }
+
     /// <summary>
     /// 测试用的简单ViewModel
     /// </summary>

@@ -12,16 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- CommunityToolkit.Mvvm（源生成器，AOT/Trim 兼容） -->
-    <PackageReference Include="CommunityToolkit.Mvvm" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Avalonia 基础类型（用于 ThemeVariant 等） -->
-    <PackageReference Include="Avalonia" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Microsoft 依赖注入 -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>

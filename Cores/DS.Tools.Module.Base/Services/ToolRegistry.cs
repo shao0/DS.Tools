@@ -1,17 +1,15 @@
 using DS.Tools.Module.Base.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace DS.Tools.Module.Base.Services;
 
 /// <summary>
-/// 工具注册表实现 - 管理所有工具模块的注册和查询
-/// AOT 兼容，无运行时反射，使用标准 .NET 事件
+/// 工具注册表实现 - 管理所有工具模块的注册和查询。
+/// AOT 兼容，无运行时反射。当前选中工具状态由 <see cref="INavigationService"/> 持有。
 /// </summary>
 public sealed class ToolRegistry : IToolRegistry, IDisposable
 {
     private readonly List<IToolModule> _tools = [];
     private readonly Dictionary<string, IToolModule> _toolIndex = new();
-    private IToolModule? _activeTool;
     private bool _isDisposed;
 
     /// <summary>
@@ -50,29 +48,6 @@ public sealed class ToolRegistry : IToolRegistry, IDisposable
     }
 
     /// <summary>
-    /// 当前选中的工具
-    /// </summary>
-    public IToolModule? ActiveTool
-    {
-        get => _activeTool;
-        set
-        {
-            ObjectDisposedException.ThrowIf(_isDisposed, typeof(ToolRegistry));
-
-            if (_activeTool != value)
-            {
-                _activeTool = value;
-                ToolChanged?.Invoke(value);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 工具变更事件（标准 .NET 事件）
-    /// </summary>
-    public event Action<IToolModule?>? ToolChanged;
-
-    /// <summary>
     /// 释放资源
     /// </summary>
     public void Dispose()
@@ -82,7 +57,6 @@ public sealed class ToolRegistry : IToolRegistry, IDisposable
 
         _tools.Clear();
         _toolIndex.Clear();
-        _activeTool = null;
         _isDisposed = true;
     }
 }

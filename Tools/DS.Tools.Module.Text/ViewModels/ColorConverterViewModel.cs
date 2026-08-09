@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -34,7 +33,6 @@ public sealed partial class ColorConverterViewModel : ViewModelBase
     partial void OnHexInputChanged(string value) => ConvertFromHex();
 
     [RelayCommand]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ConvertFromHex()
     {
         if (TryParseHex(HexInput, out var color))
@@ -54,7 +52,6 @@ public sealed partial class ColorConverterViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ConvertFromRgb()
     {
         // 简化实现，实际需要解析 RGB 字符串
@@ -63,7 +60,6 @@ public sealed partial class ColorConverterViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ConvertFromHsl()
     {
         // 简化实现，实际需要解析 HSL 字符串
@@ -72,7 +68,6 @@ public sealed partial class ColorConverterViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Reset()
     {
         HexInput = "#3B82F6";
@@ -80,7 +75,6 @@ public sealed partial class ColorConverterViewModel : ViewModelBase
         ErrorMessage = null;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryParseHex(string hex, out Color color)
     {
         color = default;
@@ -107,7 +101,6 @@ public sealed partial class ColorConverterViewModel : ViewModelBase
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (int H, int S, int L) RgbToHsl(byte r, byte g, byte b)
     {
         var rf = r / 255f;

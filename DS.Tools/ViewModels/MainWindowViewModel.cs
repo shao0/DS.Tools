@@ -2,17 +2,19 @@ using System.Collections.ObjectModel;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DS.Tools.Module.Base.Interfaces;
-using DS.Tools.Module.Base;
 using DS.Tools.Core.Interfaces;
 using DS.Tools.Core.Models;
+using DS.Tools.Module.Base;
+using DS.Tools.Module.Base.Interfaces;
+using DS.Tools.Module.Text;
 
 namespace DS.Tools.ViewModels;
 
 /// <summary>
-/// 主窗口 ViewModel - 管理工具导航和布局
-/// 支持二级菜单：一级为模块，二级为子工具，支持展开/收起功能
-/// 基于 CommunityToolkit.Mvvm（源生成器），NativeAOT 兼容
+/// 主窗口 ViewModel - 管理工具导航和布局。
+/// 支持二级菜单：一级为模块，二级为子工具。
+/// ViewModel 按 (模块, 子工具) 导航键缓存复用：切换工具保留状态，避免重复创建（如 Dashboard 时钟）。
+/// 基于 CommunityToolkit.Mvvm（源生成器），NativeAOT 兼容。
 /// </summary>
 public sealed partial class MainWindowViewModel : ViewModelBase
 {
@@ -20,6 +22,7 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     private readonly IThemeService _themeService;
     private readonly INavigationService _navigationService;
     private readonly IServiceProvider _serviceProvider;
+    private readonly Dictionary<(string ToolId, string? SubToolId), ViewModelBase> _viewModelCache = [];
 
     /// <summary>
     /// 构造函数 - 显式依赖注入
@@ -69,33 +72,37 @@ public sealed partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private bool _isPaneOpen = true;
 
     /// <summary>
-    /// 导航到默认工具
+    /// 导航到默认工具（首个模块的仪表盘）
     /// </summary>
     private void NavigateToDefaultTool()
     {
-        var defaultTool = _toolRegistry.GetTool("text-tools");
-        if (defaultTool is not null)
+        if (_toolRegistry.GetTool(TextModule.ToolIds.Module) is not null)
         {
-            // 导航到第一个子工具
-            _navigationService.NavigateTo("text-tools:dashboard");
+            _navigationService.NavigateTo(TextModule.ToolIds.Full(TextModule.ToolIds.Dashboard));
         }
     }
 
     /// <summary>
-    /// 导航变更回调
+    /// 导航变更回调 - 按导航键缓存并复用 ViewModel 实例
     /// </summary>
     private void OnNavigationChanged(IToolModule? tool, string? subToolId)
     {
-        if (tool is not null)
+        if (tool is null)
+            return;
+
+        var key = (tool.Id, subToolId);
+        if (!_viewModelCache.TryGetValue(key, out var viewModel))
         {
             // IoC 创建：ViewModel 由模块提供的强类型工厂经 DI 容器解析
             // （编译期泛型 GetRequiredService<T>，无 Type 键、无运行时反射）
-            var viewModel = string.IsNullOrEmpty(subToolId)
+            viewModel = string.IsNullOrEmpty(subToolId)
                 ? tool.CreateMainViewModel(_serviceProvider)
                 : tool.CreateSubToolViewModel(subToolId, _serviceProvider) ?? tool.CreateMainViewModel(_serviceProvider);
 
-            ActiveToolViewModel = viewModel;
+            _viewModelCache[key] = viewModel;
         }
+
+        ActiveToolViewModel = viewModel;
     }
 
     /// <summary>
