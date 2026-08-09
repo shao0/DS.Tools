@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/Cores/">
+    <Project Path="Cores/DS.Tools.Core/DS.Tools.Core.csproj" />
+    <Project Path="Cores/DS.Tools.Module.Base/DS.Tools.Module.Base.csproj" />
+    <Project Path="Cores/DS.Tools.UI.Shared/DS.Tools.UI.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="CLAUDE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/DS.Tools.Tests/DS.Tools.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/DS.Tools.Module.Text/DS.Tools.Module.Text.csproj" />
+  </Folder>
+  <Project Path="DS.Tools/DS.Tools.csproj" />
+</Solution>

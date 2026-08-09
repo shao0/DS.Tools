@@ -1,0 +1,41 @@
+<Project>
+  <PropertyGroup>
+    <!-- ======================================== -->
+    <!-- C# 14 全部特性                         -->
+    <!-- ======================================== -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Features>strict</Features>
+
+    <!-- ======================================== -->
+    <!-- AOT 兼容性配置                           -->
+    <!-- ======================================== -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsTrimmable>true</IsTrimmable>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+
+    <!-- ======================================== -->
+    <!-- 代码生成优化                             -->
+    <!-- ======================================== -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnablePreviewFeatures>false</EnablePreviewFeatures>
+
+    <!-- ======================================== -->
+    <!-- 编译器严格模式                           -->
+    <!-- ======================================== -->
+    <WarningsAsErrors>nullable;implicit-reference-types;unknown-diagnostics</WarningsAsErrors>
+   <!-- <WarningsNotAsErrors>CS0618;CS0612;CS0618</WarningsNotAsErrors>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 全局 using 引用 -->
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+</Project>

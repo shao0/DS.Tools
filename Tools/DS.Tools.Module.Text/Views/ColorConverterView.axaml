@@ -1,0 +1,147 @@
+<UserControl
+    x:Class="DS.Tools.Module.Text.Views.ColorConverterView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:DS.Tools.Module.Text.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:CompileBindings="True"
+    x:DataType="vm:ColorConverterViewModel"
+    mc:Ignorable="d">
+
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20" />
+        </Style>
+
+        <Style Selector="TextBlock.cardTitle">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Margin" Value="0,0,0,16" />
+        </Style>
+
+        <Style Selector="TextBox.formInput">
+            <Setter Property="Background" Value="#0F172A" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+        </Style>
+
+        <Style Selector="Border.colorPreview">
+            <Setter Property="Height" Value="100" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Margin" Value="0,0,0,16" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel
+            Margin="32"
+            Spacing="0">
+            <StackPanel Margin="0,0,0,32">
+                <TextBlock
+                    FontSize="28"
+                    FontWeight="Bold"
+                    Foreground="#F1F5F9"
+                    Text="颜色转换器" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    FontSize="16"
+                    Foreground="#94A3B8"
+                    Text="在 HEX、RGB、HSL 之间转换颜色" />
+            </StackPanel>
+
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock
+                        Classes="cardTitle"
+                        Text="🎨 颜色转换" />
+
+                    <!--  颜色预览  -->
+                    <Border
+                        Background="{Binding PreviewColor}"
+                        Classes="colorPreview">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="18"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="{Binding HexInput}">
+                            <TextBlock.Effect>
+                                <DropShadowEffect
+                                    BlurRadius="3"
+                                    OffsetX="0"
+                                    OffsetY="1"
+                                    Color="Black" />
+                            </TextBlock.Effect>
+                        </TextBlock>
+                    </Border>
+
+                    <!--  HEX 输入  -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="13"
+                            Foreground="#94A3B8"
+                            Text="HEX" />
+                        <TextBox
+                            Classes="formInput"
+                            Text="{Binding HexInput, Mode=TwoWay}" />
+                    </StackPanel>
+
+                    <!--  RGB 输出  -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="13"
+                            Foreground="#94A3B8"
+                            Text="RGB" />
+                        <TextBox
+                            Classes="formInput"
+                            IsReadOnly="True"
+                            Text="{Binding RgbOutput}" />
+                    </StackPanel>
+
+                    <!--  HSL 输出  -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            FontSize="13"
+                            Foreground="#94A3B8"
+                            Text="HSL" />
+                        <TextBox
+                            Classes="formInput"
+                            IsReadOnly="True"
+                            Text="{Binding HslOutput}" />
+                    </StackPanel>
+
+                    <!--  重置按钮  -->
+                    <Button
+                        Padding="12,20"
+                        Background="#334155"
+                        BorderThickness="0"
+                        Command="{Binding ResetCommand}"
+                        Content="重置"
+                        CornerRadius="8"
+                        Cursor="Hand"
+                        FontWeight="Medium"
+                        Foreground="White" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

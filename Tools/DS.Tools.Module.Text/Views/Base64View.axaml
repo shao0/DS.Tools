@@ -1,0 +1,226 @@
+<UserControl
+    x:Class="DS.Tools.Module.Text.Views.Base64View"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="clr-namespace:DS.Tools.Module.Text.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:CompileBindings="True"
+    x:DataType="viewModels:Base64ViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.Styles>
+        <!--  卡片样式  -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="Margin" Value="0,0,0,20" />
+        </Style>
+
+        <!--  标题样式  -->
+        <Style Selector="TextBlock.cardTitle">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <!--  文本框样式  -->
+        <Style Selector="TextBox.formInput">
+            <Setter Property="Background" Value="#0F172A" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="MinHeight" Value="100" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="TextBox.formInput:focus">
+            <Setter Property="BorderBrush" Value="#3B82F6" />
+        </Style>
+
+        <!--  结果框样式  -->
+        <Style Selector="Border.resultBox">
+            <Setter Property="Background" Value="#0F172A" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,12,0,0" />
+        </Style>
+
+        <!--  按钮样式  -->
+        <Style Selector="Button.btn">
+            <Setter Property="Padding" Value="12,20" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#3B82F6" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="Button.primary:pointerover">
+            <Setter Property="Background" Value="#2563EB" />
+        </Style>
+
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#334155" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+        </Style>
+
+        <Style Selector="Button.secondary:pointerover">
+            <Setter Property="Background" Value="#475569" />
+        </Style>
+
+        <!--  错误提示样式  -->
+        <Style Selector="TextBlock.errorText">
+            <Setter Property="Foreground" Value="#EF4444" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Margin" Value="0,8,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel
+            Margin="32"
+            Spacing="0">
+            <!--  标题区域  -->
+            <StackPanel Margin="0,0,0,32">
+                <TextBlock
+                    FontSize="28"
+                    FontWeight="Bold"
+                    Foreground="#F1F5F9"
+                    Text="Base64 编解码" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    FontSize="16"
+                    Foreground="#94A3B8"
+                    Text="文本与 Base64 之间的相互转换" />
+            </StackPanel>
+
+            <!--  编码区域  -->
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock
+                        Classes="cardTitle"
+                        Text="🔤 文本转 Base64" />
+
+                    <TextBox
+                        Classes="formInput"
+                        PlaceholderText="输入要编码的文本..."
+                        Text="{Binding InputText, Mode=TwoWay}" />
+
+                    <StackPanel
+                        Margin="0,12,0,0"
+                        Orientation="Horizontal"
+                        Spacing="12">
+                        <Button
+                            Classes="btn primary"
+                            Command="{Binding EncodeCommand}"
+                            Content="编码" />
+                        <Button
+                            Classes="btn secondary"
+                            Command="{Binding ClearCommand}"
+                            Content="清空" />
+                    </StackPanel>
+
+                    <!--  错误提示  -->
+                    <TextBlock
+                        Classes="errorText"
+                        IsVisible="{Binding HasErrors}"
+                        Text="{Binding ErrorMessage}" />
+
+                    <!--  编码结果  -->
+                    <Border
+                        Classes="resultBox"
+                        IsVisible="{Binding EncodedResult, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <DockPanel>
+                            <Button
+                                Margin="0,0,0,0"
+                                Padding="8,12"
+                                Classes="btn secondary"
+                                Command="{Binding CopyEncodedCommand}"
+                                Content="复制"
+                                DockPanel.Dock="Right" />
+
+                            <TextBlock
+                                VerticalAlignment="Top"
+                                Foreground="#10B981"
+                                Text="{Binding EncodedResult}"
+                                TextWrapping="Wrap" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!--  解码区域  -->
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock
+                        Classes="cardTitle"
+                        Text="🔓 Base64 转文本" />
+
+                    <TextBox
+                        Classes="formInput"
+                        PlaceholderText="输入 Base64 字符串..."
+                        Text="{Binding InputText, Mode=TwoWay}" />
+
+                    <StackPanel
+                        Margin="0,12,0,0"
+                        Orientation="Horizontal"
+                        Spacing="12">
+                        <Button
+                            Classes="btn primary"
+                            Command="{Binding DecodeCommand}"
+                            Content="解码" />
+                        <Button
+                            Classes="btn secondary"
+                            Command="{Binding ClearCommand}"
+                            Content="清空" />
+                    </StackPanel>
+
+                    <!--  错误提示  -->
+                    <TextBlock
+                        Classes="errorText"
+                        IsVisible="{Binding HasErrors}"
+                        Text="{Binding ErrorMessage}" />
+
+                    <!--  解码结果  -->
+                    <Border
+                        Classes="resultBox"
+                        IsVisible="{Binding DecodedResult, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <DockPanel>
+                            <Button
+                                Margin="0,0,0,0"
+                                Padding="8,12"
+                                Classes="btn secondary"
+                                Command="{Binding CopyDecodedCommand}"
+                                Content="复制"
+                                DockPanel.Dock="Right" />
+
+                            <TextBlock
+                                VerticalAlignment="Top"
+                                Foreground="#3B82F6"
+                                Text="{Binding DecodedResult}"
+                                TextWrapping="Wrap" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

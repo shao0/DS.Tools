@@ -1,0 +1,330 @@
+<Window
+    x:Class="DS.Tools.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:base="using:DS.Tools.Module.Base"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:module="using:DS.Tools.Module.Base.Interfaces"
+    xmlns:ui="using:DS.Tools.Module.Base.UI"
+    xmlns:vm="using:DS.Tools.ViewModels"
+    x:Name="RootWindow"
+    Title="DS.Tools - Developer Utilities"
+    Width="1200"
+    Height="800"
+    MinWidth="800"
+    MinHeight="600"
+    d:DesignHeight="800"
+    d:DesignWidth="1200"
+    x:CompileBindings="True"
+    x:DataType="vm:MainWindowViewModel"
+    Background="#0F172A"
+    Icon="avares://DS.Tools.UI.Shared/Assets/app-icon.ico"
+    mc:Ignorable="d">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <!--  使用自定义 ViewLocator  -->
+    <Window.DataTemplates>
+        <ui:ViewLocator />
+    </Window.DataTemplates>
+
+    <!--  窗口 chrome 自定义  -->
+    <Window.Styles>
+        <Style Selector="Window[ExtendClientAreaToDecorationsHint=True]">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <!--  侧边栏样式  -->
+        <Style Selector="Border.sidebar">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="0,0,1,0" />
+        </Style>
+
+        <!--  一级菜单项样式  -->
+        <Style Selector="Button.moduleItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="4,2" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.moduleItem:pointerover">
+            <Setter Property="Background" Value="#334155" />
+        </Style>
+
+        <!--  二级菜单项样式  -->
+        <Style Selector="Button.subToolItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="Margin" Value="4,1" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Foreground" Value="#94A3B8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.subToolItem:pointerover">
+            <Setter Property="Background" Value="#334155" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+        </Style>
+
+        <!--  选中状态样式  -->
+        <Style Selector="Button.moduleItem.active, Button.subToolItem.active">
+            <Setter Property="Background" Value="rgba(59, 130, 246, 0.15)" />
+            <Setter Property="Foreground" Value="#3B82F6" />
+        </Style>
+
+        <!--  Expander 样式  -->
+        <Style Selector="Expander">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+
+        <Style Selector="Expander ToggleButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Foreground" Value="#94A3B8" />
+        </Style>
+
+        <Style Selector="Expander ToggleButton:pointerover">
+            <Setter Property="Background" Value="#334155" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+        </Style>
+
+        <!--  主题切换按钮样式  -->
+        <Style Selector="Button.themeToggle">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#94A3B8" />
+        </Style>
+
+        <Style Selector="Button.themeToggle:pointerover">
+            <Setter Property="Background" Value="#334155" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+        <!--  自定义标题栏  -->
+        <Border
+            Height="40"
+            Background="#1E293B"
+            DockPanel.Dock="Top">
+            <Grid ColumnDefinitions="*,Auto">
+
+                <!--  窗口标题和图标  -->
+                <StackPanel
+                    Grid.Column="0"
+                    Margin="16,0,0,0"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="16"
+                        Text="🧰" />
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Foreground="#F1F5F9"
+                        Text="DS.Tools" />
+                </StackPanel>
+
+                <!--  窗口控制按钮和主题切换  -->
+                <Border
+                    Grid.Column="1"
+                    Margin="0,0,8,0"
+                    Background="Transparent">
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="4">
+                        <!--  侧边栏切换按钮  -->
+                        <Button
+                            Classes="themeToggle"
+                            Command="{Binding TogglePaneCommand}"
+                            ToolTip.Tip="切换侧边栏">
+                            <TextBlock
+                                FontSize="16"
+                                Text="☰" />
+                        </Button>
+
+                        <!--  主题切换按钮  -->
+                        <Button
+                            Classes="themeToggle"
+                            Command="{Binding ToggleThemeCommand}"
+                            ToolTip.Tip="切换主题">
+                            <TextBlock
+                                FontSize="16"
+                                Text="{Binding CurrentThemeIcon}" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!--  主内容区：SplitView 支持侧边栏  -->
+        <SplitView
+            Background="#0F172A"
+            DisplayMode="Inline"
+            IsPaneOpen="{Binding IsPaneOpen}"
+            OpenPaneLength="280">
+            <SplitView.Pane>
+                <!--  侧边栏：二级菜单结构  -->
+                <Border Classes="sidebar">
+                    <DockPanel LastChildFill="True">
+                        <!--  Logo 区域  -->
+                        <Border
+                            Padding="16,12"
+                            BorderBrush="#334155"
+                            BorderThickness="0,0,0,1"
+                            DockPanel.Dock="Top">
+                            <StackPanel
+                                Orientation="Horizontal"
+                                Spacing="12">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="24"
+                                    Text="⚙️" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="#F1F5F9"
+                                    Text="工具箱" />
+                            </StackPanel>
+                        </Border>
+
+                        <!--  工具模块列表（二级菜单 + Expander原生展开/收起）  -->
+                        <ScrollViewer
+                            DockPanel.Dock="Top"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Tools}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="module:IToolModule">
+                                        <!--  模块容器  -->
+                                        <StackPanel
+                                            Margin="0,4"
+                                            Spacing="2">
+                                            <!--  有子工具的模块：使用 Expander 原生展开功能  -->
+                                            <Expander
+                                                Margin="0"
+                                                Padding="0"
+                                                BorderThickness="0"
+                                                IsExpanded="True"
+                                                IsVisible="{Binding HasSubTools}">
+                                                <Expander.Header>
+                                                    <!--  一级菜单：模块标题  -->
+                                                    <StackPanel
+                                                        Orientation="Horizontal"
+                                                        Spacing="12">
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontSize="18"
+                                                            Text="{Binding Icon}" />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Text="{Binding Name}" />
+                                                    </StackPanel>
+                                                </Expander.Header>
+
+                                                <!--  二级菜单：子工具列表  -->
+                                                <ItemsControl ItemsSource="{Binding SubTools}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="base:SubToolInfo">
+                                                            <Button
+                                                                Classes="subToolItem"
+                                                                Command="{Binding ElementName=RootWindow, Path=DataContext.SelectSubToolCommand}"
+                                                                CommandParameter="{Binding}">
+                                                                <StackPanel
+                                                                    Orientation="Horizontal"
+                                                                    Spacing="8">
+                                                                    <TextBlock
+                                                                        VerticalAlignment="Center"
+                                                                        FontSize="14"
+                                                                        Text="{Binding Icon}" />
+                                                                    <TextBlock
+                                                                        VerticalAlignment="Center"
+                                                                        Text="{Binding Name}" />
+                                                                </StackPanel>
+                                                            </Button>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Expander>
+
+                                            <!--  没有子工具的模块：仅显示标题，无导航  -->
+                                            <StackPanel
+                                                Margin="0,4"
+                                                IsVisible="{Binding !HasSubTools}"
+                                                Spacing="2">
+                                                <Border
+                                                    Margin="4,2"
+                                                    Padding="12,8"
+                                                    Classes="moduleItem">
+                                                    <StackPanel
+                                                        Orientation="Horizontal"
+                                                        Spacing="12">
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontSize="18"
+                                                            Text="{Binding Icon}" />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            Text="{Binding Name}" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!--  底部信息区  -->
+                        <Border
+                            Padding="16,12"
+                            BorderBrush="#334155"
+                            BorderThickness="0,1,0,0"
+                            DockPanel.Dock="Bottom">
+                            <StackPanel Spacing="4">
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="#64748B"
+                                    Text="DS.Tools v1.0" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="#64748B"
+                                    Text="本地运行" />
+                            </StackPanel>
+                        </Border>
+                    </DockPanel>
+                </Border>
+            </SplitView.Pane>
+
+            <!--  内容区：当前工具的视图 - 通过 ViewLocator 自动映射  -->
+            <Border Background="#0F172A">
+                <ContentControl Content="{Binding ActiveToolViewModel}" />
+            </Border>
+        </SplitView>
+    </DockPanel>
+</Window>

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 核心项目引用 -->
+    <ProjectReference Include="..\..\Cores\DS.Tools.Core\DS.Tools.Core.csproj" />
+    <ProjectReference Include="..\..\Cores\DS.Tools.Module.Base\DS.Tools.Module.Base.csproj" />
+    <ProjectReference Include="..\..\Tools\DS.Tools.Module.Text\DS.Tools.Module.Text.csproj" />
+    <ProjectReference Include="..\..\DS.Tools\DS.Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 测试框架 -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Moq" />
+    <PackageReference Include="FluentAssertions" />
+  </ItemGroup>
+
+</Project>

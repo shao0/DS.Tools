@@ -1,0 +1,172 @@
+<UserControl
+    x:Class="DS.Tools.Module.Text.Views.TextHasherView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:DS.Tools.Module.Text.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    x:CompileBindings="True"
+    x:DataType="vm:TextHasherViewModel"
+    mc:Ignorable="d">
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20" />
+        </Style>
+
+        <Style Selector="TextBlock.cardTitle">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Margin" Value="0,0,0,16" />
+        </Style>
+
+        <Style Selector="TextBox.formInput">
+            <Setter Property="Background" Value="#0F172A" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="MinHeight" Value="80" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style Selector="Border.resultBox">
+            <Setter Property="Background" Value="#0F172A" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,12,0,0" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer>
+        <StackPanel
+            Margin="32"
+            Spacing="0">
+            <StackPanel Margin="0,0,0,32">
+                <TextBlock
+                    FontSize="28"
+                    FontWeight="Bold"
+                    Foreground="#F1F5F9"
+                    Text="文本哈希" />
+                <TextBlock
+                    Margin="0,8,0,0"
+                    FontSize="16"
+                    Foreground="#94A3B8"
+                    Text="计算文本的 MD5 和 SHA-256 哈希值" />
+            </StackPanel>
+
+            <Border Classes="card">
+                <StackPanel>
+                    <TextBlock
+                        Classes="cardTitle"
+                        Text="#️⃣ 输入文本" />
+
+                    <TextBox
+                        Classes="formInput"
+                        PlaceholderText="输入要计算哈希的文本..."
+                        Text="{Binding InputText, Mode=TwoWay}" />
+
+                    <Button
+                        Margin="0,12,0,0"
+                        Padding="16,20"
+                        Background="#3B82F6"
+                        BorderThickness="0"
+                        Command="{Binding CalculateHashCommand}"
+                        Content="计算哈希"
+                        CornerRadius="8"
+                        Cursor="Hand"
+                        FontWeight="Medium"
+                        Foreground="White" />
+
+                    <!--  SHA-256 结果  -->
+                    <Border
+                        Classes="resultBox"
+                        IsVisible="{Binding Sha256Result, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <DockPanel>
+                            <Button
+                                Margin="0,0,0,0"
+                                Padding="8,12"
+                                Background="#334155"
+                                BorderThickness="0"
+                                Command="{Binding CopySha256Command}"
+                                Content="复制"
+                                CornerRadius="6"
+                                DockPanel.Dock="Right"
+                                Foreground="White" />
+
+                            <StackPanel>
+                                <TextBlock
+                                    Margin="0,0,0,8"
+                                    FontSize="12"
+                                    Foreground="#94A3B8"
+                                    Text="SHA-256" />
+                                <TextBlock
+                                    FontFamily="Consolas,monospace"
+                                    FontSize="13"
+                                    Foreground="#10B981"
+                                    Text="{Binding Sha256Result}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <!--  MD5 结果  -->
+                    <Border
+                        Classes="resultBox"
+                        IsVisible="{Binding Md5Result, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <DockPanel>
+                            <Button
+                                Margin="0,0,0,0"
+                                Padding="8,12"
+                                Background="#334155"
+                                BorderThickness="0"
+                                Command="{Binding CopyMd5Command}"
+                                Content="复制"
+                                CornerRadius="6"
+                                DockPanel.Dock="Right"
+                                Foreground="White" />
+
+                            <StackPanel>
+                                <TextBlock
+                                    Margin="0,0,0,8"
+                                    FontSize="12"
+                                    Foreground="#94A3B8"
+                                    Text="MD5" />
+                                <TextBlock
+                                    FontFamily="Consolas,monospace"
+                                    FontSize="13"
+                                    Foreground="#F59E0B"
+                                    Text="{Binding Md5Result}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Button
+                        Margin="0,12,0,0"
+                        Padding="16,20"
+                        Background="#334155"
+                        BorderThickness="0"
+                        Command="{Binding ClearCommand}"
+                        Content="清空"
+                        CornerRadius="8"
+                        Cursor="Hand"
+                        FontWeight="Medium"
+                        Foreground="White" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

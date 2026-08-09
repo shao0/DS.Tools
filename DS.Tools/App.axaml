@@ -1,0 +1,96 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="DS.Tools.App"
+             RequestedThemeVariant="Default">
+    <Application.Styles>
+        <!-- Fluent Theme -->
+        <FluentTheme />
+
+        <!-- Global Font Family -->
+        <Style Selector="Window">
+            <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter" />
+        </Style>
+
+        <Style Selector="UserControl">
+            <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter" />
+        </Style>
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter" />
+        </Style>
+
+        <!-- Custom Button Styles -->
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#3B82F6" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style Selector="Button.primary:pointerover">
+            <Setter Property="Background" Value="#2563EB" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <Style Selector="Button.secondary:pointerover">
+            <Setter Property="Background" Value="#334155" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <!-- Card Panel Styles -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="24" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#334155" />
+        </Style>
+
+        <!-- TextBox Styles -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1E293B" />
+            <Setter Property="Foreground" Value="#F1F5F9" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#334155" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <Style Selector="TextBox:focus">
+            <Setter Property="BorderBrush" Value="#3B82F6" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+    </Application.Styles>
+
+    <Application.Resources>
+        <!-- Global Colors -->
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#3B82F6" />
+        <SolidColorBrush x:Key="SecondaryBrush" Color="#1E293B" />
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#0F172A" />
+        <SolidColorBrush x:Key="ForegroundBrush" Color="#F1F5F9" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#334155" />
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#64748B" />
+
+        <!-- Icon Resources -->
+        <x:String x:Key="IconDashboard">📊</x:String>
+        <x:String x:Key="IconJson">📝</x:String>
+        <x:String x:Key="IconBase64">🔐</x:String>
+        <x:String x:Key="IconColor">🎨</x:String>
+        <x:String x:Key="IconTimestamp">⏰</x:String>
+        <x:String x:Key="IconPassword">🔑</x:String>
+        <x:String x:Key="IconHash">#️⃣</x:String>
+    </Application.Resources>
+</Application>

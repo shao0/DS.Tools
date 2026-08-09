@@ -1,0 +1,85 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 操作按钮样式 -->
+    <Style Selector="Button.action-button">
+        <Setter Property="Background" Value="#3B82F6" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="MinWidth" Value="100" />
+        <Setter Property="Height" Value="40" />
+    </Style>
+
+    <Style Selector="Button.action-button:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#2563EB" />
+    </Style>
+
+    <Style Selector="Button.action-button:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="#1D4ED8" />
+    </Style>
+
+    <Style Selector="Button.action-button:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="#475569" />
+        <Setter Property="Foreground" Value="#94A3B8" />
+    </Style>
+
+    <!-- 次要按钮样式 -->
+    <Style Selector="Button.secondary-button">
+        <Setter Property="Background" Value="#334155" />
+        <Setter Property="Foreground" Value="#F1F5F9" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="MinWidth" Value="100" />
+        <Setter Property="Height" Value="40" />
+    </Style>
+
+    <Style Selector="Button.secondary-button:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#475569" />
+    </Style>
+
+    <Style Selector="Button.secondary-button:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="#64748B" />
+    </Style>
+
+    <Style Selector="Button.secondary-button:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="#1E293B" />
+        <Setter Property="Foreground" Value="#64748B" />
+    </Style>
+
+    <!-- TextBox 样式 -->
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#E2E8F0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="CaretBrush" Value="#E2E8F0" />
+        <Setter Property="SelectionBrush" Value="#3B82F6" />
+        <Setter Property="SelectionForegroundBrush" Value="#FFFFFF" />
+    </Style>
+
+    <Style Selector="TextBox:focus">
+        <Setter Property="BorderBrush" Value="#3B82F6" />
+        <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <!-- ScrollBar 样式 -->
+    <Style Selector="ScrollBar">
+        <Setter Property="Background" Value="#1E293B" />
+        <Setter Property="Foreground" Value="#64748B" />
+    </Style>
+
+    <Style Selector="ScrollBar:pointerover /template/ Thumb">
+        <Setter Property="Background" Value="#475569" />
+    </Style>
+
+</Styles>
