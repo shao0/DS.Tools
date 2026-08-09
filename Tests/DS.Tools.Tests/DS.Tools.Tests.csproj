@@ -140,29 +140,4 @@
     <None Remove="Tempds-build-verify\tr\Microsoft.TestPlatform.CoreUtilities.resources.dll" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tempds-build-verify\runtimes\win-arm64\native\" />
-    <Folder Include="Tempds-build-verify\runtimes\win\lib\net6.0\" />
-    <Folder Include="Tempds-build\de\" />
-    <Folder Include="Tempds-build\es\" />
-    <Folder Include="Tempds-build\ja\" />
-    <Folder Include="Tempds-build\ko\" />
-    <Folder Include="Tempds-build\pl\" />
-    <Folder Include="Tempds-build\runtimes\linux-arm64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-arm\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-bionic-arm64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-bionic-x64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-loongarch64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-musl-riscv64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-musl-x64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-riscv64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-x64\native\" />
-    <Folder Include="Tempds-build\runtimes\linux-x86\native\" />
-    <Folder Include="Tempds-build\runtimes\unix\lib\net6.0\" />
-    <Folder Include="Tempds-build\runtimes\win-arm64\native\" />
-    <Folder Include="Tempds-build\runtimes\win-x86\native\" />
-    <Folder Include="Tempds-build\ru\" />
-    <Folder Include="Tempds-build\tr\" />
-  </ItemGroup>
-
 </Project>
