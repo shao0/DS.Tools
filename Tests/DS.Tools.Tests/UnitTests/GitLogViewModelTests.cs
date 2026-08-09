@@ -223,9 +223,9 @@ public sealed class GitLogViewModelTests
     }
 
     [Fact]
-    public async Task CopyLog_WithEntries_CopiesFormattedTextToClipboard()
+    public async Task CopyLog_WithEntries_CopiesFullMessagesToClipboard()
     {
-        // Arrange
+        // Arrange（第二条含多行正文——%B 完整消息应整体复制，而非仅首行主题）
         var vm = CreateViewModel();
         vm.RepositoryPath = @"D:\repo";
         _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
@@ -233,7 +233,7 @@ public sealed class GitLogViewModelTests
                 new GitLogEntry("abc1234", "Test User", "test@example.com",
                     new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: bug"),
                 new GitLogEntry("def5678", "小毛 邵", "xiaomao@example.com",
-                    new DateTimeOffset(2026, 3, 2, 9, 30, 0, TimeSpan.FromHours(8)), "feat: new feature")
+                    new DateTimeOffset(2026, 3, 2, 9, 30, 0, TimeSpan.FromHours(8)), "feat: new feature\n\nline one\n\nline three")
             ]));
         await vm.LoadLogCommand.ExecuteAsync(null);
 
@@ -245,10 +245,43 @@ public sealed class GitLogViewModelTests
         // Act
         await vm.CopyLogCommand.ExecuteAsync(null);
 
-        // Assert（每条日志一行：hash | 作者 | 日期 | 主题）
-        captured.Should().Contain("abc1234 | Test User | 2026-03-01 10:00 | fix: bug");
-        captured.Should().Contain("def5678 | 小毛 邵 | 2026-03-02 09:30 | feat: new feature");
-        captured.Should().Contain(Environment.NewLine);
+        // Assert（每条 = 元数据行 + 完整消息，条目间空行分隔）
+        captured.Should().Contain("abc1234 | Test User | 2026-03-01 10:00\nfix: bug");
+        captured.Should().Contain("def5678 | 小毛 邵 | 2026-03-02 09:30\nfeat: new feature\n\nline one\n\nline three");
+        captured.Should().Contain("\n\n");
+    }
+
+    [Fact]
+    public async Task CopyEntry_WithEntry_CopiesOnlyThatEntry()
+    {
+        // Arrange
+        var vm = CreateViewModel();
+        var entry = new GitLogEntry("abc1234", "Test User", "test@example.com",
+            new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: bug\n\nbody line");
+        string? captured = null;
+        _clipboard.Setup(c => c.SetTextAsync(It.IsAny<string>()))
+            .Callback<string>(t => captured = t)
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await vm.CopyEntryCommand.ExecuteAsync(entry);
+
+        // Assert（仅该条完整内容，无条目间分隔符）
+        captured.Should().Be("abc1234 | Test User | 2026-03-01 10:00\nfix: bug\n\nbody line");
+        vm.StatusMessage.Should().Contain("已复制该条");
+    }
+
+    [Fact]
+    public async Task CopyEntry_WithNullEntry_DoesNotTouchClipboard()
+    {
+        // Arrange
+        var vm = CreateViewModel();
+
+        // Act
+        await vm.CopyEntryCommand.ExecuteAsync(null);
+
+        // Assert
+        _clipboard.Verify(c => c.SetTextAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

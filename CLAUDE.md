@@ -476,7 +476,7 @@ DS.Tools.slnx
 
 1. **文件夹选择器入 Core**：`IFolderPickerService`/`FolderPickerService`（镜像 `ClipboardService` 的 MainWindow + Dispatcher 模式，`StorageProvider.OpenFolderPickerAsync`，Avalonia 12 验证过 `TryGetLocalPath`/`CanPickFolder`/`FolderPickerOpenOptions`），注册于 `AddApplicationServices()`
 2. **设置持久化**：`IGitSettingsService` → `%LocalAppData%\DS.Tools\git-settings.json`（源生成上下文 `GitJsonContext`，camelCase + 缩进；双构造函数供测试注入路径；损坏/缺失回默认值，保存失败仅记日志）
-3. **git CLI 集成**：`IGitLogService` 经 `System.Diagnostics.Process` 执行（零新依赖，禁 LibGit2Sharp）——`git -C <path>` + `ArgumentList` 免引号；分支 = `symbolic-ref --short -q HEAD`（游离 HEAD 退化 `rev-parse --short HEAD`）；日志 = `log -n 1000 [--since/--until] --pretty=format:%x1e%h%x1f%an%x1f%ae%x1f%aI%x1f%s`（控制符分隔防主题含 `|`）；防死锁（先读流再等待）、30s 超时 + 进程树 Kill、`Win32Exception` 友好报错、空仓库 exit-128 特判为成功空列表
+3. **git CLI 集成**：`IGitLogService` 经 `System.Diagnostics.Process` 执行（零新依赖，禁 LibGit2Sharp）——`git -C <path>` + `ArgumentList` 免引号；分支 = `symbolic-ref --short -q HEAD`（游离 HEAD 退化 `rev-parse --short HEAD`）；日志 = `log -n 1000 [--since/--until] --pretty=format:%x1e%h%x1f%an%x1f%ae%x1f%aI%x1f%B`（控制符分隔防消息含 `|`；**%B 完整消息含正文与换行**——解析按 `\x1e` 记录整体切分 + `Split('\x1f', 5)` 限 5 段，消息保留第 5 段后全部内容，跨行消息不丢行，`TrimEnd('\n','\r')` 去记录分隔换行）；防死锁（先读流再等待）、30s 超时 + 进程树 Kill、`Win32Exception` 友好报错、空仓库 exit-128 特判为成功空列表
 4. **修复多模块导航 bug**：`MainWindowViewModel.SelectSubTool` 原以「当前活动模块」推断子工具导航 ID——多模块下点击其他模块的子工具会路由错误（`text-tools:git-log`）；改为从 `IToolRegistry` 查找子工具所属模块（`SubTools.Contains` 引用相等）再拼 ID
 5. **清理**：删除临时诊断测试 `MenuDiagTests.cs`/`MenuDiagAppTests.cs`（文件注释自述"确认后删除"；后者不在 HeadlessUi 串行集合内且初始化真实 App，污染共享平台状态导致其他 headless 测试随机失败）
 
@@ -486,7 +486,10 @@ DS.Tools.slnx
 
 **默认时间范围**：打开工具即默认本周一至本周日（`SetDefaultDateRange`，`DayOfWeek` 周日=0 的周一偏移 `(dow+6)%7`）。注意 git `--until` 是排他边界——结束日期必须按"含当天"处理：VM 传参 `until.AddDays(1)`（次日零点），否则周日当天提交会被排除（服务层 `GetLog_UntilBoundary_IsExclusiveAtBoundaryInstant` 锁定该语义）。
 
-**复制结果**：信息栏右侧「📋 复制结果」按钮（`CopyLogCommand`，CanExecute=有日志条目）——全部日志按 `hash | 作者 | yyyy-MM-dd HH:mm | 主题` 每行一条写入剪贴板，成功提示 2 秒后自动清除。
+**复制**（2026-08-10 增强）：复制内容为**完整提交消息**（%B 全文，含正文与换行），而非仅首行主题——每条 = 元数据行（`hash | 作者 | yyyy-MM-dd HH:mm`）+ 换行 + 完整消息，条目间空行分隔。两级复制：
+- **复制全部**：信息栏右侧「📋 复制结果」按钮（`CopyLogCommand`，CanExecute=有日志条目）
+- **复制单条**：每条日志卡片右侧「📋」按钮（`CopyEntryCommand`，RelayCommand 参数 = 当前 `GitLogEntry`，`CommandParameter="{Binding}"`）仅复制该条——命令绑定用 `$parent[Window].((vm:GitLogViewModel)DataContext).CopyEntryCommand` 相对源（条目在 DataTemplate 内、无命名根；与主页磁贴 `ElementName=Root` 模式互补）
+- 成功提示 2 秒后自动清除（`CopyToClipboardAsync` 基类统一实现）
 
 **侧边栏默认状态（2026-08-09 用户调整）**：`MainWindowViewModel.IsPaneOpen` 默认 false（侧边栏收起）+ MainWindow.axaml Expander 去掉 `IsExpanded="True"`（模块默认折叠）——headless 导航测试须先 `IsPaneOpen=true`（Show 前设置）再 `ExpandModule` 展开目标模块，才能点击子工具（SplitView 收起时窗格内容不在视觉树、折叠 Expander 的子工具同样不在）。
 

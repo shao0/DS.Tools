@@ -28,5 +28,11 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Tempds-build\DS.Tools.Core.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Tempds-build\" />
+  </ItemGroup>
 
 </Project>

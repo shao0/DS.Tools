@@ -146,7 +146,7 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     private bool CanLoadLog() => !string.IsNullOrWhiteSpace(RepositoryPath);
 
     /// <summary>
-    /// 复制全部日志到剪贴板命令
+    /// 复制全部日志到剪贴板命令（每条为元数据行 + 完整消息，条目间空行分隔）
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCopyLog))]
     private Task CopyLogAsync()
@@ -155,12 +155,24 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     private bool CanCopyLog() => LogCount > 0;
 
     /// <summary>
-    /// 生成剪贴板文本：每条日志一行（hash | 作者 | 日期 | 主题）
-    /// 消息为完整多行文本时取首行（主题），保持"每行一条"的表格格式
+    /// 复制单条日志到剪贴板命令（仅该条：元数据行 + 完整消息）
+    /// </summary>
+    [RelayCommand]
+    private Task CopyEntryAsync(GitLogEntry entry)
+        => CopyToClipboardAsync(_clipboardService, FormatEntry(entry), "✓ 已复制该条日志到剪贴板");
+
+    /// <summary>
+    /// 生成剪贴板文本：每条为元数据行（hash | 作者 | 日期）+
+    /// 完整提交消息（%B，含正文与换行），条目间空行分隔
     /// </summary>
     private string BuildCopyText()
-        => string.Join(Environment.NewLine, LogEntries.Select(e =>
-            $"{e.Hash} | {e.AuthorName} | {e.Date:yyyy-MM-dd HH:mm} | {e.Message.Split('\n')[0]}"));
+        => string.Join("\n\n", LogEntries.Select(FormatEntry));
+
+    /// <summary>
+    /// 格式化单条日志：元数据行 + 完整消息（消息尾部换行已由服务层去除）
+    /// </summary>
+    private static string FormatEntry(GitLogEntry e)
+        => $"{e.Hash} | {e.AuthorName} | {e.Date:yyyy-MM-dd HH:mm}\n{e.Message}";
 
     /// <summary>
     /// 加载仓库状态：校验仓库 → 获取分支 → 拉取日志

@@ -130,6 +130,9 @@ public class GitLogViewRenderTests
                 .Any(t => t.Text == "abc1234").Should().BeTrue("提交哈希应显示在日志列表中");
             window.GetVisualDescendants().OfType<TextBlock>()
                 .Any(t => t.Text == "main").Should().BeTrue("当前分支应显示在仓库信息卡中");
+            // 条目复制按钮应渲染（仅复制该条）
+            window.GetVisualDescendants().OfType<Button>()
+                .Count(b => b.Content?.ToString() == "📋").Should().Be(1, "每条日志条目应有复制按钮");
 
             window.Close();
         });

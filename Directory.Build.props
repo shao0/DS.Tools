@@ -26,6 +26,7 @@
     <!-- ======================================== -->
     <!-- Avalonia 编译绑定（全项目默认开启）        -->
     <!-- ======================================== -->
+    <CompileBindings>true</CompileBindings>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 
   </PropertyGroup>

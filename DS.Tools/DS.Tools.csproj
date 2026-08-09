@@ -53,5 +53,24 @@
         <None Include="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Remove="Tempds-build\DS.Tools.Module.Base.dll" />
+        <None Remove="Tempds-build\runtimes\linux-musl-x64\native\libHarfBuzzSharp.so" />
+        <None Remove="Tempds-build\runtimes\linux-x86\native\libHarfBuzzSharp.so" />
+        <None Remove="Tempds-build\runtimes\win-arm64\native\av_libglesv2.dll" />
+        <None Remove="Tempds-build\runtimes\win-arm64\native\libHarfBuzzSharp.dll" />
+        <None Remove="Tempds-build\runtimes\win-arm64\native\libHarfBuzzSharp.pdb" />
+        <None Remove="Tempds-build\runtimes\win-x64\native\av_libglesv2.dll" />
+        <None Remove="Tempds-build\runtimes\win-x64\native\libSkiaSharp.dll" />
+        <None Remove="Tempds-build\runtimes\win-x86\native\av_libglesv2.dll" />
+        <None Remove="Tempds-build\runtimes\win-x86\native\libHarfBuzzSharp.dll" />
+        <None Remove="Tempds-build\runtimes\win-x86\native\libHarfBuzzSharp.pdb" />
+        <None Remove="Tempds-build\runtimes\win-x86\native\libSkiaSharp.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Tempds-build\runtimes\linux-x64\native\" />
+      <Folder Include="Tempds-build\runtimes\linux-x86\native\" />
+      <Folder Include="Tempds-build\runtimes\win-x64\native\" />
+      <Folder Include="Tempds-build\runtimes\win-x86\native\" />
     </ItemGroup>
 </Project>

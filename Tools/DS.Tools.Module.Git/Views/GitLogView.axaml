@@ -2,10 +2,10 @@
     x:Class="DS.Tools.Module.Git.Views.GitLogView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:DS.Tools.UI.Shared.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:gitmodels="using:DS.Tools.Module.Git.Models"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:DS.Tools.Module.Git.ViewModels"
     d:DesignHeight="600"
     d:DesignWidth="900"
@@ -77,7 +77,9 @@
             Background="{DynamicResource CardBrush}"
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12">
+            <Grid
+                ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto"
+                ColumnSpacing="12">
                 <!--  仓库路径（可手动编辑）  -->
                 <TextBox
                     Grid.Column="0"
@@ -97,8 +99,8 @@
                 <!--  起始日期  -->
                 <CalendarDatePicker
                     Grid.Column="2"
-                    VerticalAlignment="Center"
                     MinWidth="150"
+                    VerticalAlignment="Center"
                     PlaceholderText="起始日期"
                     SelectedDate="{Binding SinceDate, Mode=TwoWay}" />
 
@@ -112,8 +114,8 @@
                 <!--  结束日期  -->
                 <CalendarDatePicker
                     Grid.Column="4"
-                    VerticalAlignment="Center"
                     MinWidth="150"
+                    VerticalAlignment="Center"
                     PlaceholderText="结束日期"
                     SelectedDate="{Binding UntilDate, Mode=TwoWay}" />
 
@@ -162,10 +164,10 @@
                     <!--  复制全部日志到剪贴板  -->
                     <Button
                         Grid.Column="1"
-                        VerticalAlignment="Center"
+                        Height="32"
                         MinWidth="0"
                         Padding="12,6"
-                        Height="32"
+                        VerticalAlignment="Center"
                         Classes="secondary-button"
                         Command="{Binding CopyLogCommand}"
                         Content="📋 复制结果" />
@@ -219,7 +221,7 @@
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1"
                             CornerRadius="8">
-                            <Grid ColumnDefinitions="Auto,*,Auto">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
                                 <!--  提交哈希  -->
                                 <TextBlock
                                     Grid.Column="0"
@@ -256,6 +258,21 @@
                                     FontSize="12"
                                     Foreground="{DynamicResource TextSecondaryBrush}"
                                     Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
+
+                                <!--  复制该条日志（仅复制本条完整内容）  -->
+                                <!--  ReSharper disable once Xaml.PossibleNullReferenceException  -->
+                                <Button
+                                    Grid.Column="3"
+                                    Height="28"
+                                    MinWidth="0"
+                                    Margin="12,0,0,0"
+                                    Padding="8,4"
+                                    VerticalAlignment="Center"
+                                    Classes="secondary-button"
+                                    Command="{Binding $parent[Window].((vm:GitLogViewModel)DataContext).CopyEntryCommand}"
+                                    CommandParameter="{Binding}"
+                                    Content="📋"
+                                    FontSize="13" />
                             </Grid>
                         </Border>
                     </DataTemplate>

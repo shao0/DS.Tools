@@ -7,7 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:module="using:DS.Tools.Module.Base.Interfaces"
     xmlns:vm="using:DS.Tools.ViewModels"
-    x:Name="RootWindow"
     Title="DS.Tools - Developer Utilities"
     Width="1200"
     Height="800"
@@ -141,8 +140,8 @@
                     VerticalAlignment="Stretch"
                     Background="Transparent"
                     BorderThickness="0"
-                    Cursor="Hand"
                     Command="{Binding NavigateToHomeCommand}"
+                    Cursor="Hand"
                     ToolTip.Tip="返回主页">
                     <StackPanel
                         VerticalAlignment="Center"
@@ -286,9 +285,10 @@
                                                 <ItemsControl ItemsSource="{Binding SubTools}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="base:SubToolInfo">
+                                                            <!--  ReSharper disable once Xaml.PossibleNullReferenceException  -->
                                                             <Button
                                                                 Classes="subToolItem"
-                                                                Command="{Binding ElementName=RootWindow, Path=DataContext.SelectSubToolCommand}"
+                                                                Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SelectSubToolCommand}"
                                                                 CommandParameter="{Binding}">
                                                                 <StackPanel
                                                                     Orientation="Horizontal"

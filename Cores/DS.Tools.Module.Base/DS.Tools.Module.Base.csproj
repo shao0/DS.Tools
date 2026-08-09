@@ -21,4 +21,8 @@
     <InternalsVisibleTo Include="DS.Tools.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Tempds-build\DS.Tools.Module.Base.dll" />
+  </ItemGroup>
+
 </Project>

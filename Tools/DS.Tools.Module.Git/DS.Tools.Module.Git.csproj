@@ -16,4 +16,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Tempds-build\DS.Tools.Core.dll" />
+  </ItemGroup>
+
 </Project>
