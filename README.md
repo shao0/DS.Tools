@@ -100,8 +100,8 @@ DS.Tools.slnx
 - **`INavigationService`**：导航服务，管理模块/子工具切换与历史记录
 - **IoC ViewModel 创建**：模块提供 `Func<IServiceProvider, ViewModelBase>` 强类型工厂，
   经 DI 容器 `GetRequiredService<T>()` 解析实例（无 `Type` 键、无反射）
-- **统一注册表服务**：`ToolRegistration`（`AddViewMapping`/`AddSubTool` 一行注册）+
-  `IToolCatalog`/`ToolCatalog` 查询（View 映射 + 子工具目录），
+- **统一注册表服务**：`ToolRegistration`（`AddSubTool<TVM, TView>` 一行注册子工具 + View 映射）+
+  `IToolCatalog`/`ToolCatalog` 查询（单条目类型 `SubToolInfo`，View 映射 + 子工具目录同源），
   `ViewRegistryDataTemplate` 桥接 Avalonia 渲染（无手写 XAML DataTemplate 列表）
 
 #### 添加新工具
@@ -109,8 +109,8 @@ DS.Tools.slnx
 1. 继承 `ToolModule` 基类
 2. 实现必需的成员（Id、Name、Icon、Description、`CreateMainViewModel`）
 3. 在 `Register` 方法中注册：
-   - 子工具：`services.AddSubTool<TViewModel>()`（元数据由 ViewModel 实现 `ISubTool` 接口声明）
-   - View 映射：`services.AddViewMapping<TViewModel, TView>()`
+   - 子工具（含 View 映射）：`services.AddSubTool<TViewModel, TView>()`
+     （元数据由 ViewModel 实现 `ISubTool` 接口声明）
    - 服务：`services.AddSingleton<IXxxService, XxxService>()`
 4. 在 `App.axaml.cs` 的 `ToolModules` 数组中追加一行：`new XxxModule()`
 

@@ -124,7 +124,7 @@ public partial class App : Application
     /// <summary>
     /// 注册工具模块：模块服务入 DI 容器 + 模块实例注册为单例
     /// （编译期显式，无反射；模块 Register 一个方法完成子工具/View 映射/服务全部注册，
-    /// 经 ToolRegistration.AddViewMapping/AddSubTool 扩展方法入容器）
+    /// 经 ToolRegistration.AddSubTool/AddViewMapping 扩展方法入容器）
     /// </summary>
     private void RegisterToolModules(IServiceCollection services)
     {

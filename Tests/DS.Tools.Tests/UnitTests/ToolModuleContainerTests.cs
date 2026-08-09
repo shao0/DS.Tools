@@ -39,7 +39,8 @@ public sealed class ToolModuleContainerTests
 
         foreach (var subTool in module.SubTools!)
         {
-            var viewModel = subTool.CreateViewModel(sp);
+            // 子工具条目经目录按 ModuleId 过滤，工厂必非空（仅 View 映射条目不参与）
+            var viewModel = subTool.CreateViewModel!(sp);
             viewModel.Should().NotBeNull($"子工具 '{subTool.Id}' 的 ViewModel 应能被 DI 解析");
         }
     }

@@ -19,7 +19,7 @@ public sealed class ToolRegistryTests
     /// <summary>
     /// 创建注册表（统一目录为必需构造依赖；本组测试用 mock 模块，空目录即可）
     /// </summary>
-    private static ToolRegistry CreateRegistry() => new(new ToolCatalog([], [], Mock.Of<IServiceProvider>()));
+    private static ToolRegistry CreateRegistry() => new(new ToolCatalog([], Mock.Of<IServiceProvider>()));
 
     public ToolRegistryTests()
     {

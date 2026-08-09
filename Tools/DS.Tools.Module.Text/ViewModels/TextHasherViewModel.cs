@@ -14,7 +14,7 @@ namespace DS.Tools.Module.Text.ViewModels;
 /// </summary>
 public sealed partial class TextHasherViewModel : ToolViewModelBase, ISubTool
 {
-    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T>() 编译期读取注册
+    // 子工具元数据（ISubTool 静态抽象接口实现）：经 ToolRegistration.AddSubTool<T, TView>() 编译期读取注册
     static string ISubTool.ModuleId => TextModule.ToolIds.Module;
     static string ISubTool.Id => TextModule.ToolIds.TextHasher;
     static string ISubTool.Name => "文本哈希";

@@ -10,7 +10,7 @@ namespace DS.Tools.Module.Text;
 
 /// <summary>
 /// 文本工具模块 - 包含多个独立的子工具。
-/// 子工具经 AddSubTool 在 Register 阶段注册进 DI 容器（SubToolInfo 含 IoC 工厂，无 Type 键、无反射），
+/// 子工具经 AddSubTool 在 Register 阶段注册进 DI 容器（SubToolInfo 含元数据/工厂/View 映射，无 Type 键、无反射），
 /// 由 IToolCatalog 统一目录按模块查询并经 ToolRegistry 挂载到基类。
 /// </summary>
 public sealed class TextModule : ToolModule
@@ -57,24 +57,15 @@ public sealed class TextModule : ToolModule
 
     public override IServiceCollection Register(IServiceCollection services)
     {
-        // 注册子工具：AddSubTool 一行完成「ViewModel 入容器 + SubToolInfo（含 IoC 工厂）入容器」——
+        // 注册子工具：AddSubTool 一行完成「VM + View 入容器 + SubToolInfo（元数据 + 工厂 + View 映射）入容器」——
         // 元数据由 ViewModel 实现的 ISubTool 静态抽象接口提供（编译期读取），无 Type 键、零反射，AOT 兼容；
-        // Build 后经 IToolCatalog 统一目录按模块查询
-        services.AddSubTool<JsonFormatterViewModel>();
-        services.AddSubTool<Base64ViewModel>();
-        services.AddSubTool<ColorConverterViewModel>();
-        services.AddSubTool<PasswordGeneratorViewModel>();
-        services.AddSubTool<TextHasherViewModel>();
-        services.AddSubTool<TimestampConverterViewModel>();
-
-        // 注册 View 映射：AddViewMapping 一行完成「VM + View 入容器 + ViewModel→View 映射」——
-        // IoC 经 DI 容器创建，类型模式匹配无 Type 键，AOT 兼容零反射，替代 XAML DataTemplate 手写列表
-        services.AddViewMapping<JsonFormatterViewModel, JsonFormatterView>();
-        services.AddViewMapping<Base64ViewModel, Base64View>();
-        services.AddViewMapping<ColorConverterViewModel, ColorConverterView>();
-        services.AddViewMapping<PasswordGeneratorViewModel, PasswordGeneratorView>();
-        services.AddViewMapping<TextHasherViewModel, TextHasherView>();
-        services.AddViewMapping<TimestampConverterViewModel, TimestampConverterView>();
+        // Build 后经 IToolCatalog 统一目录查询（子工具目录 + View 渲染同源）
+        services.AddSubTool<JsonFormatterViewModel, JsonFormatterView>();
+        services.AddSubTool<Base64ViewModel, Base64View>();
+        services.AddSubTool<ColorConverterViewModel, ColorConverterView>();
+        services.AddSubTool<PasswordGeneratorViewModel, PasswordGeneratorView>();
+        services.AddSubTool<TextHasherViewModel, TextHasherView>();
+        services.AddSubTool<TimestampConverterViewModel, TimestampConverterView>();
 
         // 注册共享服务
         services.AddSingleton<IJsonFormatterService, JsonFormatterService>();

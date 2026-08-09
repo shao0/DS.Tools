@@ -14,7 +14,7 @@ namespace DS.Tools.Module.Base;
 /// （如 <c>sp =&gt; sp.GetRequiredService&lt;JsonFormatterViewModel&gt;()</c>），
 /// 杜绝 Type 键解析与运行时反射。
 ///
-/// 子工具经 <see cref="ToolRegistration.AddSubTool{TViewModel}"/> 在 Register 阶段注册进 DI 容器，
+/// 子工具经 <see cref="ToolRegistration.AddSubTool{TViewModel, TView}"/> 在 Register 阶段注册进 DI 容器，
 /// 容器构建后由 <see cref="ToolRegistry"/> 挂载 <see cref="IToolCatalog"/> 到模块基类——
 /// <see cref="SubTools"/>/<see cref="CreateSubToolViewModel"/> 经统一目录查询，模块自身不再持有子工具状态。
 ///
@@ -51,7 +51,7 @@ public abstract class ToolModule : IToolModule
     /// 子类可以重写此方法来自定义子工具解析逻辑。
     /// </summary>
     public virtual ViewModelBase? CreateSubToolViewModel(string subToolId, IServiceProvider services)
-        => _toolCatalog?.GetSubTool(Id, subToolId)?.CreateViewModel(services);
+        => _toolCatalog?.GetSubTool(Id, subToolId)?.CreateViewModel?.Invoke(services);
 
     /// <inheritdoc />
     public abstract ViewModelBase CreateMainViewModel(IServiceProvider services);

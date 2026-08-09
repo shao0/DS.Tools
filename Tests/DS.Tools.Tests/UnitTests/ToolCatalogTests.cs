@@ -14,7 +14,7 @@ namespace DS.Tools.Tests.UnitTests;
 
 /// <summary>
 /// 统一工具目录（ToolCatalog + ToolRegistration）单元测试 -
-/// AddViewMapping/AddSubTool 一行注册（类型入容器 + 元数据含 IoC 工厂入容器）+
+/// AddSubTool/AddViewMapping 一行注册（类型入容器 + SubToolInfo 单条目含元数据/工厂/View 映射入容器）+
 /// IToolCatalog 查询（View 映射：类型模式匹配/覆盖/派生命中/IoC 创建；子工具：按模块过滤/按 ID 查询）+
 /// ToolRegistry 挂载目录到模块基类 + 模板桥接（Match/Build 委托）。
 /// </summary>
@@ -40,7 +40,7 @@ public sealed class ToolCatalogTests
         public SampleDependency Dependency { get; } = dependency;
     }
 
-    /// <summary>测试用子工具 VM（元数据经 ISubTool 静态抽象接口声明，供 AddSubTool&lt;T&gt;() 编译期读取）</summary>
+    /// <summary>测试用子工具 VM（元数据经 ISubTool 静态抽象接口声明，供 AddSubTool&lt;T,TView&gt;() 编译期读取）</summary>
     private sealed class TestViewModel : ViewModelBase, ISubTool
     {
         static string ISubTool.ModuleId => "m1";
@@ -74,17 +74,14 @@ public sealed class ToolCatalogTests
     }
 
     /// <summary>
-    /// 构建容器 + 查询目录（与生产同构：注册经扩展方法入容器，ToolCatalog 集合注入消费）
+    /// 构建容器 + 查询目录（与生产同构：注册经扩展方法入容器，ToolCatalog 单集合注入消费）
     /// </summary>
     private static ToolCatalog CreateCatalog(Action<IServiceCollection> configure)
     {
         var services = new ServiceCollection();
         configure(services);
         var sp = services.BuildServiceProvider();
-        return new ToolCatalog(
-            sp.GetRequiredService<IEnumerable<ViewMappingEntry>>(),
-            sp.GetRequiredService<IEnumerable<SubToolInfo>>(),
-            sp);
+        return new ToolCatalog(sp.GetRequiredService<IEnumerable<SubToolInfo>>(), sp);
     }
 
     // ==================== View 映射注册（AddViewMapping）====================
@@ -204,17 +201,15 @@ public sealed class ToolCatalogTests
     [Fact]
     public void AddSubTool_RegistersViewModelAndCatalogEntry()
     {
-        // Arrange & Act（AddSubTool 同时注册 VM 与 SubToolInfo 单例；元数据来自 VM 的 ISubTool 接口声明）
+        // Arrange & Act（AddSubTool 一行同时注册 VM/View 与 SubToolInfo 单例；元数据来自 VM 的 ISubTool 接口声明）
         var services = new ServiceCollection();
-        services.AddSubTool<TestViewModel>();
+        services.AddSubTool<TestViewModel, SampleView>();
         var sp = services.BuildServiceProvider();
 
-        // Assert（VM 可解析；目录条目元数据与接口声明一致）
+        // Assert（VM/View 可解析；目录条目元数据与接口声明一致）
         sp.GetRequiredService<TestViewModel>().Should().NotBeNull();
-        var catalog = new ToolCatalog(
-            sp.GetRequiredService<IEnumerable<ViewMappingEntry>>(),
-            sp.GetRequiredService<IEnumerable<SubToolInfo>>(),
-            sp);
+        sp.GetRequiredService<SampleView>().Should().NotBeNull();
+        var catalog = new ToolCatalog(sp.GetRequiredService<IEnumerable<SubToolInfo>>(), sp);
         var entry = catalog.GetSubTools("m1").Should().ContainSingle().Which;
         entry.Id.Should().Be("s1");
         entry.Name.Should().Be("工具一");
@@ -223,14 +218,27 @@ public sealed class ToolCatalogTests
     }
 
     [Fact]
+    public void AddSubTool_OneLine_AlsoRegistersViewMapping()
+    {
+        // Arrange（合并核心收益：AddSubTool 一行完成子工具 + View 映射，无独立 AddViewMapping 调用）
+        var catalog = CreateCatalog(services =>
+            services.AddSubTool<TestViewModel, SampleView>());
+
+        // Act & Assert（同一条目经目录即可查询子工具，又可渲染 View）
+        catalog.GetSubTool("m1", "s1").Should().NotBeNull();
+        catalog.IsRegistered(new TestViewModel()).Should().BeTrue();
+        catalog.GetView(new TestViewModel()).Should().BeOfType<SampleView>();
+    }
+
+    [Fact]
     public void GetSubTools_ReturnsOnlySubToolsOfModule()
     {
         // Arrange（多模块混合注册，按 ModuleId 过滤）
         var catalog = CreateCatalog(services =>
         {
-            services.AddSubTool<TestViewModelA>();
-            services.AddSubTool<TestViewModelB>();
-            services.AddSubTool<TestViewModelC>();
+            services.AddSubTool<TestViewModelA, SampleView>();
+            services.AddSubTool<TestViewModelB, SampleView>();
+            services.AddSubTool<TestViewModelC, SampleView>();
         });
 
         // Act & Assert
@@ -243,7 +251,7 @@ public sealed class ToolCatalogTests
     public void GetSubTools_UnknownModule_ReturnsEmpty()
     {
         // Arrange
-        var catalog = CreateCatalog(services => services.AddSubTool<TestViewModel>());
+        var catalog = CreateCatalog(services => services.AddSubTool<TestViewModel, SampleView>());
 
         // Act & Assert
         catalog.GetSubTools("nope").Should().BeEmpty();
@@ -255,8 +263,8 @@ public sealed class ToolCatalogTests
         // Arrange
         var catalog = CreateCatalog(services =>
         {
-            services.AddSubTool<TestViewModelA>();
-            services.AddSubTool<TestViewModelB>();
+            services.AddSubTool<TestViewModelA, SampleView>();
+            services.AddSubTool<TestViewModelB, SampleView>();
         });
 
         // Act & Assert（按模块 + 子工具 ID 精确定位）
@@ -269,7 +277,7 @@ public sealed class ToolCatalogTests
     public void GetSubTool_UnknownId_ReturnsNull()
     {
         // Arrange
-        var catalog = CreateCatalog(services => services.AddSubTool<TestViewModel>());
+        var catalog = CreateCatalog(services => services.AddSubTool<TestViewModel, SampleView>());
 
         // Act & Assert（未知子工具 ID / 未知模块均返回 null）
         catalog.GetSubTool("m1", "nope").Should().BeNull();
@@ -280,7 +288,7 @@ public sealed class ToolCatalogTests
     public void SubToolInfo_GetFullNavigationId_UsesOwnModuleId()
     {
         // Arrange（SubToolInfo 自带 ModuleId，无需外部再传）
-        var catalog = CreateCatalog(services => services.AddSubTool<TestViewModel>());
+        var catalog = CreateCatalog(services => services.AddSubTool<TestViewModel, SampleView>());
 
         // Act & Assert
         catalog.GetSubTool("m1", "s1")!.GetFullNavigationId().Should().Be("m1:s1");
