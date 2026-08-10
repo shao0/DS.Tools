@@ -17,6 +17,12 @@ public sealed class GitLogService : IGitLogService
     /// <summary>日志条数上限（防止大仓库卡死 UI；VM 用于展示"已达上限"提示）</summary>
     internal const int MaxEntries = 1000;
 
+    /// <summary>子仓库发现上限（防止巨型仓库内嵌套过多仓库拖垮 UI）</summary>
+    private const int MaxSubRepositories = 50;
+
+    /// <summary>目录遍历预算（防符号链接环/巨型目录树失控）</summary>
+    private const int MaxWalkedDirectories = 200_000;
+
     /// <summary>命令执行超时（秒）</summary>
     private static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(30);
 
@@ -73,6 +79,47 @@ public sealed class GitLogService : IGitLogService
         if (string.IsNullOrWhiteSpace(repoPath))
             return GitLogResult.Failure("仓库路径为空");
 
+        // 归一化路径：GetFullPath 解析相对路径/`..`，TrimEndingDirectorySeparator 保证根仓库自身
+        // 识别比较（.git 发现遍历返回的目录路径不含结尾分隔符）一致
+        var rootPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(repoPath));
+
+        // 根仓库日志——失败即整体失败（与原先语义一致）
+        var rootResult = await FetchLogAsync(rootPath, since, until, ct);
+        if (!rootResult.IsSuccess)
+            return GitLogResult.Failure(rootResult.ErrorMessage ?? "获取日志失败");
+
+        // 根仓库恒第一；嵌套子仓库（子模块/工作树/嵌套独立仓库）按显示名排序（稳定顺序便于切换）。
+        // 子仓库失败仅跳过并记日志，不阻断根仓库结果；空仓库（时间范围内无提交）仍列出，便于用户知晓其存在
+        var repositories = new List<GitRepositoryLog>
+        {
+            new("根仓库", rootResult.Entries, IsRoot: true)
+        };
+
+        foreach (var subRoot in FindSubRepositoryRoots(rootPath))
+        {
+            if (ct.IsCancellationRequested)
+                break;
+
+            var subResult = await FetchLogAsync(subRoot, since, until, ct);
+            if (!subResult.IsSuccess)
+            {
+                _logger.LogWarning("子仓库日志获取失败，已跳过（{SubRepo}）：{Message}", subRoot, subResult.ErrorMessage);
+                continue;
+            }
+
+            var repositoryName = Path.GetRelativePath(rootPath, subRoot).Replace('\\', '/');
+            repositories.Add(new GitRepositoryLog(repositoryName, subResult.Entries));
+        }
+
+        return GitLogResult.Success(
+            repositories.OrderBy(r => !r.IsRoot).ThenBy(r => r.DisplayName, StringComparer.Ordinal).ToList());
+    }
+
+    /// <summary>
+    /// 拉取单个仓库的日志（起止日期过滤 + 条数上限 + 空仓库特判）
+    /// </summary>
+    private async Task<FetchResult> FetchLogAsync(string repoPath, DateTimeOffset? since, DateTimeOffset? until, CancellationToken ct)
+    {
         var args = new List<string>
         {
             "log",
@@ -94,17 +141,80 @@ public sealed class GitLogService : IGitLogService
             if (output.Stderr.Contains("does not have any commits yet", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("仓库 {RepoPath} 尚无提交（未出生分支）", repoPath);
-                return GitLogResult.Success([]);
+                return new FetchResult(true, null, []);
             }
 
             var message = string.IsNullOrWhiteSpace(output.Stderr)
                 ? $"git log 执行失败（退出码 {output.ExitCode}）"
                 : output.Stderr.Trim();
             _logger.LogWarning("git log 失败（{RepoPath}）：{Message}", repoPath, message);
-            return GitLogResult.Failure(message);
+            return new FetchResult(false, message, []);
         }
 
-        return GitLogResult.Success(ParseLogOutput(output.Stdout));
+        return new FetchResult(true, null, ParseLogOutput(output.Stdout));
+    }
+
+    /// <summary>
+    /// 发现根仓库目录下嵌套的子仓库根目录（DFS，不进入 .git 内部）。
+    /// 仓库标记：.git 目录（嵌套独立仓库）或 .git 文件（子模块/工作树 gitdir 指针）；
+    /// 根仓库自身的 .git 跳过，符号链接/联接点跳过（防环）。
+    /// </summary>
+    private static IReadOnlyList<string> FindSubRepositoryRoots(string rootPath)
+    {
+        var results = new List<string>();
+        var stack = new Stack<string>();
+        stack.Push(rootPath);
+        var walked = 0;
+
+        while (stack.Count > 0 && results.Count < MaxSubRepositories)
+        {
+            var dir = stack.Pop();
+            if (walked++ >= MaxWalkedDirectories)
+                break;
+
+            IEnumerable<string> children;
+            try
+            {
+                children = Directory.EnumerateFileSystemEntries(dir);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                continue; // 无权限/目录已删除——跳过该目录，不影响其余遍历
+            }
+
+            foreach (var child in children)
+            {
+                if (Path.GetFileName(child).Equals(".git", StringComparison.OrdinalIgnoreCase))
+                {
+                    // .git 标记所在目录即仓库根（根仓库自身除外）；
+                    // 同时不把 .git 压栈——其内部（gitdir 指针文件/钩子）不是工作区仓库
+                    if (!string.Equals(dir, rootPath, StringComparison.OrdinalIgnoreCase))
+                        results.Add(dir);
+                    continue;
+                }
+
+                if (IsRealDirectory(child))
+                    stack.Push(child);
+            }
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// 判断是否为真实目录（排除符号链接/联接点——防止目录环导致遍历失控）
+    /// </summary>
+    private static bool IsRealDirectory(string path)
+    {
+        try
+        {
+            return Directory.Exists(path)
+                && (File.GetAttributes(path) & FileAttributes.ReparsePoint) == 0;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -220,4 +330,9 @@ public sealed class GitLogService : IGitLogService
     /// git 命令执行结果（私有传输对象）
     /// </summary>
     private sealed record GitCommandOutput(int ExitCode, string Stdout, string Stderr);
+
+    /// <summary>
+    /// 单仓库日志拉取结果（私有传输对象；空仓库 = 成功且零条目）
+    /// </summary>
+    private sealed record FetchResult(bool IsSuccess, string? ErrorMessage, IReadOnlyList<GitLogEntry> Entries);
 }

@@ -17,17 +17,23 @@ public sealed record GitLogResult
     public string? ErrorMessage { get; init; }
 
     /// <summary>
-    /// 提交日志条目（成功时非空）
+    /// 各仓库日志分组（成功时非空；第一个恒为根仓库，其余为嵌套子仓库）
     /// </summary>
-    public IReadOnlyList<GitLogEntry> Entries { get; init; } = [];
+    public IReadOnlyList<GitRepositoryLog> Repositories { get; init; } = [];
+
+    /// <summary>
+    /// 全部仓库的提交条数总和
+    /// </summary>
+    public int TotalEntries => Repositories.Sum(r => r.Entries.Count);
 
     /// <summary>
     /// 创建成功结果
     /// </summary>
-    public static GitLogResult Success(IReadOnlyList<GitLogEntry> entries) => new()
+    /// <param name="repositories">各仓库日志分组（根仓库第一）</param>
+    public static GitLogResult Success(IReadOnlyList<GitRepositoryLog> repositories) => new()
     {
         IsSuccess = true,
-        Entries = entries
+        Repositories = repositories
     };
 
     /// <summary>

@@ -53,7 +53,7 @@ public sealed class GitLogViewModelTests
         _gitLog.Setup(g => g.IsGitRepositoryAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _gitLog.Setup(g => g.GetCurrentBranchAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync("main");
         _gitLog.Setup(g => g.GetLogAsync(savedPath, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(GitLogResult.Success([new GitLogEntry("abc1234", "A", "a@x.com", DateTimeOffset.Now, "s1")]));
+            .ReturnsAsync(GitLogResult.Success([new GitRepositoryLog("根仓库", [new GitLogEntry("abc1234", "A", "a@x.com", DateTimeOffset.Now, "s1")], IsRoot: true)]));
 
         // Act
         var vm = CreateViewModel();
@@ -89,8 +89,10 @@ public sealed class GitLogViewModelTests
         _gitLog.Setup(g => g.GetCurrentBranchAsync(selected, It.IsAny<CancellationToken>())).ReturnsAsync("main");
         _gitLog.Setup(g => g.GetLogAsync(selected, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GitLogResult.Success([
-                new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "first"),
-                new GitLogEntry("b2", "B", "b@x.com", DateTimeOffset.Now, "second")
+                new GitRepositoryLog("根仓库", [
+                    new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "first"),
+                    new GitLogEntry("b2", "B", "b@x.com", DateTimeOffset.Now, "second")
+                ], IsRoot: true)
             ]));
         var vm = CreateViewModel();
 
@@ -100,7 +102,7 @@ public sealed class GitLogViewModelTests
         // Assert
         vm.RepositoryPath.Should().Be(selected);
         vm.BranchName.Should().Be("main");
-        vm.LogEntries.Should().HaveCount(2);
+        vm.SelectedRepository!.Entries.Should().HaveCount(2);
         vm.LogCount.Should().Be(2);
         vm.HasErrors.Should().BeFalse();
         vm.StatusMessage.Should().Contain("共 2 条提交");
@@ -152,7 +154,7 @@ public sealed class GitLogViewModelTests
         vm.RepositoryPath = @"D:\repo";
         _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GitLogResult.Success([
-                new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "first")
+                new GitRepositoryLog("根仓库", [new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "first")], IsRoot: true)
             ]));
 
         // Act
@@ -162,6 +164,79 @@ public sealed class GitLogViewModelTests
         vm.LogCount.Should().Be(1);
         vm.StatusMessage.Should().Be("✓ 共 1 条提交");
         vm.HasErrors.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LoadLog_WithMultipleRepositories_ShowsRepoCountAndSelectsRoot()
+    {
+        // Arrange（含嵌套子仓库时状态栏标注仓库总数；加载后默认选中根仓库）
+        var vm = CreateViewModel();
+        vm.RepositoryPath = @"D:\repo";
+        _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitRepositoryLog("根仓库", [new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "root commit")], IsRoot: true),
+                new GitRepositoryLog("sub/module", [new GitLogEntry("b2", "B", "b@x.com", DateTimeOffset.Now, "sub commit")])
+            ]));
+
+        // Act
+        await vm.LoadLogCommand.ExecuteAsync(null);
+
+        // Assert（加载摘要为总数；默认选中根仓库，LogCount 跟随根仓库条数）
+        vm.StatusMessage.Should().Be("✓ 共 2 条提交（2 个仓库）");
+        vm.SelectedRepository.Should().NotBeNull();
+        vm.SelectedRepository!.IsRoot.Should().BeTrue();
+        vm.LogCount.Should().Be(1);
+        vm.HasErrors.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SwitchRepository_UpdatesLogCountAndStatus()
+    {
+        // Arrange
+        var vm = CreateViewModel();
+        vm.RepositoryPath = @"D:\repo";
+        _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitRepositoryLog("根仓库", [new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "root commit")], IsRoot: true),
+                new GitRepositoryLog("sub/module", [new GitLogEntry("b2", "B", "b@x.com", DateTimeOffset.Now, "sub commit")])
+            ]));
+        await vm.LoadLogCommand.ExecuteAsync(null);
+
+        // Act（切换到子仓库 Tab）
+        vm.SelectedRepository = vm.Repositories[1];
+
+        // Assert（LogCount 跟随选中仓库；状态显示切换消息；复制可用）
+        vm.LogCount.Should().Be(1);
+        vm.StatusMessage.Should().Be("📂 sub/module：1 条提交");
+        vm.CopyLogCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CopyLog_CopiesSelectedRepositoryEntriesOnly()
+    {
+        // Arrange（复制跟随当前选中仓库——切到子仓库后只复制子仓库条目，不带仓库前缀）
+        var vm = CreateViewModel();
+        vm.RepositoryPath = @"D:\repo";
+        _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitRepositoryLog("根仓库", [new GitLogEntry("abc1234", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "root commit")], IsRoot: true),
+                new GitRepositoryLog("sub/module", [new GitLogEntry("def5678", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 2, 9, 30, 0, TimeSpan.FromHours(8)), "sub commit")])
+            ]));
+        await vm.LoadLogCommand.ExecuteAsync(null);
+        vm.SelectedRepository = vm.Repositories[1];
+
+        string? captured = null;
+        _clipboard.Setup(c => c.SetTextAsync(It.IsAny<string>()))
+            .Callback<string>(t => captured = t)
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await vm.CopyLogCommand.ExecuteAsync(null);
+
+        // Assert（仅选中仓库条目，根仓库条目不出现）
+        captured.Should().Be("def5678 | Test User | 2026-03-02 09:30\nsub commit");
     }
 
     [Fact]
@@ -179,7 +254,7 @@ public sealed class GitLogViewModelTests
         // Assert
         vm.HasErrors.Should().BeTrue();
         vm.ErrorMessage.Should().Contain("git 命令执行超时");
-        vm.LogEntries.Should().BeEmpty();
+        vm.Repositories.Should().BeEmpty();
     }
 
     [Fact]
@@ -230,10 +305,12 @@ public sealed class GitLogViewModelTests
         vm.RepositoryPath = @"D:\repo";
         _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(GitLogResult.Success([
-                new GitLogEntry("abc1234", "Test User", "test@example.com",
-                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: bug"),
-                new GitLogEntry("def5678", "小毛 邵", "xiaomao@example.com",
-                    new DateTimeOffset(2026, 3, 2, 9, 30, 0, TimeSpan.FromHours(8)), "feat: new feature\n\nline one\n\nline three")
+                new GitRepositoryLog("根仓库", [
+                    new GitLogEntry("abc1234", "Test User", "test@example.com",
+                        new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: bug"),
+                    new GitLogEntry("def5678", "小毛 邵", "xiaomao@example.com",
+                        new DateTimeOffset(2026, 3, 2, 9, 30, 0, TimeSpan.FromHours(8)), "feat: new feature\n\nline one\n\nline three")
+                ], IsRoot: true)
             ]));
         await vm.LoadLogCommand.ExecuteAsync(null);
 
@@ -307,7 +384,7 @@ public sealed class GitLogViewModelTests
         // 加载成功后有条目 → 可复制
         vm.RepositoryPath = @"D:\repo";
         _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(GitLogResult.Success([new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "s1")]));
+            .ReturnsAsync(GitLogResult.Success([new GitRepositoryLog("根仓库", [new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "s1")], IsRoot: true)]));
         await vm.LoadLogCommand.ExecuteAsync(null);
         vm.CopyLogCommand.CanExecute(null).Should().BeTrue();
 

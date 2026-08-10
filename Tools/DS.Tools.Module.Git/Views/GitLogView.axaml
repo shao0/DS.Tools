@@ -159,7 +159,7 @@
                             FontSize="14"
                             FontWeight="SemiBold"
                             Foreground="{DynamicResource TextSecondaryBrush}"
-                            Text="🌿 当前分支：" />
+                            Text="🌿 根仓库分支：" />
                         <TextBlock
                             FontSize="14"
                             FontWeight="SemiBold"
@@ -167,7 +167,7 @@
                             Text="{Binding BranchName, TargetNullValue=未选择仓库}" />
                     </StackPanel>
 
-                    <!--  复制全部日志到剪贴板  -->
+                    <!--  复制当前选中仓库的日志到剪贴板  -->
                     <Button
                         Grid.Column="1"
                         Height="32"
@@ -176,7 +176,7 @@
                         VerticalAlignment="Center"
                         Classes="secondary-button"
                         Command="{Binding CopyLogCommand}"
-                        Content="📋 复制结果" />
+                        Content="📋 复制当前仓库" />
                 </Grid>
             </Border>
 
@@ -211,79 +211,110 @@
                 IsVisible="{Binding IsEmptyState}"
                 Text="尚未加载日志。点击「📁 选择文件夹」选择 Git 仓库，或直接输入路径后点击「📜 获取日志」。" />
 
-            <!--  日志列表  -->
-            <ListBox
+            <TextBlock
+                Grid.Row="1"
+                Padding="16"
+                FontSize="13"
+                Foreground="{DynamicResource TextMutedBrush}"
+                IsVisible="{Binding IsNoCommitsState}"
+                Text="该仓库在所选时间范围内没有提交，可切换其他仓库标签查看。" />
+
+            <!--  日志列表：每个仓库一个 Tab，选择切换显示  -->
+            <TabControl
                 Grid.Row="2"
                 Background="Transparent"
-                BorderThickness="0"
-                ItemsSource="{Binding LogEntries}"
-                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="gitmodels:GitLogEntry">
-                        <Border
-                            Margin="0,0,0,8"
-                            Padding="16,12"
-                            Background="{DynamicResource CardBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8">
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                <!--  提交哈希  -->
-                                <TextBlock
-                                    Grid.Column="0"
-                                    Margin="0,0,16,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="Consolas,Courier New,monospace"
-                                    FontSize="13"
-                                    FontWeight="SemiBold"
-                                    Foreground="{DynamicResource PrimaryBrush}"
-                                    Text="{Binding Hash}" />
-
-                                <!--  作者与主题  -->
-                                <StackPanel
-                                    Grid.Column="1"
-                                    Spacing="4">
-                                    <TextBlock
-                                        FontSize="14"
-                                        FontWeight="SemiBold"
-                                        Foreground="{DynamicResource TextPrimaryBrush}"
-                                        Text="{Binding Message, Converter={StaticResource GitLogMessageConverter}}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        FontSize="12"
-                                        Foreground="{DynamicResource TextMutedBrush}"
-                                        Text="{Binding AuthorName}" />
-                                </StackPanel>
-
-                                <!--  提交日期  -->
-                                <TextBlock
-                                    Grid.Column="2"
-                                    Margin="16,0,0,0"
-                                    VerticalAlignment="Center"
-                                    FontFamily="Consolas,Courier New,monospace"
-                                    FontSize="12"
-                                    Foreground="{DynamicResource TextSecondaryBrush}"
-                                    Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
-
-                                <!--  复制该条日志（仅复制本条完整内容）  -->
-                                <!--  ReSharper disable once Xaml.PossibleNullReferenceException  -->
-                                <Button
-                                    Grid.Column="3"
-                                    Height="28"
-                                    MinWidth="0"
-                                    Margin="12,0,0,0"
-                                    Padding="8,4"
-                                    VerticalAlignment="Center"
-                                    Classes="secondary-button"
-                                    Command="{Binding $parent[UserControl].((vm:GitLogViewModel)DataContext).CopyEntryCommand}"
-                                    CommandParameter="{Binding}"
-                                    Content="📋"
-                                    FontSize="13" />
-                            </Grid>
-                        </Border>
+                ItemsSource="{Binding Repositories}"
+                SelectedItem="{Binding SelectedRepository, Mode=TwoWay}">
+                <TabControl.ItemTemplate>
+                    <DataTemplate x:DataType="gitmodels:GitRepositoryLog">
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="6">
+                            <TextBlock Text="{Binding DisplayName}" />
+                            <TextBlock
+                                FontSize="11"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                Text="{Binding EntryCount, StringFormat='({0})'}" />
+                        </StackPanel>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate x:DataType="gitmodels:GitRepositoryLog">
+                        <ListBox
+                            Background="Transparent"
+                            BorderThickness="0"
+                            ItemsSource="{Binding Entries}"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="gitmodels:GitLogEntry">
+                                    <Border
+                                        Margin="0,0,0,8"
+                                        Padding="16,12"
+                                        Background="{DynamicResource CardBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8">
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                            <!--  提交哈希  -->
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                Margin="0,0,16,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas,Courier New,monospace"
+                                                FontSize="13"
+                                                FontWeight="SemiBold"
+                                                Foreground="{DynamicResource PrimaryBrush}"
+                                                Text="{Binding Hash}" />
+
+                                            <!--  作者与主题  -->
+                                            <StackPanel
+                                                Grid.Column="1"
+                                                Spacing="4">
+                                                <TextBlock
+                                                    FontSize="14"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{DynamicResource TextPrimaryBrush}"
+                                                    Text="{Binding Message, Converter={StaticResource GitLogMessageConverter}}"
+                                                    TextWrapping="Wrap" />
+                                                <!--  作者  -->
+                                                <TextBlock
+                                                    FontSize="12"
+                                                    Foreground="{DynamicResource TextMutedBrush}"
+                                                    Text="{Binding AuthorName}" />
+                                            </StackPanel>
+
+                                            <!--  提交日期  -->
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                Margin="16,0,0,0"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Consolas,Courier New,monospace"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                                Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
+
+                                            <!--  复制该条日志（仅复制本条完整内容）  -->
+                                            <!--  ReSharper disable once Xaml.PossibleNullReferenceException  -->
+                                            <Button
+                                                Grid.Column="3"
+                                                Height="28"
+                                                MinWidth="0"
+                                                Margin="12,0,0,0"
+                                                Padding="8,4"
+                                                VerticalAlignment="Center"
+                                                Classes="secondary-button"
+                                                Command="{Binding $parent[UserControl].((vm:GitLogViewModel)DataContext).CopyEntryCommand}"
+                                                CommandParameter="{Binding}"
+                                                Content="📋"
+                                                FontSize="13" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
         </Grid>
 
         <!--  状态栏  -->

@@ -108,7 +108,7 @@ public class GitLogViewRenderTests
     }
 
     [Fact]
-    public void GitLogView_WithLogEntries_ShouldRenderListItems()
+    public void GitLogView_WithRepositories_ShouldRenderListItems()
     {
         EnsureHeadlessInitialized();
 
@@ -117,8 +117,12 @@ public class GitLogViewRenderTests
             var vm = CreateViewModel();
             vm.RepositoryPath = @"D:\repo";
             vm.BranchName = "main";
-            vm.LogEntries = [new GitLogEntry("abc1234", "Test User", "test@example.com",
-                new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug")];
+            vm.Repositories =
+            [
+                new GitRepositoryLog("根仓库", [new GitLogEntry("abc1234", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug")], IsRoot: true)
+            ];
+            vm.SelectedRepository = vm.Repositories[0];
 
             RenderInWindow(vm, out var window, out _);
             RenderFrame();
@@ -149,15 +153,18 @@ public class GitLogViewRenderTests
             var vm = CreateViewModel();
             vm.RepositoryPath = @"D:\repo";
             vm.BranchName = "main";
-            vm.LogEntries =
+            vm.Repositories =
             [
-                new GitLogEntry("abc1234", "Test User", "test@example.com",
-                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)),
-                    "feat: multi-line body\n\nline one\n\nline three"),
-                new GitLogEntry("def5678", "Test User", "test@example.com",
-                    new DateTimeOffset(2026, 3, 2, 10, 0, 0, TimeSpan.FromHours(8)),
-                    "fix: second commit")
+                new GitRepositoryLog("根仓库", [
+                    new GitLogEntry("abc1234", "Test User", "test@example.com",
+                        new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)),
+                        "feat: multi-line body\n\nline one\n\nline three"),
+                    new GitLogEntry("def5678", "Test User", "test@example.com",
+                        new DateTimeOffset(2026, 3, 2, 10, 0, 0, TimeSpan.FromHours(8)),
+                        "fix: second commit")
+                ], IsRoot: true)
             ];
+            vm.SelectedRepository = vm.Repositories[0];
 
             RenderInWindow(vm, out var window, out _);
             RenderFrame();
@@ -262,11 +269,12 @@ public class GitLogViewRenderTests
             var vm = CreateViewModel(clipboard);
             vm.RepositoryPath = @"D:\repo";
             vm.BranchName = "main";
-            vm.LogEntries =
+            vm.Repositories =
             [
-                new GitLogEntry("abc1234", "Test User", "test@example.com",
-                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug")
+                new GitRepositoryLog("根仓库", [new GitLogEntry("abc1234", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug")], IsRoot: true)
             ];
+            vm.SelectedRepository = vm.Repositories[0];
 
             RenderInWindow(vm, out var window, out _);
             RenderFrame();

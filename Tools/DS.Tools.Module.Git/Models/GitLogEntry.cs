@@ -1,7 +1,8 @@
 namespace DS.Tools.Module.Git.Models;
 
 /// <summary>
-/// Git 提交日志条目（纯 UI 绑定模型，无需 JSON 序列化）
+/// Git 提交日志条目（纯 UI 绑定模型，无需 JSON 序列化）。
+/// 仓库归属由上层 <see cref="GitRepositoryLog"/> 分组表达，条目自身不携带
 /// </summary>
 /// <param name="Hash">提交短哈希（%h）</param>
 /// <param name="AuthorName">作者名（%an）</param>

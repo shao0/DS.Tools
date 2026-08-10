@@ -70,7 +70,7 @@ services.AddSingleton<IJsonFormatterService, JsonFormatterService>();
 |---|---|---|
 | 主页（DS.Tools） | — | 功能总览：时钟/日期/时间戳/功能数卡片 + 模块分组磁贴导航（左上角图标回主页） |
 | Text（`text-tools`） | `json-formatter` `base64-converter` `color-converter` `timestamp-converter` `password-generator` `text-hasher` | 文本处理工具集（ID 常量集中于 `TextModule.ToolIds`） |
-| Git（`git-tools`） | `git-log` | 文件夹选择 → 当前分支 → 设置持久化（`%LocalAppData%\DS.Tools\git-settings.json`）→ 时间段日志（git CLI，控制符分隔解析，30s 超时 + 进程树 Kill）；两级复制（复制全部/单条，内容为**完整 %B 消息**含正文与换行）；默认时间范围本周一至周日 |
+| Git（`git-tools`） | `git-log` | 文件夹选择 → 根仓库分支 → 设置持久化（`%LocalAppData%\DS.Tools\git-settings.json`）→ 时间段日志（git CLI，控制符分隔解析，30s 超时 + 进程树 Kill）；**自动发现嵌套子仓库**（子模块/工作树/嵌套独立仓库，DFS 发现 `.git` 目录/文件，不进入 `.git` 内部、跳过符号链接防环、50 仓库/20 万目录上限），**每个仓库独立 Tab 分组**（根仓库第一、子仓库按相对路径排序，Tab 显示名 + 条数），Tab 切换查看；复制跟随当前选中仓库（整批/单条，内容为**完整 %B 消息**含正文与换行），子仓库失败仅跳过；默认时间范围本周一至周日 |
 
 ## ⛔ AOT 纪律（不可协商）
 
@@ -116,7 +116,7 @@ services.AddSingleton<IJsonFormatterService, JsonFormatterService>();
 ## ✅ 当前验证结果
 
 - **构建**：Rider / CLI `dotnet build` 均通过，`TreatWarningsAsErrors` + `EnableTrimAnalyzer` 全开零警告
-- **测试**：**235/235** 通过（单元测试 + Headless UI 集成测试），覆盖：模块化服务（ToolCatalog/ToolRegistry/NavigationService/DI 注册）、Text/Git 模块全部 ViewModel 与服务、ToolViewModelBase 复制语义、GitLogMessageConverter、ThemeService、SerilogConfig/AvaloniaLogSink、Headless UI 渲染与导航
+- **测试**：**241/241** 通过（单元测试 + Headless UI 集成测试），覆盖：模块化服务（ToolCatalog/ToolRegistry/NavigationService/DI 注册）、Text/Git 模块全部 ViewModel 与服务、ToolViewModelBase 复制语义、GitLogMessageConverter、Git 嵌套子仓库分组（.git 目录/文件标记、损坏 gitdir 跳过、Tab 切换/选中仓库复制）、ThemeService、SerilogConfig/AvaloniaLogSink、Headless UI 渲染与导航
 - **冒烟**：应用启动正常；Serilog 控制台+文件日志输出启动/模块初始化链路；主页/模块视图经注册表渲染无崩溃
 
 ## ⚠️ 遗留问题

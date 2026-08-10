@@ -86,22 +86,46 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     private bool _hasLog;
 
     /// <summary>
-    /// 日志条目数（与 LogEntries 同步维护）
+    /// 日志条目数（当前选中仓库的提交数，与 SelectedRepository 同步维护）
     /// </summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CopyLogCommand))]
     private int _logCount;
 
     /// <summary>
-    /// 提交日志条目（整批替换，避免逐条 Add 触发 1000 次 CollectionChanged）
+    /// 各仓库日志分组（根仓库第一，其余为嵌套子仓库；整批替换）
     /// </summary>
     [ObservableProperty]
-    private IReadOnlyList<GitLogEntry> _logEntries = [];
+    private IReadOnlyList<GitRepositoryLog> _repositories = [];
 
     /// <summary>
-    /// 是否为空状态（无错误、非加载中、无日志条目——显示占位提示）
+    /// 当前选中的仓库（Tab 切换；加载完成后默认选中根仓库）
     /// </summary>
-    public bool IsEmptyState => !HasErrors && !IsLoading && LogEntries.Count == 0;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CopyLogCommand))]
+    private GitRepositoryLog? _selectedRepository;
+
+    /// <summary>
+    /// 是否为空状态（尚未加载任何日志——显示占位提示）
+    /// </summary>
+    public bool IsEmptyState => !HasLog && !HasErrors && !IsLoading;
+
+    /// <summary>
+    /// 是否已加载但当前选中仓库无提交（提示切换其他仓库）
+    /// </summary>
+    public bool IsNoCommitsState => HasLog && !HasErrors && !IsLoading && LogCount == 0;
+
+    /// <summary>
+    /// 选中仓库切换：同步日志条数（复制可执行性/空状态）并更新状态消息
+    /// </summary>
+    partial void OnSelectedRepositoryChanged(GitRepositoryLog? value)
+    {
+        LogCount = value?.EntryCount ?? 0;
+        var limitSuffix = LogCount >= GitLogService.MaxEntries ? "（已达上限 1000 条）" : string.Empty;
+        StatusMessage = value is null
+            ? string.Empty
+            : $"📂 {value.DisplayName}：{LogCount} 条提交{limitSuffix}";
+    }
 
     /// <summary>
     /// 属性变化时联动刷新空状态（含基类 IsLoading/HasErrors/ErrorMessage）
@@ -110,9 +134,11 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     {
         base.OnPropertyChanged(e);
 
-        if (e.PropertyName is nameof(IsLoading) or nameof(HasErrors) or nameof(HasLog) or nameof(LogCount) or nameof(LogEntries))
+        if (e.PropertyName is nameof(IsLoading) or nameof(HasErrors) or nameof(HasLog) or nameof(LogCount)
+            or nameof(Repositories) or nameof(SelectedRepository))
         {
             OnPropertyChanged(nameof(IsEmptyState));
+            OnPropertyChanged(nameof(IsNoCommitsState));
         }
     }
 
@@ -146,7 +172,7 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     private bool CanLoadLog() => !string.IsNullOrWhiteSpace(RepositoryPath);
 
     /// <summary>
-    /// 复制全部日志到剪贴板命令（每条为元数据行 + 完整消息，条目间空行分隔）
+    /// 复制当前选中仓库的日志到剪贴板命令（每条为元数据行 + 完整消息，条目间空行分隔）
     /// </summary>
     [RelayCommand(CanExecute = nameof(CanCopyLog))]
     private Task CopyLogAsync()
@@ -169,10 +195,10 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
 
     /// <summary>
     /// 生成剪贴板文本：每条为元数据行（hash | 作者 | 日期）+
-    /// 完整提交消息（%B，含正文与换行），条目间空行分隔
+    /// 完整提交消息（%B，含正文与换行），条目间空行分隔（仅当前选中仓库）
     /// </summary>
     private string BuildCopyText()
-        => string.Join("\n\n", LogEntries.Select(FormatEntry));
+        => string.Join("\n\n", SelectedRepository?.Entries.Select(FormatEntry) ?? []);
 
     /// <summary>
     /// 格式化单条日志：元数据行 + 完整消息（消息尾部换行已由服务层去除）
@@ -232,13 +258,15 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
             if (result.IsSuccess)
             {
                 // 整批替换（避免逐条 Add 触发 N 次 CollectionChanged）
-                LogEntries = result.Entries;
+                Repositories = result.Repositories;
                 HasErrors = false;
                 ErrorMessage = null;
                 HasLog = true;
-                LogCount = result.Entries.Count;
-                StatusMessage = $"✓ 共 {result.Entries.Count} 条提交" +
-                    (result.Entries.Count >= GitLogService.MaxEntries ? "（已达上限 1000 条）" : string.Empty);
+                // 默认选中根仓库（OnSelectedRepositoryChanged 会先行更新 LogCount/状态）；
+                // 加载摘要最后设置，覆盖切换消息——用户切 Tab 时再由切换消息反馈
+                SelectedRepository = result.Repositories.FirstOrDefault();
+                var repoLabel = result.Repositories.Count > 1 ? $"（{result.Repositories.Count} 个仓库）" : string.Empty;
+                StatusMessage = $"✓ 共 {result.TotalEntries} 条提交{repoLabel}";
             }
             else
             {
@@ -282,6 +310,7 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
         base.ShowError(message);
         HasLog = false;
         LogCount = 0;
-        LogEntries = [];
+        Repositories = [];
+        SelectedRepository = null;
     }
 }
