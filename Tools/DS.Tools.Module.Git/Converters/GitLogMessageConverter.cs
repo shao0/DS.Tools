@@ -11,9 +11,9 @@ namespace DS.Tools.Module.Git.Converters;
 /// TextWrapping=Wrap 且文本含空段落（如提交正文的段落间空行）时，断行循环不终止，
 /// 无限分配行对象导致内存爆炸挂起。压缩空行后不再产生空段落，规避该框架 bug。
 /// </summary>
-public sealed class GitLogMessageConverter : IValueConverter
+public sealed partial class GitLogMessageConverter : IValueConverter
 {
-    private static readonly Regex s_multiNewline = new("\n{2,}", RegexOptions.Compiled);
+    private static readonly Regex s_multiNewline = MyRegex();
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         => value is string text && s_multiNewline.IsMatch(text)
@@ -22,4 +22,6 @@ public sealed class GitLogMessageConverter : IValueConverter
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         => throw new NotSupportedException();
+    [GeneratedRegex("\n{2,}", RegexOptions.Compiled)]
+    private static partial Regex MyRegex();
 }
