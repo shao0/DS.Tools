@@ -54,11 +54,11 @@
                         Orientation="Horizontal"
                         Spacing="12">
                         <Button
-                            Classes="btn primary"
+                            Classes="action-button"
                             Command="{Binding EncodeCommand}"
                             Content="编码" />
                         <Button
-                            Classes="btn secondary"
+                            Classes="secondary-button"
                             Command="{Binding ClearCommand}"
                             Content="清空" />
                     </StackPanel>
@@ -75,9 +75,7 @@
                         IsVisible="{Binding EncodedResult, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <DockPanel>
                             <Button
-                                Margin="0,0,0,0"
-                                Padding="8,12"
-                                Classes="btn secondary"
+                                Classes="compact-button"
                                 Command="{Binding CopyEncodedCommand}"
                                 Content="复制"
                                 DockPanel.Dock="Right" />
@@ -112,11 +110,11 @@
                         Orientation="Horizontal"
                         Spacing="12">
                         <Button
-                            Classes="btn primary"
+                            Classes="action-button"
                             Command="{Binding DecodeCommand}"
                             Content="解码" />
                         <Button
-                            Classes="btn secondary"
+                            Classes="secondary-button"
                             Command="{Binding ClearCommand}"
                             Content="清空" />
                     </StackPanel>
@@ -133,9 +131,7 @@
                         IsVisible="{Binding DecodedResult, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <DockPanel>
                             <Button
-                                Margin="0,0,0,0"
-                                Padding="8,12"
-                                Classes="btn secondary"
+                                Classes="compact-button"
                                 Command="{Binding CopyDecodedCommand}"
                                 Content="复制"
                                 DockPanel.Dock="Right" />

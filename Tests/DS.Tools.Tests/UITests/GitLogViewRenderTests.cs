@@ -207,6 +207,52 @@ public class GitLogViewRenderTests
         });
     }
 
+    [Fact]
+    public void GitLogView_ToolbarControls_ShareUnifiedHeight()
+    {
+        // 回归：控件高度统一两档（36 标准 / 28 紧凑，见 ToolStyles.axaml 头注）——
+        // 工具栏 TextBox/CalendarDatePicker/ComboBox/按钮混排须完全同高，条目内嵌小按钮为 28
+        EnsureHeadlessInitialized();
+
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var vm = CreateViewModel();
+            vm.RepositoryPath = @"D:\repo";
+            vm.BranchName = "main";
+            vm.Repositories =
+            [
+                new GitRepositoryLog("根仓库", [new GitLogEntry("abc1234", "Test User", "test@example.com",
+                    new DateTimeOffset(2026, 3, 1, 10, 0, 0, TimeSpan.FromHours(8)), "fix: critical bug")], IsRoot: true)
+            ];
+            vm.SelectedRepository = vm.Repositories[0];
+
+            RenderInWindow(vm, out var window, out _);
+            RenderFrame();
+
+            // 工具栏（Row=1 Border 内）标准档控件全部恰为 36。
+            // 排除控件模板内部部件（CalendarDatePicker/ComboBox 模板内含 TextBox，TemplatedParent 非空）
+            var standardControls = window.GetVisualDescendants()
+                .OfType<Control>()
+                .Where(v => v.TemplatedParent is null)
+                .Where(v => v is TextBox or ComboBox or CalendarDatePicker
+                    || (v is Button b && b.Classes.Contains("action-button")))
+                .ToList();
+            standardControls.Should().HaveCount(6, "工具栏应含 TextBox×1 + CalendarDatePicker×2 + ComboBox×1 + 按钮×2");
+            standardControls.Should().OnlyContain(v => v.Bounds.Height == 36,
+                $"标准档控件高度应统一为 36，实际: {string.Join(", ", standardControls.Select(v => $"{v.GetType().Name}={v.Bounds.Height}"))}");
+
+            // 条目内嵌复制按钮为紧凑档 28
+            var compact = window.GetVisualDescendants()
+                .OfType<Button>()
+                .Where(b => b.Classes.Contains("compact-button"))
+                .ToList();
+            compact.Should().NotBeEmpty("条目内应有紧凑复制按钮");
+            compact.Should().OnlyContain(b => b.Bounds.Height == 28, "紧凑按钮高度应为 28");
+
+            window.Close();
+        });
+    }
+
     /// <summary>
     /// 测试用文件夹选择器桩（不打开系统对话框）
     /// </summary>

@@ -46,7 +46,7 @@
                         Text="{Binding TimestampInput, Mode=TwoWay}" />
                     <Button
                         Margin="0,12,0,0"
-                        Classes="btn primary"
+                        Classes="action-button"
                         Command="{Binding TimestampToDateCommand}"
                         Content="转换" />
                     <Border
@@ -82,7 +82,7 @@
                     </Border>
                     <Button
                         Margin="0,12,0,0"
-                        Classes="btn secondary"
+                        Classes="secondary-button"
                         Command="{Binding ClearTimestampCommand}"
                         Content="清空" />
                 </StackPanel>
@@ -100,7 +100,7 @@
                         Text="{Binding DateInput, Mode=TwoWay}" />
                     <Button
                         Margin="0,12,0,0"
-                        Classes="btn primary"
+                        Classes="action-button"
                         Command="{Binding DateToTimestampCommand}"
                         Content="转换" />
                     <Border
@@ -127,7 +127,7 @@
                     </Border>
                     <Button
                         Margin="0,12,0,0"
-                        Classes="btn secondary"
+                        Classes="secondary-button"
                         Command="{Binding ClearDateCommand}"
                         Content="清空" />
                 </StackPanel>

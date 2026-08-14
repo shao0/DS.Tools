@@ -20,27 +20,8 @@
     </UserControl.Resources>
 
     <UserControl.Styles>
-        <!--  共享样式（按钮/滚动条）  -->
+        <!--  共享样式（按钮/输入控件/滚动条）：控件高度统一 36/28 两档（见 ToolStyles 头注）  -->
         <StyleInclude Source="avares://DS.Tools.UI.Shared/Styles/ToolStyles.axaml" />
-
-        <!--  仓库路径输入框（工具栏内紧凑单行输入，本视图专属）  -->
-        <Style Selector="TextBox.repoPathBox">
-            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12,10" />
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="Height" Value="40" />
-            <Setter Property="CaretBrush" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="SelectionBrush" Value="{DynamicResource PrimaryBrush}" />
-            <Setter Property="SelectionForegroundBrush" Value="{DynamicResource PrimaryFgBrush}" />
-        </Style>
-
-        <Style Selector="TextBox.repoPathBox:focus">
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-        </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -90,14 +71,13 @@
                 <TextBox
                     Grid.Column="0"
                     VerticalAlignment="Center"
-                    Classes="repoPathBox"
+                    Classes="formInput"
                     PlaceholderText="选择 Git 仓库文件夹..."
                     Text="{Binding RepositoryPath, Mode=TwoWay}" />
 
                 <!--  选择文件夹  -->
                 <Button
                     Grid.Column="1"
-                    VerticalAlignment="Center"
                     Classes="action-button"
                     Command="{Binding PickFolderCommand}"
                     Content="📁 选择文件夹" />
@@ -107,6 +87,8 @@
                     Grid.Column="2"
                     MinWidth="150"
                     VerticalAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    Classes="formInput"
                     PlaceholderText="起始日期"
                     SelectedDate="{Binding SinceDate, Mode=TwoWay}" />
 
@@ -122,6 +104,7 @@
                     Grid.Column="4"
                     MinWidth="150"
                     VerticalAlignment="Center"
+                    Classes="formInput"
                     PlaceholderText="结束日期"
                     SelectedDate="{Binding UntilDate, Mode=TwoWay}" />
 
@@ -131,11 +114,14 @@
                     MinWidth="130"
                     MaxWidth="220"
                     VerticalAlignment="Center"
+                    Classes="formInput"
                     ItemsSource="{Binding AuthorOptions}"
                     SelectedItem="{Binding SelectedAuthorOption, Mode=TwoWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="gitmodels:AuthorOption">
-                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Text="{Binding DisplayName}"
+                                TextTrimming="CharacterEllipsis" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
@@ -143,7 +129,6 @@
                 <!--  获取日志  -->
                 <Button
                     Grid.Column="6"
-                    VerticalAlignment="Center"
                     Classes="action-button"
                     Command="{Binding LoadLogCommand}"
                     Content="📜 获取日志" />
@@ -185,9 +170,6 @@
                     <!--  复制当前选中仓库的日志到剪贴板  -->
                     <Button
                         Grid.Column="1"
-                        Height="32"
-                        MinWidth="0"
-                        Padding="12,6"
                         VerticalAlignment="Center"
                         Classes="secondary-button"
                         Command="{Binding CopyLogCommand}"
@@ -308,20 +290,15 @@
                                                 Foreground="{DynamicResource TextSecondaryBrush}"
                                                 Text="{Binding Date, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
 
-                                            <!--  复制该条日志（仅复制本条完整内容）  -->
-                                            <!--  ReSharper disable once Xaml.PossibleNullReferenceException  -->
+                                            <!--  复制该条日志（仅复制本条完整内容；紧凑档 28）  -->
                                             <Button
                                                 Grid.Column="3"
-                                                Height="28"
-                                                MinWidth="0"
                                                 Margin="12,0,0,0"
-                                                Padding="8,4"
                                                 VerticalAlignment="Center"
-                                                Classes="secondary-button"
+                                                Classes="compact-button"
                                                 Command="{Binding $parent[UserControl].((vm:GitLogViewModel)DataContext).CopyEntryCommand}"
                                                 CommandParameter="{Binding}"
-                                                Content="📋"
-                                                FontSize="13" />
+                                                Content="📋" />
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

@@ -61,36 +61,26 @@
                 Orientation="Horizontal"
                 Spacing="12">
                 <Button
-                    MinWidth="120"
-                    Padding="16,10"
                     Classes="action-button"
                     Command="{Binding FormatCommand}"
                     Content="✨ 格式化" />
 
                 <Button
-                    MinWidth="120"
-                    Padding="16,10"
                     Classes="action-button"
                     Command="{Binding CompressCommand}"
                     Content="🗜️ 压缩" />
 
                 <Button
-                    MinWidth="120"
-                    Padding="16,10"
                     Classes="action-button"
                     Command="{Binding ValidateCommand}"
                     Content="✓ 验证" />
 
                 <Button
-                    MinWidth="100"
-                    Padding="16,10"
                     Classes="secondary-button"
                     Command="{Binding ClearCommand}"
                     Content="🗑️ 清空" />
 
                 <Button
-                    MinWidth="120"
-                    Padding="16,10"
                     Classes="secondary-button"
                     Command="{Binding CopyOutputCommand}"
                     Content="📋 复制结果" />

@@ -26,18 +26,59 @@
         <Setter Property="Margin" Value="0,0,0,16" />
     </Style>
 
-    <!-- 表单输入框 -->
+    <!-- ============================================================
+         统一控件高度体系（两档）：
+         - 标准 36：TextBox / ComboBox / CalendarDatePicker（formInput）
+                    与常规按钮（action-button / secondary-button）同高，
+                    同一工具行混排完全对齐
+         - 紧凑 28：compact-button（结果框/列表项内嵌小操作）
+    ============================================================ -->
+
+    <!-- 表单输入框（单行文本） -->
     <Style Selector="TextBox.formInput">
         <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Padding" Value="12" />
+        <Setter Property="Padding" Value="12,7" />
+        <Setter Property="MinHeight" Value="36" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
 
     <Style Selector="TextBox.formInput:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+
+    <!-- 下拉框：与 TextBox.formInput 同高同观感（工具行混排对齐） -->
+    <Style Selector="ComboBox.formInput">
+        <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+    </Style>
+
+    <Style Selector="ComboBox.formInput:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+    </Style>
+
+    <!-- 日期选择器：与 TextBox.formInput 同高同观感（工具行混排对齐） -->
+    <Style Selector="CalendarDatePicker.formInput">
+        <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <Style Selector="CalendarDatePicker.formInput:focus">
         <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
     </Style>
 
@@ -66,16 +107,7 @@
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
-    <!-- 卡片内操作按钮（高按钮形态：Padding 12,20） -->
-    <Style Selector="Button.btn">
-        <Setter Property="Padding" Value="12,20" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="FontSize" Value="14" />
-        <Setter Property="FontWeight" Value="Medium" />
-        <Setter Property="Cursor" Value="Hand" />
-    </Style>
-
-    <!-- 工具栏操作按钮（紧凑形态：固定高度 40） -->
+    <!-- 工具栏/卡片主操作按钮（标准高度 36，与 formInput 输入控件同高） -->
     <Style Selector="Button.action-button">
         <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryFgBrush}" />
@@ -84,9 +116,9 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="Padding" Value="16,0" />
         <Setter Property="MinWidth" Value="100" />
-        <Setter Property="Height" Value="40" />
+        <Setter Property="Height" Value="36" />
     </Style>
 
     <!--  hover/按下态作用于模板部件 ContentPresenter，过渡动画挂同一层级才生效  -->
@@ -111,7 +143,7 @@
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
     </Style>
 
-    <!-- 工具栏次要按钮 -->
+    <!-- 次要操作按钮（标准高度 36，与 formInput 输入控件同高） -->
     <Style Selector="Button.secondary-button">
         <Setter Property="Background" Value="{DynamicResource SecondaryBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
@@ -120,9 +152,9 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Normal" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="Padding" Value="16,0" />
         <Setter Property="MinWidth" Value="100" />
-        <Setter Property="Height" Value="40" />
+        <Setter Property="Height" Value="36" />
     </Style>
 
     <Style Selector="Button.secondary-button /template/ ContentPresenter">
@@ -144,6 +176,35 @@
     <Style Selector="Button.secondary-button:disabled /template/ ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource CardBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+
+    <!-- 紧凑小按钮（结果框/列表项内嵌操作；高度 28，随内容自适应宽度） -->
+    <Style Selector="Button.compact-button">
+        <Setter Property="Background" Value="{DynamicResource SecondaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Height" Value="28" />
+    </Style>
+
+    <Style Selector="Button.compact-button /template/ ContentPresenter">
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Button.compact-button:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SecondaryHoverBrush}" />
+    </Style>
+
+    <Style Selector="Button.compact-button:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource TextMutedBrush}" />
     </Style>
 
     <!-- 滚动条 -->

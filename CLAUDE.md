@@ -108,6 +108,7 @@ services.AddSingleton<IJsonFormatterService, JsonFormatterService>();
 - **命令**：统一 `[RelayCommand]`（MVVM Toolkit 8.0 起无 `[AsyncRelayCommand]` 特性）；`[RelayCommand]` + `Task` + `CancellationToken` 参数自动生成可取消命令
 - **复制语义**：复制走 VM 原始数据（如 git 完整消息），显示层转换不污染复制内容；成功提示 2s 自动清除（`ToolViewModelBase.CopyToClipboardAsync` 统一实现）；剪贴板错误统一 rethrow → 基类展示
 - **样式资源**：单个控件/视图内联 `Styles` 超过 **3 个**必须抽取为同名资源文件（`{视图名}Styles.axaml`，`StyleInclude` 引用）；共享样式集中于 UI.Shared `Styles/ToolStyles.axaml`；class 统一 **kebab-case**（Avalonia class 区分大小写）；颜色一律 `DynamicResource` 引用 App 主题色板（Light/Dark `ThemeDictionaries`，约 25 个语义化键）
+- **控件高度两档**（`ToolStyles.axaml` 头注）：**标准 36**——`formInput`（同一 class 挂 TextBox/ComboBox/CalendarDatePicker）与 `action-button`/`secondary-button`，同一工具行混排完全对齐；**紧凑 28**——`compact-button`（结果框/列表项内嵌小操作）。全局 TextBox 基础样式（App.axaml）同为 36；focus 只变色不加粗边框（边框粗细变化会改变控件高度产生抖动）。**禁止内联 Height/Padding 覆盖按钮样式**；Headless 回归测试（`GitLogView_ToolbarControls_ShareUnifiedHeight`）实测 Bounds.Height 防漂移（注意排除 `TemplatedParent != null` 的模板内部部件，如 CalendarDatePicker 内嵌 TextBox）
 - **构建**：`TreatWarningsAsErrors` 全开；目录级 `Directory.Build.props` 必须 `Import` 根 props（`GetPathOfFileAbove`），否则丢失 LangVersion/Nullable/AOT 配置；版本经 `Directory.Packages.props` 集中管理
 - **git 集成**：`Process.StandardOutput`/`StandardErrorEncoding` 设 `UTF8Encoding(false)` + `-c i18n.logOutputEncoding=UTF-8`（防中文乱码）；`--until` 是排他边界——结束日期传 `until.AddDays(1)` 才含当天
 - **headless 测试**：所有 Headless UI 测试类须同 xUnit `Collection("HeadlessUi")` 串行（Avalonia 平台仅可初始化一次）；`dotnet test` 卡死先查内存（`--blame-hang-timeout`）
@@ -116,7 +117,7 @@ services.AddSingleton<IJsonFormatterService, JsonFormatterService>();
 ## ✅ 当前验证结果
 
 - **构建**：Rider / CLI `dotnet build` 均通过，`TreatWarningsAsErrors` + `EnableTrimAnalyzer` 全开零警告
-- **测试**：**248/248** 通过（单元测试 + Headless UI 集成测试），覆盖：模块化服务（ToolCatalog/ToolRegistry/NavigationService/DI 注册）、Text/Git 模块全部 ViewModel 与服务、ToolViewModelBase 复制语义、GitLogMessageConverter、Git 嵌套子仓库分组（.git 目录/文件标记、损坏 gitdir 跳过、Tab 切换/选中仓库复制）、提交人过滤（默认当前用户、手动选择保留、隐藏无匹配仓库）、ThemeService、SerilogConfig/AvaloniaLogSink、Headless UI 渲染与导航
+- **测试**：**249/249** 通过（单元测试 + Headless UI 集成测试），覆盖：模块化服务（ToolCatalog/ToolRegistry/NavigationService/DI 注册）、Text/Git 模块全部 ViewModel 与服务、ToolViewModelBase 复制语义、GitLogMessageConverter、Git 嵌套子仓库分组（.git 目录/文件标记、损坏 gitdir 跳过、Tab 切换/选中仓库复制）、提交人过滤（默认当前用户、手动选择保留、隐藏无匹配仓库）、控件高度统一回归（36/28 两档）、ThemeService、SerilogConfig/AvaloniaLogSink、Headless UI 渲染与导航
 - **冒烟**：应用启动正常；Serilog 控制台+文件日志输出启动/模块初始化链路；主页/模块视图经注册表渲染无崩溃
 
 ## ⚠️ 遗留问题

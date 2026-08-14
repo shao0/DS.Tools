@@ -19,59 +19,16 @@
             <Setter Property="FontFamily" Value="avares://Avalonia.Fonts.Inter/Assets#Inter" />
         </Style>
 
-        <!-- Custom Button Styles -->
-        <Style Selector="Button.primary">
-            <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryFgBrush}" />
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15" />
-                </Transitions>
-            </Setter>
-        </Style>
-
-        <Style Selector="Button.primary:pointerover">
-            <Setter Property="Background" Value="{DynamicResource PrimaryHoverBrush}" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <Style Selector="Button.primary:pressed">
-            <Setter Property="Background" Value="{DynamicResource PrimaryPressedBrush}" />
-        </Style>
-
-        <Style Selector="Button.secondary">
-            <Setter Property="Background" Value="{DynamicResource SecondaryBrush}" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="Padding" Value="16,8" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15" />
-                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
-                </Transitions>
-            </Setter>
-        </Style>
-
-        <Style Selector="Button.secondary:pointerover">
-            <Setter Property="Background" Value="{DynamicResource SecondaryHoverBrush}" />
-            <Setter Property="Cursor" Value="Hand" />
-        </Style>
-
-        <!-- TextBox Styles -->
+        <!-- TextBox 全局基础样式：单行高度统一 36（Padding 上下 7 + 字号 14 行高 ≈ 35）。
+             focus 只变色不加粗边框——边框粗细变化会改变控件高度产生抖动 -->
         <Style Selector="TextBox">
             <Setter Property="Background" Value="{DynamicResource InputBackgroundBrush}" />
             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
             <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="MinHeight" Value="36" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="Transitions">
                 <Transitions>
@@ -83,7 +40,6 @@
 
         <Style Selector="TextBox:focus">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
-            <Setter Property="BorderThickness" Value="2" />
         </Style>
     </Application.Styles>
 

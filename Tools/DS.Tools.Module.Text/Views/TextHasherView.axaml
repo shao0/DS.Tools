@@ -49,15 +49,9 @@
 
                     <Button
                         Margin="0,12,0,0"
-                        Padding="16,20"
-                        Background="{DynamicResource PrimaryBrush}"
-                        BorderThickness="0"
+                        Classes="action-button"
                         Command="{Binding CalculateHashCommand}"
-                        Content="计算哈希"
-                        CornerRadius="8"
-                        Cursor="Hand"
-                        FontWeight="Medium"
-                        Foreground="{DynamicResource PrimaryFgBrush}" />
+                        Content="计算哈希" />
 
                     <!--  SHA-256 结果  -->
                     <Border
@@ -65,15 +59,10 @@
                         IsVisible="{Binding Sha256Result, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <DockPanel>
                             <Button
-                                Margin="0,0,0,0"
-                                Padding="8,12"
-                                Background="{DynamicResource SecondaryBrush}"
-                                BorderThickness="0"
+                                Classes="compact-button"
                                 Command="{Binding CopySha256Command}"
                                 Content="复制"
-                                CornerRadius="6"
-                                DockPanel.Dock="Right"
-                                Foreground="{DynamicResource PrimaryFgBrush}" />
+                                DockPanel.Dock="Right" />
 
                             <StackPanel>
                                 <TextBlock
@@ -97,15 +86,10 @@
                         IsVisible="{Binding Md5Result, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <DockPanel>
                             <Button
-                                Margin="0,0,0,0"
-                                Padding="8,12"
-                                Background="{DynamicResource SecondaryBrush}"
-                                BorderThickness="0"
+                                Classes="compact-button"
                                 Command="{Binding CopyMd5Command}"
                                 Content="复制"
-                                CornerRadius="6"
-                                DockPanel.Dock="Right"
-                                Foreground="{DynamicResource PrimaryFgBrush}" />
+                                DockPanel.Dock="Right" />
 
                             <StackPanel>
                                 <TextBlock
@@ -125,15 +109,9 @@
 
                     <Button
                         Margin="0,12,0,0"
-                        Padding="16,20"
-                        Background="{DynamicResource SecondaryBrush}"
-                        BorderThickness="0"
+                        Classes="secondary-button"
                         Command="{Binding ClearCommand}"
-                        Content="清空"
-                        CornerRadius="8"
-                        Cursor="Hand"
-                        FontWeight="Medium"
-                        Foreground="{DynamicResource PrimaryFgBrush}" />
+                        Content="清空" />
                 </StackPanel>
             </Border>
         </StackPanel>

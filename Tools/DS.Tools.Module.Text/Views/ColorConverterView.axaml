@@ -110,15 +110,9 @@
 
                     <!--  重置按钮  -->
                     <Button
-                        Padding="12,20"
-                        Background="{DynamicResource SecondaryBrush}"
-                        BorderThickness="0"
+                        Classes="secondary-button"
                         Command="{Binding ResetCommand}"
-                        Content="重置"
-                        CornerRadius="8"
-                        Cursor="Hand"
-                        FontWeight="Medium"
-                        Foreground="{DynamicResource PrimaryFgBrush}" />
+                        Content="重置" />
                 </StackPanel>
             </Border>
         </StackPanel>
