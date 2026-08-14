@@ -84,7 +84,7 @@
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,0,0,1">
             <Grid
-                ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto"
+                ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto"
                 ColumnSpacing="12">
                 <!--  仓库路径（可手动编辑）  -->
                 <TextBox
@@ -125,9 +125,24 @@
                     PlaceholderText="结束日期"
                     SelectedDate="{Binding UntilDate, Mode=TwoWay}" />
 
+                <!--  提交人过滤（默认当前 git 用户；全部 = 不过滤）  -->
+                <ComboBox
+                    Grid.Column="5"
+                    MinWidth="130"
+                    MaxWidth="220"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding AuthorOptions}"
+                    SelectedItem="{Binding SelectedAuthorOption, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="gitmodels:AuthorOption">
+                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
                 <!--  获取日志  -->
                 <Button
-                    Grid.Column="5"
+                    Grid.Column="6"
                     VerticalAlignment="Center"
                     Classes="action-button"
                     Command="{Binding LoadLogCommand}"
@@ -217,7 +232,7 @@
                 FontSize="13"
                 Foreground="{DynamicResource TextMutedBrush}"
                 IsVisible="{Binding IsNoCommitsState}"
-                Text="该仓库在所选时间范围内没有提交，可切换其他仓库标签查看。" />
+                Text="当前时间范围与提交人过滤条件下没有提交，可切换其他仓库标签或更改过滤条件。" />
 
             <!--  日志列表：每个仓库一个 Tab，选择切换显示  -->
             <TabControl

@@ -106,6 +106,30 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     private GitRepositoryLog? _selectedRepository;
 
     /// <summary>
+    /// 提交人过滤选项（首项"全部提交人"，其余按提交数降序；当前 git 用户恒在列）
+    /// </summary>
+    [ObservableProperty]
+    private IReadOnlyList<AuthorOption> _authorOptions = [AuthorOption.All];
+
+    /// <summary>
+    /// 当前选中的提交人过滤（null 名称 = 全部；加载后默认当前 git 用户）
+    /// </summary>
+    [ObservableProperty]
+    private AuthorOption? _selectedAuthorOption = AuthorOption.All;
+
+    /// <summary>服务返回的原始分组（未经提交人过滤——过滤在内存即时完成，切换不重跑 git）</summary>
+    private IReadOnlyList<GitRepositoryLog> _allRepositories = [];
+
+    /// <summary>当前 git 用户名（仓库级/全局 user.name），提交人过滤默认值</summary>
+    private string? _currentUser;
+
+    /// <summary>用户是否手动切换过提交人过滤（手动后不再自动重置为默认）</summary>
+    private bool _authorFilterTouched;
+
+    /// <summary>正在程序化设置默认过滤（不标记 touched）</summary>
+    private bool _applyingDefaultAuthor;
+
+    /// <summary>
     /// 是否为空状态（尚未加载任何日志——显示占位提示）
     /// </summary>
     public bool IsEmptyState => !HasLog && !HasErrors && !IsLoading;
@@ -114,6 +138,70 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     /// 是否已加载但当前选中仓库无提交（提示切换其他仓库）
     /// </summary>
     public bool IsNoCommitsState => HasLog && !HasErrors && !IsLoading && LogCount == 0;
+
+    /// <summary>
+    /// 提交人过滤切换：按选中提交人重建仓库分组（无匹配提交的仓库隐藏 Tab）
+    /// </summary>
+    partial void OnSelectedAuthorOptionChanged(AuthorOption? value)
+    {
+        if (!_applyingDefaultAuthor)
+            _authorFilterTouched = true; // 用户手动切换后，重新加载/换仓库前保持其选择
+
+        ApplyAuthorFilter();
+
+        // 过滤切换即时反馈（加载流程随后会用加载摘要覆盖）
+        if (!IsLoading && HasLog)
+            StatusMessage = BuildSummaryMessage();
+    }
+
+    /// <summary>
+    /// 按提交人过滤重建 <see cref="Repositories"/>（null = 全部，原样透传）；
+    /// 无匹配提交的仓库不显示 Tab；选中 Tab 尽量按显示名保留，不可用则回退第一个
+    /// </summary>
+    private void ApplyAuthorFilter()
+    {
+        var author = SelectedAuthorOption?.Name;
+        var filtered = author is null
+            ? _allRepositories
+            : _allRepositories
+                .Select(r => r with { Entries = r.Entries.Where(e => e.AuthorName == author).ToList() })
+                .Where(r => r.EntryCount > 0)
+                .ToList();
+
+        Repositories = filtered;
+        SelectedRepository = filtered.FirstOrDefault(r => r.DisplayName == SelectedRepository?.DisplayName)
+            ?? filtered.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// 依据原始分组重建提交人选项：全部 + 按提交数降序（同数按名字典序）；
+    /// 当前 git 用户无范围内提交时仍附加在列（默认过滤需选中它）
+    /// </summary>
+    private void RebuildAuthorOptions()
+    {
+        var options = _allRepositories
+            .SelectMany(r => r.Entries)
+            .GroupBy(e => e.AuthorName)
+            .OrderByDescending(g => g.Count())
+            .ThenBy(g => g.Key, StringComparer.Ordinal)
+            .Select(g => new AuthorOption(g.Key, g.Key))
+            .ToList();
+
+        if (_currentUser is not null && options.All(o => o.Name != _currentUser))
+            options.Add(new AuthorOption(_currentUser, _currentUser));
+
+        AuthorOptions = [AuthorOption.All, .. options];
+        // 现选择与重建后的同名项值相等（record 值相等），ComboBox 自动匹配，无需回选
+    }
+
+    /// <summary>
+    /// 加载摘要：✓ 共 N 条提交（M 个仓库）——N/M 为过滤后实际展示的数量
+    /// </summary>
+    private string BuildSummaryMessage()
+    {
+        var repoLabel = Repositories.Count > 1 ? $"（{Repositories.Count} 个仓库）" : string.Empty;
+        return $"✓ 共 {Repositories.Sum(r => r.EntryCount)} 条提交{repoLabel}";
+    }
 
     /// <summary>
     /// 选中仓库切换：同步日志条数（复制可执行性/空状态）并更新状态消息
@@ -225,6 +313,10 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
             }
 
             BranchName = await _gitLogService.GetCurrentBranchAsync(RepositoryPath);
+            // 当前 git 用户（user.name，仓库级/全局）作为提交人过滤默认值；
+            // 重置 touched——新仓库恢复"默认过滤为当前用户"，而非沿用上一仓库的手动选择
+            _currentUser = await _gitLogService.GetCurrentUserNameAsync(RepositoryPath);
+            _authorFilterTouched = false;
             await LoadLogCoreAsync(CancellationToken.None);
         }
         catch (Exception ex)
@@ -257,16 +349,35 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
 
             if (result.IsSuccess)
             {
-                // 整批替换（避免逐条 Add 触发 N 次 CollectionChanged）
-                Repositories = result.Repositories;
+                // 整批替换（避免逐条 Add 触发 N 次 CollectionChanged）。
+                // 原始分组留存 _allRepositories，提交人过滤在内存即时完成（切换不重跑 git）
+                _allRepositories = result.Repositories;
                 HasErrors = false;
                 ErrorMessage = null;
                 HasLog = true;
-                // 默认选中根仓库（OnSelectedRepositoryChanged 会先行更新 LogCount/状态）；
-                // 加载摘要最后设置，覆盖切换消息——用户切 Tab 时再由切换消息反馈
-                SelectedRepository = result.Repositories.FirstOrDefault();
-                var repoLabel = result.Repositories.Count > 1 ? $"（{result.Repositories.Count} 个仓库）" : string.Empty;
-                StatusMessage = $"✓ 共 {result.TotalEntries} 条提交{repoLabel}";
+                RebuildAuthorOptions();
+
+                // 用户未手动切换过过滤 → 默认选中当前 git 用户（未配置则"全部"）；
+                // 已手动选择 → 沿用其选择
+                if (!_authorFilterTouched)
+                {
+                    _applyingDefaultAuthor = true;
+                    try
+                    {
+                        SelectedAuthorOption = AuthorOptions.FirstOrDefault(o => o.Name == _currentUser)
+                            ?? AuthorOption.All;
+                    }
+                    finally
+                    {
+                        _applyingDefaultAuthor = false;
+                    }
+                }
+
+                // 无条件重建展示分组：默认值与当前选择值相等（record 值相等）时
+                // OnSelectedAuthorOptionChanged 不触发，ApplyAuthorFilter 必须显式调用（幂等）。
+                // 默认选中根仓库由 ApplyAuthorFilter 完成；加载摘要最后设置覆盖过滤切换消息
+                ApplyAuthorFilter();
+                StatusMessage = BuildSummaryMessage();
             }
             else
             {
@@ -303,14 +414,27 @@ public sealed partial class GitLogViewModel : ToolViewModelBase, ISubTool
     }
 
     /// <summary>
-    /// 显示错误（基类三段式基础上追加：清空日志结果）
+    /// 显示错误（基类三段式基础上追加：清空日志结果与提交人过滤状态）
     /// </summary>
     protected override void ShowError(string message)
     {
         base.ShowError(message);
         HasLog = false;
         LogCount = 0;
+        _allRepositories = [];
         Repositories = [];
         SelectedRepository = null;
+
+        // 过滤状态回到初始（"全部"，不标记 touched——错误后重新加载仍可恢复默认过滤）
+        _applyingDefaultAuthor = true;
+        try
+        {
+            AuthorOptions = [AuthorOption.All];
+            SelectedAuthorOption = AuthorOption.All;
+        }
+        finally
+        {
+            _applyingDefaultAuthor = false;
+        }
     }
 }

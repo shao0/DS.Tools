@@ -19,6 +19,11 @@ public interface IGitLogService
     Task<string?> GetCurrentBranchAsync(string repoPath, CancellationToken ct = default);
 
     /// <summary>
+    /// 获取当前 git 用户名（仓库级 user.name，缺省时逐级回退全局/系统配置）；未配置返回 null
+    /// </summary>
+    Task<string?> GetCurrentUserNameAsync(string repoPath, CancellationToken ct = default);
+
+    /// <summary>
     /// 获取指定时间范围内的提交日志，按仓库分组返回（每个仓库内部时间倒序）。
     /// 自动包含选中仓库目录下嵌套的子仓库（子模块/工作树/嵌套独立仓库）——
     /// 结果第一个恒为根仓库，其余为子仓库（<see cref="GitRepositoryLog.IsRoot"/> 标记）；

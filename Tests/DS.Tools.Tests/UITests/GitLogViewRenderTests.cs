@@ -225,6 +225,9 @@ public class GitLogViewRenderTests
         public Task<string?> GetCurrentBranchAsync(string repoPath, CancellationToken ct = default)
             => Task.FromResult<string?>("main");
 
+        public Task<string?> GetCurrentUserNameAsync(string repoPath, CancellationToken ct = default)
+            => Task.FromResult<string?>(null);
+
         public Task<GitLogResult> GetLogAsync(string repoPath, DateTimeOffset? since, DateTimeOffset? until, CancellationToken ct = default)
             => Task.FromResult(GitLogResult.Success([]));
     }

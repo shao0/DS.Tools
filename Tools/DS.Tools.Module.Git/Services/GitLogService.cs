@@ -74,6 +74,20 @@ public sealed class GitLogService : IGitLogService
     }
 
     /// <inheritdoc />
+    public async Task<string?> GetCurrentUserNameAsync(string repoPath, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(repoPath))
+            return null;
+
+        // git config 逐级合并（local > global > system）：仓库级未配置时自动回退全局用户名；
+        // 未任何配置时 exit 1 → null（过滤回退为"全部"）
+        var result = await RunGitAsync(repoPath, ["config", "user.name"], ct);
+        return result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.Stdout)
+            ? result.Stdout.Trim()
+            : null;
+    }
+
+    /// <inheritdoc />
     public async Task<GitLogResult> GetLogAsync(string repoPath, DateTimeOffset? since, DateTimeOffset? until, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(repoPath))

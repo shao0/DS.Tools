@@ -240,6 +240,147 @@ public sealed class GitLogViewModelTests
     }
 
     [Fact]
+    public async Task Ctor_WithSavedFolderAndCurrentUser_DefaultsAuthorFilterToCurrentUser()
+    {
+        // Arrange（当前 git 用户 = A → 加载后默认过滤为 A，仅显示 A 的提交）
+        const string savedPath = @"D:\Code\Self\DS.Tools";
+        _settings.Setup(s => s.Load()).Returns(new GitSettings { LastFolderPath = savedPath });
+        _gitLog.Setup(g => g.IsGitRepositoryAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _gitLog.Setup(g => g.GetCurrentBranchAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync("main");
+        _gitLog.Setup(g => g.GetCurrentUserNameAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync("A");
+        _gitLog.Setup(g => g.GetLogAsync(savedPath, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitRepositoryLog("根仓库", [
+                    new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "by A"),
+                    new GitLogEntry("b2", "B", "b@x.com", DateTimeOffset.Now, "by B")
+                ], IsRoot: true)
+            ]));
+
+        // Act
+        var vm = CreateViewModel();
+        await WaitUntilAsync(() => !vm.IsLoading && vm.HasLog);
+
+        // Assert（默认选中当前用户；条目/计数/摘要均为过滤后）
+        vm.SelectedAuthorOption!.Name.Should().Be("A");
+        vm.LogCount.Should().Be(1);
+        vm.SelectedRepository!.Entries.Should().ContainSingle(e => e.Message == "by A");
+        vm.StatusMessage.Should().Be("✓ 共 1 条提交");
+        // 选项列表：全部在首，A/B 均在列
+        vm.AuthorOptions[0].Name.Should().BeNull();
+        vm.AuthorOptions.Select(o => o.Name).Should().Contain(["A", "B"]);
+    }
+
+    [Fact]
+    public async Task AuthorFilter_ManualSelection_PersistsAcrossReload()
+    {
+        // Arrange（手动切到 B 后重新获取日志——不重置为默认"全部/当前用户"）
+        var vm = CreateViewModel();
+        vm.RepositoryPath = @"D:\repo";
+        SetupLogWithAuthors(["A", "B"]);
+        await vm.LoadLogCommand.ExecuteAsync(null);
+
+        vm.SelectedAuthorOption = vm.AuthorOptions.First(o => o.Name == "B");
+
+        // Act（换日期重新拉取，返回数据不变）
+        await vm.LoadLogCommand.ExecuteAsync(null);
+
+        // Assert
+        vm.SelectedAuthorOption!.Name.Should().Be("B");
+        vm.LogCount.Should().Be(1);
+        vm.StatusMessage.Should().Be("✓ 共 1 条提交");
+    }
+
+    [Fact]
+    public async Task AuthorFilter_SwitchToAll_RestoresAllEntries()
+    {
+        // Arrange（默认过滤为 A → 手动切回"全部"恢复全部条目）
+        const string savedPath = @"D:\Code\Self\DS.Tools";
+        _settings.Setup(s => s.Load()).Returns(new GitSettings { LastFolderPath = savedPath });
+        _gitLog.Setup(g => g.IsGitRepositoryAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _gitLog.Setup(g => g.GetCurrentBranchAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync("main");
+        _gitLog.Setup(g => g.GetCurrentUserNameAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync("A");
+        SetupLogWithAuthors(["A", "B"], path: savedPath);
+        var vm = CreateViewModel();
+        await WaitUntilAsync(() => !vm.IsLoading && vm.HasLog);
+        vm.LogCount.Should().Be(1);
+
+        // Act
+        vm.SelectedAuthorOption = vm.AuthorOptions[0]; // 全部提交人
+
+        // Assert
+        vm.SelectedAuthorOption!.Name.Should().BeNull();
+        vm.LogCount.Should().Be(2);
+        vm.StatusMessage.Should().Be("✓ 共 2 条提交");
+    }
+
+    [Fact]
+    public async Task AuthorFilter_HidesRepositoriesWithoutMatches()
+    {
+        // Arrange（两个仓库各含不同提交人；过滤 A 后子仓库 Tab 隐藏，切回全部恢复）
+        var vm = CreateViewModel();
+        vm.RepositoryPath = @"D:\repo";
+        _gitLog.Setup(g => g.GetLogAsync(@"D:\repo", It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitRepositoryLog("根仓库", [
+                    new GitLogEntry("a1", "A", "a@x.com", DateTimeOffset.Now, "root by A"),
+                    new GitLogEntry("b2", "B", "b@x.com", DateTimeOffset.Now, "root by B")
+                ], IsRoot: true),
+                new GitRepositoryLog("sub/module", [new GitLogEntry("c3", "B", "b@x.com", DateTimeOffset.Now, "sub by B")])
+            ]));
+        await vm.LoadLogCommand.ExecuteAsync(null);
+        vm.Repositories.Should().HaveCount(2);
+
+        // Act（过滤 A：子仓库无 A 的提交 → Tab 隐藏）
+        vm.SelectedAuthorOption = vm.AuthorOptions.First(o => o.Name == "A");
+
+        // Assert
+        vm.Repositories.Should().ContainSingle();
+        vm.Repositories[0].DisplayName.Should().Be("根仓库");
+        vm.Repositories[0].EntryCount.Should().Be(1);
+
+        // 切回全部：两个 Tab 恢复
+        vm.SelectedAuthorOption = vm.AuthorOptions[0];
+        vm.Repositories.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task AuthorFilter_CurrentUserWithoutCommits_ShowsNoCommitsState()
+    {
+        // Arrange（当前 git 用户在时间范围内无提交：仍出现在选项并被默认选中，空状态提示）
+        const string savedPath = @"D:\Code\Self\DS.Tools";
+        _settings.Setup(s => s.Load()).Returns(new GitSettings { LastFolderPath = savedPath });
+        _gitLog.Setup(g => g.IsGitRepositoryAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _gitLog.Setup(g => g.GetCurrentBranchAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync("main");
+        _gitLog.Setup(g => g.GetCurrentUserNameAsync(savedPath, It.IsAny<CancellationToken>())).ReturnsAsync("A");
+        _gitLog.Setup(g => g.GetLogAsync(savedPath, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitRepositoryLog("根仓库", [new GitLogEntry("b2", "B", "b@x.com", DateTimeOffset.Now, "by B")], IsRoot: true)
+            ]));
+
+        // Act
+        var vm = CreateViewModel();
+        await WaitUntilAsync(() => !vm.IsLoading && vm.HasLog);
+
+        // Assert（A 附加在选项列表并默认选中；无条目 → 空仓库 Tab 全部隐藏 → 无提交状态）
+        vm.SelectedAuthorOption!.Name.Should().Be("A");
+        vm.AuthorOptions.Select(o => o.Name).Should().Contain("A");
+        vm.Repositories.Should().BeEmpty();
+        vm.LogCount.Should().Be(0);
+        vm.IsNoCommitsState.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// 配置根仓库日志桩：每位作者一条提交
+    /// </summary>
+    private void SetupLogWithAuthors(string[] authors, string path = @"D:\repo")
+        => _gitLog.Setup(g => g.GetLogAsync(path, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GitLogResult.Success([
+                new GitRepositoryLog("根仓库",
+                    [.. authors.Select((a, i) => new GitLogEntry($"h{i}", a, $"{a}@x.com", DateTimeOffset.Now, $"by {a}"))],
+                    IsRoot: true)
+            ]));
+
+    [Fact]
     public async Task LoadLog_OnFailure_SetsErrorMessage()
     {
         // Arrange

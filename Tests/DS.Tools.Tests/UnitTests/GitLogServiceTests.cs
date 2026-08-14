@@ -302,6 +302,21 @@ public sealed class GitLogServiceTests
     }
 
     [RequiresGitFact]
+    public async Task GetCurrentUserName_ReturnsConfiguredName()
+    {
+        // GitTestRepo 初始化时已配置仓库级 user.name（覆盖全局值）
+        using var repo = GitTestRepo.Create();
+
+        (await _service.GetCurrentUserNameAsync(repo.Path)).Should().Be("Test User");
+    }
+
+    [Fact]
+    public async Task GetCurrentUserName_EmptyPath_ReturnsNull()
+    {
+        (await _service.GetCurrentUserNameAsync("   ")).Should().BeNull();
+    }
+
+    [RequiresGitFact]
     public async Task GetLog_WithNestedSubRepo_SeparatesRepositories()
     {
         // 选中仓库目录下嵌套独立子仓库（.git 目录）——每个仓库独立分组（对应 UI Tab），根仓库恒第一。
